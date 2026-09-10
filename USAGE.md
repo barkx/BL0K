@@ -28,29 +28,55 @@ serves `dist/` if you want to check the built output without Docker.
 
 ### Docker
 
-Docker Desktop is installed on this machine, but as a **per-user** install under
-`%LOCALAPPDATA%\Programs\DockerDesktop`, so `docker` is **not on PATH**. Use
-`run.bat`, which locates it:
+Works the same for everyone, on any OS:
 
 | Command | What you get | Port |
 |---|---|---|
-| `run.bat` | Production bundle served by nginx - closest thing to Vercel | http://localhost:8080 |
-| `run.bat dev` | Vite dev server in a container, hot reload | http://localhost:5173 |
-| `run.bat stop` | Stops and removes both containers | - |
-| `run.bat logs` | Follows container output | - |
+| `npm run docker:prod` | Production bundle served by nginx - closest thing to Vercel | http://localhost:8080 |
+| `npm run docker:dev` | Vite dev server in a container, hot reload | http://localhost:5173 |
+| `npm run docker:stop` | Stops and removes both containers | - |
+| `npm run docker:logs` | Follows container output | - |
 
-Double-click `run.bat` in Explorer and it builds, starts, and opens the browser.
-If the engine is not running it starts Docker Desktop and waits for it.
+On Windows, `run.bat` is the same thing but double-clickable from Explorer, and
+it opens the browser for you: `run.bat`, `run.bat dev`, `run.bat stop`,
+`run.bat logs`.
 
-The `npm run docker:*` scripts do the same thing but only work from a shell
-where `docker` is already on PATH. `run.bat` is the reliable route here.
+#### Finding Docker
 
-Notes:
+`scripts/docker.mjs` resolves Docker in this order:
+
+1. **`docker` on PATH.** A normal install, CI, and anyone else cloning the
+   repo land here and nothing else runs.
+2. **Known install locations** for the current platform, if PATH has nothing.
+   Windows: the per-user `%LOCALAPPDATA%\Programs\DockerDesktop`, then
+   `Program Files`, then `ProgramData`. macOS: Homebrew, `/usr/local/bin`, and
+   `Docker.app`. Linux: `/usr/bin`, `/usr/local/bin`, `~/.docker/bin`.
+
+It prints which one it used. If neither works it lists every path it tried.
+
+Docker Desktop on this development machine is a **per-user** install that never
+put itself on PATH, which is why the fallback exists. When Docker is found off
+PATH, its folder is prepended to PATH **for that child process only** - the
+credential helper and the compose plugin live next to `docker.exe`, and image
+pulls fail with `docker-credential-desktop: executable file not found` without
+them. Nothing outside the process is changed.
+
+If you would rather have it on PATH permanently, this is yours to run - it is
+not required:
+
+```powershell
+[Environment]::SetEnvironmentVariable('Path',
+  [Environment]::GetEnvironmentVariable('Path','User') + ';' +
+  "$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin", 'User')
+```
+
+#### Notes
 
 - Both targets live in one `Dockerfile`; `docker-compose.yml` picks between them.
-- `run.bat` puts the Docker folder on PATH **for its own process only**. It
-  changes nothing outside that window. Image pulls need the credential helper,
-  which sits in that same folder.
+- If the engine is not running, the script starts Docker Desktop and waits up
+  to three minutes.
+- Compose v2 (`docker compose`) is used; the script checks for it and reports
+  clearly if only the legacy standalone binary is present.
 - `dev` keeps `node_modules` inside the image (an anonymous volume hides the
   host's), so Windows-built binaries never leak into the Linux container. Both
   commands pass `--build`, so a new dependency is picked up on the next run.

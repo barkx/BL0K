@@ -8,3 +8,4 @@ dist
 *.bat
 *.md
 npm-debug.log*
+scripts

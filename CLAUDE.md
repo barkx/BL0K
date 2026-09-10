@@ -15,8 +15,8 @@
 - Do not add a dependency without naming the reason in the commit message.
 - Keep GitHub to what Vercel needs to build, plus Docker files and docs.
 - Docker is local only. It is never part of a Vercel deploy.
-- Docker Desktop here is a per-user install and is NOT on PATH. Use `run.bat`,
-  not bare `docker` or `npm run docker:*`.
+- Docker locating lives only in `scripts/docker.mjs`: PATH first, then known
+  install paths. Do not duplicate that logic anywhere else.
 - Rebuild geometry at most once per frame. Never once per pixel of a drag.
 - Instance repeated boxes; merge static walls. Do not regress to per-element meshes.
 
@@ -28,7 +28,8 @@
 - GitHub: `https://github.com/barkx/BL0K` — branch `main`
 - Vercel: builds `main` on push once linked; config in `vercel.json`
 - Git scripts: `setup-git.bat` (first time only), `push.bat` (every time after)
-- Container: `Dockerfile` (targets `dev`, `prod`), `docker-compose.yml`, `run.bat`
+- Container: `Dockerfile` (targets `dev`, `prod`), `docker-compose.yml`,
+  `scripts/docker.mjs` (locator), `run.bat` (Windows double-click wrapper)
 
 ## 3. Setup / Test
 
@@ -44,14 +45,15 @@
 ```bash
 npm run dev            # local dev, http://localhost:5173
 npm run build          # typecheck + bundle — must pass before committing
+npm run docker:prod    # production container, http://localhost:8080
+npm run docker:dev     # dev container, hot reload
 ```
 
 ```bat
-run.bat                :: production container, http://localhost:8080
-run.bat dev            :: dev container, hot reload, http://localhost:5173
-run.bat stop           :: tear both down
 push.bat               :: commit + push to main -> Vercel deploys
 ```
+
+- `run.bat [dev|stop|logs]` is the same thing, double-clickable on Windows.
 
 ## 5. Stop Conditions
 

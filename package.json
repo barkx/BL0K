@@ -8,9 +8,10 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "docker:dev": "docker compose up --build dev",
-    "docker:prod": "docker compose up --build prod",
-    "docker:down": "docker compose down"
+    "docker:dev": "node scripts/docker.mjs dev",
+    "docker:prod": "node scripts/docker.mjs prod",
+    "docker:stop": "node scripts/docker.mjs stop",
+    "docker:logs": "node scripts/docker.mjs logs"
   },
   "dependencies": {
     "@react-three/drei": "^9.114.0",
