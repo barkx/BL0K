@@ -19,15 +19,16 @@
  */
 
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { homedir, platform } from 'node:os'
 import { dirname, join } from 'node:path'
 
+/** docker-compose.yml owns the ports; these are just the modes. */
 const MODES = {
-  prod: { service: 'prod', url: 'http://localhost:8080' },
-  dev: { service: 'dev', url: 'http://localhost:5173' },
-  stop: {},
-  logs: {},
+  prod: 'prod',
+  dev: 'dev',
+  stop: null,
+  logs: null,
 }
 
 const args = process.argv.slice(2)
@@ -165,6 +166,56 @@ async function ensureEngine() {
   process.exit(1)
 }
 
+/**
+ * The host port for a service, read from docker-compose.yml rather than
+ * repeated here. Asking Compose to resolve its own config beats parsing YAML:
+ * it handles any formatting, variable substitution and override files, and
+ * needs no YAML dependency.
+ */
+function hostPort(service) {
+  const out = spawnSync(docker.cmd, ['compose', 'config', '--format', 'json'], {
+    env,
+    encoding: 'utf8',
+  })
+  if (out.status === 0 && out.stdout) {
+    try {
+      // Compose emits a BOM on Windows.
+      const text = out.stdout.charCodeAt(0) === 0xfeff ? out.stdout.slice(1) : out.stdout
+      const published = JSON.parse(text)?.services?.[service]?.ports?.[0]?.published
+      if (published) return Number(published)
+    } catch {
+      // fall through to the text scan
+    }
+  }
+  return portFromYaml(service)
+}
+
+/** Last resort if `compose config --format json` is unavailable. */
+function portFromYaml(service) {
+  let text
+  try {
+    text = readFileSync('docker-compose.yml', 'utf8')
+  } catch {
+    return null
+  }
+  let current = null
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const indent = line.length - line.trimStart().length
+    if (indent === 2 && trimmed.endsWith(':')) {
+      current = trimmed.slice(0, -1)
+      continue
+    }
+    if (current === service && trimmed.startsWith('- ')) {
+      const mapping = trimmed.slice(2).trim().replace(/["']/g, '')
+      const host = mapping.split(':')[0]
+      if (host && !Number.isNaN(Number(host))) return Number(host)
+    }
+  }
+  return null
+}
+
 function openBrowser(url) {
   if (os === 'win32') spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' }).unref()
   else if (os === 'darwin') spawn('open', [url], { detached: true, stdio: 'ignore' }).unref()
@@ -181,14 +232,22 @@ if (mode === 'logs') {
   process.exit(run(['compose', 'logs', '-f']).status ?? 0)
 }
 
-const { service, url } = MODES[mode]
-console.log(`\nBuilding and starting "${service}". The first run pulls base images.\n`)
+const service = MODES[mode]
+console.log()
+console.log(`Building and starting "${service}". The first run pulls base images.`)
+console.log()
 
 const up = run(['compose', 'up', '-d', '--build', service])
 if (up.status !== 0) process.exit(up.status ?? 1)
 
-console.log(`\n  Running at ${url}`)
-console.log(`  Logs:  npm run docker:logs`)
-console.log(`  Stop:  npm run docker:stop\n`)
+const port = hostPort(service)
+const url = port ? `http://localhost:${port}` : null
 
-if (shouldOpen) openBrowser(url)
+// Better to say we do not know than to print a port compose no longer uses.
+console.log()
+console.log(url ? `  Running at ${url}` : '  Started. For the port: docker compose ps')
+console.log('  Logs:  npm run docker:logs')
+console.log('  Stop:  npm run docker:stop')
+console.log()
+
+if (shouldOpen && url) openBrowser(url)

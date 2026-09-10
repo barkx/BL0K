@@ -48,9 +48,13 @@ it opens the browser for you: `run.bat`, `run.bat dev`, `run.bat stop`,
 `run.bat logs`.
 
 Both targets live in one [`Dockerfile`](Dockerfile);
-[`docker-compose.yml`](docker-compose.yml) picks between them. `dev` and `prod`
-can run at the same time on their two ports. If the engine is not running, the
-script starts Docker Desktop and waits up to three minutes.
+[`docker-compose.yml`](docker-compose.yml) picks between them and **owns the
+host ports** — the ports above are what it currently maps. `scripts/docker.mjs`
+reads them back with `docker compose config`, so changing a port in compose is
+the only edit needed and the printed URL follows.
+
+`dev` and `prod` can run at the same time on their two ports. If the engine is
+not running, the script starts Docker Desktop and waits up to three minutes.
 
 Docker is never involved in a Vercel deploy. It is for local production parity,
 and for running the app on a machine with no Node toolchain.

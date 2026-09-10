@@ -1,7 +1,11 @@
 # Local container runs. Neither service is used by Vercel.
 #
-#   npm run docker:dev    -> http://localhost:5173  (hot reload)
-#   npm run docker:prod   -> http://localhost:8080  (production bundle)
+# This file owns the host ports. scripts/docker.mjs reads them from here via
+# `docker compose config`, so change a port below and nothing else needs
+# touching.
+#
+#   npm run docker:dev    -> hot reload
+#   npm run docker:prod   -> production bundle
 
 services:
   dev:
