@@ -44,8 +44,8 @@
 
 - Spec of record: [`project.md`](project.md) — locked decisions §1, non-goals §1,
   open questions §9, milestones §8
-- Architecture, decisions, deviations, measured performance: [`README.md`](README.md)
-- Every feature and both delivery paths, in detail: [`USAGE.md`](USAGE.md)
+- [`README.md`](README.md) — the one doc. Chapter 1: running, coding,
+  publishing. Chapter 2: the app, its features, design and performance.
 - GitHub: `https://github.com/barkx/BL0K` — branch `main`
 - Vercel: builds `main` on push **once linked**; config in `vercel.json`
 - Git scripts: `setup-git.bat` (already run — do not run again), `push.bat`
@@ -78,7 +78,7 @@ push.bat               :: commit + push to main -> Vercel deploys
 - `npm run docker:stop` / `docker:logs` for teardown and output.
 - `push.bat` prompts for a message; it does **not** typecheck, so build first.
 - Vercel needs no command. Push to `main` and it deploys. To link it the first
-  time, or to deploy by hand, see USAGE.md § GitHub + Vercel.
+  time, see README.md ch.1 § Publish it.
 
 ## 5. Stop Conditions
 
@@ -113,7 +113,7 @@ Refuse:
 - **Deviations** (both in README): default `sillHeight` is 0.65 m because the
   spec's three facade defaults cannot coexist; windows are merged, not instanced.
 - **Not done yet**:
-  - Vercel project is **not linked** — one dashboard step, see USAGE.md.
+  - Vercel project is **not linked** — one dashboard step, see README.md ch.1.
   - `npx plugins add vercel/vercel-plugin` was deliberately not run. User's call.
   - No test runner. `project.md` §9 answers are provisional.
   - 30-floor courtyard rebuilds in ~25 ms warm. If that needs to improve, the
