@@ -1,15 +1,28 @@
-# Vercel builds from source — it needs package.json, package-lock.json,
-# src/, index.html, tsconfig.json, vite.config.ts and vercel.json. Nothing
-# below is needed by the build, so none of it belongs on GitHub.
+# Vercel builds from source. It needs package.json, package-lock.json, src/,
+# index.html, tsconfig.json, vite.config.ts and vercel.json. Nothing below is
+# needed by the build, so none of it belongs on GitHub.
 
 node_modules/
 dist/
 .vite/
 .vercel/
 
+# --- secrets: never commit these ---
 .env
 .env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+.npmrc
+.netrc
+*.token
+secrets.json
+credentials.json
 
+# --- noise ---
 *.log
 *.local
 .DS_Store
