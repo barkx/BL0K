@@ -4,10 +4,12 @@ cd /d "%~dp0"
 rem  Double-clickable wrapper. All the Docker locating lives in
 rem  scripts/docker.mjs, so there is one implementation, not two.
 rem
-rem  run.bat        -> production build in nginx, http://localhost:8080
-rem  run.bat dev    -> Vite dev server with hot reload, http://localhost:5173
+rem  run.bat        -> production build in nginx
+rem  run.bat dev    -> Vite dev server with hot reload
 rem  run.bat stop   -> stop and remove both containers
 rem  run.bat logs   -> follow container output
+rem
+rem  Ports come from docker-compose.yml; the script prints the URL it resolved.
 
 set "MODE=%~1"
 if "%MODE%"=="" set "MODE=prod"
