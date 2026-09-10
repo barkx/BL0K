@@ -28,24 +28,36 @@ serves `dist/` if you want to check the built output without Docker.
 
 ### Docker
 
-Needs Docker Desktop (not currently installed on this machine — install from
-docker.com, then `docker --version` should answer).
+Docker Desktop is installed on this machine, but as a **per-user** install under
+`%LOCALAPPDATA%\Programs\DockerDesktop`, so `docker` is **not on PATH**. Use
+`run.bat`, which locates it:
 
 | Command | What you get | Port |
 |---|---|---|
-| `npm run docker:dev` | Vite dev server in a container, source bind-mounted, hot reload | http://localhost:5173 |
-| `npm run docker:prod` | The production bundle served by nginx — closest thing to Vercel | http://localhost:8080 |
-| `npm run docker:down` | Stops and removes both | — |
+| `run.bat` | Production bundle served by nginx - closest thing to Vercel | http://localhost:8080 |
+| `run.bat dev` | Vite dev server in a container, hot reload | http://localhost:5173 |
+| `run.bat stop` | Stops and removes both containers | - |
+| `run.bat logs` | Follows container output | - |
+
+Double-click `run.bat` in Explorer and it builds, starts, and opens the browser.
+If the engine is not running it starts Docker Desktop and waits for it.
+
+The `npm run docker:*` scripts do the same thing but only work from a shell
+where `docker` is already on PATH. `run.bat` is the reliable route here.
 
 Notes:
 
 - Both targets live in one `Dockerfile`; `docker-compose.yml` picks between them.
+- `run.bat` puts the Docker folder on PATH **for its own process only**. It
+  changes nothing outside that window. Image pulls need the credential helper,
+  which sits in that same folder.
 - `dev` keeps `node_modules` inside the image (an anonymous volume hides the
-  host's), so Windows-built binaries never leak into the Linux container. If you
-  add a dependency, rebuild: `npm run docker:dev` already passes `--build`.
+  host's), so Windows-built binaries never leak into the Linux container. Both
+  commands pass `--build`, so a new dependency is picked up on the next run.
 - Hot reload in a container relies on polling (`VITE_POLLING=1`), because bind
-  mounts on Windows do not deliver filesystem events. That costs a little CPU;
-  it is only set for the container.
+  mounts on Windows do not deliver filesystem events. Verified working: editing
+  a file on the host updates the page in the container.
+- `dev` and `prod` can run at the same time, on their two ports.
 - Docker is never involved in a Vercel deploy. It is for local parity and for
   running the app on a machine without a Node toolchain.
 

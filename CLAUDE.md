@@ -15,6 +15,8 @@
 - Do not add a dependency without naming the reason in the commit message.
 - Keep GitHub to what Vercel needs to build, plus Docker files and docs.
 - Docker is local only. It is never part of a Vercel deploy.
+- Docker Desktop here is a per-user install and is NOT on PATH. Use `run.bat`,
+  not bare `docker` or `npm run docker:*`.
 - Rebuild geometry at most once per frame. Never once per pixel of a drag.
 - Instance repeated boxes; merge static walls. Do not regress to per-element meshes.
 
@@ -26,7 +28,7 @@
 - GitHub: `https://github.com/barkx/BL0K` — branch `main`
 - Vercel: builds `main` on push once linked; config in `vercel.json`
 - Git scripts: `setup-git.bat` (first time only), `push.bat` (every time after)
-- Container: `Dockerfile` (targets `dev`, `prod`), `docker-compose.yml`
+- Container: `Dockerfile` (targets `dev`, `prod`), `docker-compose.yml`, `run.bat`
 
 ## 3. Setup / Test
 
@@ -42,11 +44,12 @@
 ```bash
 npm run dev            # local dev, http://localhost:5173
 npm run build          # typecheck + bundle — must pass before committing
-npm run docker:prod    # production bundle in nginx, http://localhost:8080
-npm run docker:dev     # dev server in a container, hot reload via polling
 ```
 
 ```bat
+run.bat                :: production container, http://localhost:8080
+run.bat dev            :: dev container, hot reload, http://localhost:5173
+run.bat stop           :: tear both down
 push.bat               :: commit + push to main -> Vercel deploys
 ```
 
