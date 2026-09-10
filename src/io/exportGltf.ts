@@ -1,6 +1,6 @@
-import { BufferGeometry, Mesh, MeshStandardMaterial, Scene } from 'three'
+import { BufferGeometry, Group, Mesh, MeshStandardMaterial, Scene } from 'three'
 import { GLTFExporter } from 'three-stdlib'
-import type { Building } from '../geometry/build'
+import type { SiteBuild } from '../site/build'
 import type { Instance } from '../geometry/balcony'
 import { MeshBuilder, type V3 } from '../lib/mesh'
 
@@ -10,7 +10,7 @@ import { MeshBuilder, type V3 } from '../lib/mesh'
  */
 function bake(instances: Instance[]): BufferGeometry | null {
   if (instances.length === 0) return null
-  const b = new MeshBuilder()
+  const b = new MeshBuilder(instances.length * 6)
 
   for (const it of instances) {
     const [px, py, pz] = it.position
@@ -39,57 +39,82 @@ function bake(instances: Instance[]): BufferGeometry | null {
   return b.toGeometry()
 }
 
-export async function exportGltf(building: Building): Promise<ArrayBuffer> {
+function makeMaterials() {
+  return {
+    wall: new MeshStandardMaterial({ name: 'Wall', color: '#c9c3b9', roughness: 0.85 }),
+    glass: new MeshStandardMaterial({
+      name: 'Glass',
+      color: '#87a0ad',
+      roughness: 0.06,
+      metalness: 0.2,
+      transparent: true,
+      opacity: 0.45,
+    }),
+    slab: new MeshStandardMaterial({ name: 'Slab', color: '#bdb8b0', roughness: 0.9 }),
+    metal: new MeshStandardMaterial({
+      name: 'Metal',
+      color: '#8e949a',
+      metalness: 0.85,
+      roughness: 0.35,
+    }),
+    infill: new MeshStandardMaterial({
+      name: 'Balustrade',
+      color: '#a9bcc4',
+      roughness: 0.1,
+      transparent: true,
+      opacity: 0.4,
+    }),
+  }
+}
+
+/**
+ * The whole site as one binary glTF: a named group per building, positioned and
+ * rotated exactly as on the plot, so it drops into Rhino, Blender or a viewer
+ * with the layout intact.
+ */
+export async function exportSiteGltf(build: SiteBuild): Promise<ArrayBuffer> {
   const scene = new Scene()
-  scene.name = 'ApartmentBlock'
+  scene.name = 'Site'
 
-  const wall = new MeshStandardMaterial({ name: 'Wall', color: '#c9c3b9', roughness: 0.85 })
-  const glass = new MeshStandardMaterial({
-    name: 'Glass',
-    color: '#87a0ad',
-    roughness: 0.06,
-    metalness: 0.2,
-    transparent: true,
-    opacity: 0.45,
-  })
-  const slab = new MeshStandardMaterial({ name: 'Slab', color: '#bdb8b0', roughness: 0.9 })
-  const metal = new MeshStandardMaterial({ name: 'Metal', color: '#8e949a', metalness: 0.85, roughness: 0.35 })
-  const infill = new MeshStandardMaterial({
-    name: 'Balustrade',
-    color: '#a9bcc4',
-    roughness: 0.1,
-    transparent: true,
-    opacity: 0.4,
-  })
-
-  for (const [id, g] of Object.entries(building.walls.byMass)) {
-    const mesh = new Mesh(g, wall)
-    mesh.name = `Walls_${id}`
-    scene.add(mesh)
-  }
-  for (const [id, g] of Object.entries(building.roof.byMass)) {
-    const mesh = new Mesh(g, wall)
-    mesh.name = `Roof_${id}`
-    scene.add(mesh)
-  }
-  const glazing = new Mesh(building.walls.glass, glass)
-  glazing.name = 'Glazing'
-  scene.add(glazing)
-
-  const baked: [string, Instance[], MeshStandardMaterial][] = [
-    ['BalconySlabs', building.balconies.slabs, slab],
-    ['Balustrades', building.balconies.panels, infill],
-    ['Handrails', building.balconies.rails, metal],
-    ['Bars', building.balconies.bars, metal],
-  ]
+  const m = makeMaterials()
   const temporary: BufferGeometry[] = []
-  for (const [name, items, material] of baked) {
-    const g = bake(items)
-    if (!g) continue
-    temporary.push(g)
-    const mesh = new Mesh(g, material)
-    mesh.name = name
-    scene.add(mesh)
+
+  for (const { placement, building } of build.placed) {
+    const group = new Group()
+    group.name = placement.name.replace(/\s+/g, '_')
+    group.position.set(placement.position.x, 0, placement.position.z)
+    group.rotation.y = (placement.rotation * Math.PI) / 180
+
+    for (const [id, g] of Object.entries(building.walls.byMass)) {
+      const mesh = new Mesh(g, m.wall)
+      mesh.name = `Walls_${id}`
+      group.add(mesh)
+    }
+    for (const [id, g] of Object.entries(building.roof.byMass)) {
+      const mesh = new Mesh(g, m.wall)
+      mesh.name = `Roof_${id}`
+      group.add(mesh)
+    }
+    const glazing = new Mesh(building.walls.glass, m.glass)
+    glazing.name = 'Glazing'
+    group.add(glazing)
+
+    const baked: [string, Instance[], MeshStandardMaterial][] = [
+      ['BalconySlabs', building.balconies.slabs, m.slab],
+      ['Balustrades', building.balconies.panels, m.infill],
+      ['Handrails', building.balconies.rails, m.metal],
+      ['Bars', building.balconies.bars, m.metal],
+    ]
+    for (const [name, items, material] of baked) {
+      const g = bake(items)
+      if (!g) continue
+      temporary.push(g)
+      const mesh = new Mesh(g, material)
+      mesh.name = name
+      group.add(mesh)
+    }
+
+    scene.add(group)
   }
 
   try {
@@ -103,8 +128,8 @@ export async function exportGltf(building: Building): Promise<ArrayBuffer> {
       )
     })
   } finally {
-    // The walls and roof buffers belong to the live building — leave those alone.
+    // The wall, roof and glass buffers belong to the live site — leave those.
     temporary.forEach((g) => g.dispose())
-    ;[wall, glass, slab, metal, infill].forEach((m) => m.dispose())
+    Object.values(m).forEach((mat) => mat.dispose())
   }
 }

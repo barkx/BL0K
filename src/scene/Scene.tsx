@@ -4,19 +4,32 @@ import { ContactShadows, Environment, Grid, OrbitControls } from '@react-three/d
 import { PerspectiveCamera, Vector3 } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { useStore } from '../store/store'
-import { makeMaterials } from './materials'
+import { makeMaterials, type MaterialSet } from './materials'
 import { Lighting } from './Lighting'
 import { Building } from './Building'
+import { Plot } from './Plot'
+import { useSiteDrag } from './useSiteDrag'
+import type { PlacedBuilding } from '../site/build'
 
 const VIEW_DIRECTION = new Vector3(0.62, 0.46, 0.64).normalize()
 
 /**
- * Reframe when the building changes shape, not on every slider tick. The fit
+ * Reframe when the site changes shape, not on every slider tick. The fit
  * solves for the bounding sphere against *both* field-of-view angles — a tall
  * narrow viewport is limited by the horizontal one, so using the vertical fov
- * alone crops the building.
+ * alone crops the site.
  */
-function CameraRig({ preset, radius, height }: { preset: string; radius: number; height: number }) {
+function CameraRig({
+  shapeKey,
+  radius,
+  height,
+  centre,
+}: {
+  shapeKey: string
+  radius: number
+  height: number
+  centre: { x: number; z: number }
+}) {
   const camera = useThree((s) => s.camera)
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null
   const size = useThree((s) => s.size)
@@ -24,7 +37,7 @@ function CameraRig({ preset, radius, height }: { preset: string; radius: number;
 
   const fit = useCallback(() => {
     if (!(camera instanceof PerspectiveCamera)) return
-    const target = new Vector3(0, height * 0.45, 0)
+    const target = new Vector3(centre.x, height * 0.45, centre.z)
     const sphere = Math.max(6, Math.hypot(radius, height * 0.55) * 1.02)
     const vfov = (camera.fov * Math.PI) / 180
     const hfov = 2 * Math.atan(Math.tan(vfov / 2) * (size.width / Math.max(1, size.height)))
@@ -38,30 +51,108 @@ function CameraRig({ preset, radius, height }: { preset: string; radius: number;
       controls.target.copy(target)
       controls.update()
     }
-  }, [camera, controls, radius, height, size.width, size.height])
+  }, [camera, controls, radius, height, centre.x, centre.z, size.width, size.height])
 
   useEffect(() => {
     fit()
     // Keyed to shape changes and explicit requests — refitting mid-drag is disorienting.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preset, fitRequest, controls])
+  }, [shapeKey, fitRequest, controls])
 
   return null
 }
 
+/** The ground catches shadows and clears the selection when clicked. */
+function Ground({
+  radius,
+  colour,
+  shadows,
+}: {
+  radius: number
+  colour: string
+  shadows: boolean
+}) {
+  const selectBuilding = useStore((s) => s.selectBuilding)
+
+  return (
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, -0.02, 0]}
+      receiveShadow={shadows}
+      onPointerDown={() => selectBuilding(null)}
+    >
+      <circleGeometry args={[radius * 8, 64]} />
+      <meshStandardMaterial color={colour} roughness={0.95} />
+    </mesh>
+  )
+}
+
+/**
+ * Inside the Canvas so the drag hook can reach the camera and orbit controls.
+ * One hook for the whole site rather than one per building — the window
+ * listeners it installs should exist once.
+ */
+function Buildings({
+  placed,
+  mat,
+  selectedId,
+  selectedElevation,
+  onSelectBuilding,
+  onSelectElevation,
+}: {
+  placed: PlacedBuilding[]
+  mat: MaterialSet
+  selectedId: string | null
+  selectedElevation: string | null
+  onSelectBuilding: (id: string | null) => void
+  onSelectElevation: (key: string | null) => void
+}) {
+  const drag = useSiteDrag()
+  return (
+    <>
+      {placed.map((p) => (
+        <Building
+          key={p.placement.id}
+          placed={p}
+          mat={mat}
+          selected={p.placement.id === selectedId}
+          selectedElevation={selectedElevation}
+          onSelectBuilding={() => onSelectBuilding(p.placement.id)}
+          onSelectElevation={onSelectElevation}
+          drag={drag}
+        />
+      ))}
+    </>
+  )
+}
+
 export function Scene() {
-  const mode = useStore((s) => s.params.renderMode)
-  const preset = useStore((s) => s.params.preset)
-  const bounds = useStore((s) => s.building.bounds)
-  const height = useStore((s) => s.building.metrics.height)
+  const mode = useStore((s) => s.renderMode)
+  const site = useStore((s) => s.site)
+  const build = useStore((s) => s.build)
+  const selectedId = useStore((s) => s.selectedId)
+  const selectedElevation = useStore((s) => s.selectedElevation)
+  const selectBuilding = useStore((s) => s.selectBuilding)
+  const selectElevation = useStore((s) => s.selectElevation)
 
   const mat = useMemo(() => makeMaterials(mode), [mode])
   useEffect(() => () => mat.dispose(), [mat])
 
-  // The plan half-diagonal drives the camera fit; the scene furniture (ground,
-  // fog, shadow camera) gets a floor so a small block still sits in a scene.
-  const planRadius = Math.hypot(bounds.x1 - bounds.x0, bounds.z1 - bounds.z0) / 2
+  const b = build.bounds
+  const centre = { x: (b.x0 + b.x1) / 2, z: (b.z0 + b.z1) / 2 }
+  const planRadius = Math.hypot(b.x1 - b.x0, b.z1 - b.z0) / 2
   const radius = Math.max(12, planRadius)
+  const height = Math.max(6, build.metrics.maxHeight)
+
+  // Refit when the site's extent changes materially, not on every nudge.
+  const shapeKey = `${site.buildings.length}:${Math.round(planRadius)}:${Math.round(height)}`
+
+  const clashing = useMemo(() => {
+    const names = new Set(build.metrics.clashes.flat())
+    return new Set(
+      build.placed.filter((p) => names.has(p.placement.name)).map((p) => p.placement.id),
+    )
+  }, [build.metrics.clashes, build.placed])
 
   return (
     <Canvas
@@ -71,19 +162,32 @@ export function Scene() {
       camera={{ fov: 36, position: [60, 45, 70] }}
     >
       <color attach="background" args={[mat.background]} />
-      <fog attach="fog" args={[mat.background, radius * 6, radius * 14]} />
+      <fog attach="fog" args={[mat.background, radius * 6, radius * 16]} />
 
       <Lighting mat={mat} radius={Math.max(radius, height)} />
-      <Building mat={mat} />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow={mat.shadows}>
-        <circleGeometry args={[radius * 8, 64]} />
-        <meshStandardMaterial color={mat.groundColor} roughness={0.95} />
-      </mesh>
+      <Buildings
+        placed={build.placed}
+        mat={mat}
+        selectedId={selectedId}
+        selectedElevation={selectedElevation}
+        onSelectBuilding={selectBuilding}
+        onSelectElevation={selectElevation}
+      />
+
+      <Plot
+        plot={site.plot}
+        placed={build.placed}
+        selectedId={selectedId}
+        clashing={clashing}
+        mat={mat}
+      />
+
+      <Ground radius={radius} colour={mat.groundColor} shadows={mat.shadows} />
 
       {mat.mode === 'white' && (
         <ContactShadows
-          position={[0, 0.01, 0]}
+          position={[centre.x, 0.01, centre.z]}
           scale={radius * 4}
           resolution={1024}
           blur={2.2}
@@ -103,7 +207,7 @@ export function Scene() {
           sectionSize={25}
           sectionThickness={0.9}
           sectionColor="#a7b4c0"
-          fadeDistance={radius * 7}
+          fadeDistance={radius * 9}
           fadeStrength={1.4}
           infiniteGrid
         />
@@ -116,10 +220,10 @@ export function Scene() {
         enableDamping
         dampingFactor={0.08}
         minDistance={6}
-        maxDistance={radius * 12}
+        maxDistance={radius * 14}
         maxPolarAngle={Math.PI / 2 - 0.02}
       />
-      <CameraRig preset={preset} radius={planRadius} height={height} />
+      <CameraRig shapeKey={shapeKey} radius={radius} height={height} centre={centre} />
     </Canvas>
   )
 }

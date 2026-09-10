@@ -10,7 +10,6 @@ export interface AreaMetrics {
   gfa: number
   loggiaLoss: number
   footprintArea: number
-  coverage: number
   facadeArea: number
   glazedArea: number
   solidArea: number
@@ -43,7 +42,6 @@ export function computeAreas(
     gfa: gfaGross - facade.loggiaArea,
     loggiaLoss: facade.loggiaArea,
     footprintArea,
-    coverage: p.siteArea > 0 ? footprintArea / p.siteArea : 0,
     facadeArea,
     glazedArea,
     solidArea: Math.max(0, facadeArea - glazedArea),

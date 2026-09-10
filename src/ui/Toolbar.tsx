@@ -23,8 +23,8 @@ export function Toolbar({
   collapsed: boolean
   onToggle: () => void
 }) {
-  const mode = useStore((s) => s.params.renderMode)
-  const set = useStore((s) => s.set)
+  const mode = useStore((s) => s.renderMode)
+  const setRenderMode = useStore((s) => s.setRenderMode)
   const fitView = useStore((s) => s.fitView)
 
   return (
@@ -37,7 +37,7 @@ export function Toolbar({
       >
         ☰
       </button>
-      <h1>Apartment block generator</h1>
+      <h1>Urbanism builder</h1>
       <span className="spacer" />
       <div className="segmented" role="group" aria-label="Render mode">
         {MODES.map((o) => (
@@ -45,7 +45,7 @@ export function Toolbar({
             key={o.value}
             type="button"
             aria-pressed={o.value === mode}
-            onClick={() => set({ renderMode: o.value })}
+            onClick={() => setRenderMode(o.value)}
           >
             {o.label}
           </button>

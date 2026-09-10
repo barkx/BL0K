@@ -12,6 +12,11 @@
 - Rebuild geometry at most once per frame. Never once per pixel of a drag.
 - Instance repeated boxes; merge static walls. Do not regress to per-element meshes.
 - Docker locating lives only in `scripts/docker.mjs`. Do not duplicate it.
+- Buildings are generated in their **own local frame** with axis-aligned masses.
+  Placement (position, rotation) belongs to the site layer, never inside
+  `geometry/`. Do not rotate masses within a building.
+- Site area comes from the plot polygon. Render mode is store state. Neither is
+  a per-building parameter.
 
 ### Secrets and privacy
 - Never commit credentials. Not in code, `vercel.json`, `Dockerfile`,
@@ -42,8 +47,10 @@
 
 ## 2. Authority & Links
 
-- Spec of record: [`project.md`](project.md) — locked decisions §1, non-goals §1,
-  open questions §9, milestones §8
+- Spec of record for a building: [`project.md`](project.md) — locked decisions
+  §1, non-goals §1, open questions §9, milestones §8. Do not edit it.
+- v2 site/urbanism scope, data model and milestones: [`project-v2.md`](project-v2.md).
+  A working doc — edit this one freely.
 - [`README.md`](README.md) — the one doc. Chapter 1: running, coding,
   publishing. Chapter 2: the app, its features, design and performance.
 - GitHub: `https://github.com/barkx/BL0K` — branch `main`
@@ -85,8 +92,8 @@ push.bat               :: commit + push to main -> Vercel deploys
 Ask before proceeding:
 
 - A change touches a locked decision in `project.md` §1.
-- A change implements anything in `project.md` §1 non-goals (floorplans, cores,
-  sun study, plinth, site context, cost, code compliance).
+- A change implements a `project.md` §1 non-goal that `project-v2.md` has not
+  opened up (floorplans, cores, sun study, plinth, terrain, cost, compliance).
 - An open question in `project.md` §9 would be answered differently from
   `README.md` § Open questions.
 - A new runtime dependency, or a three.js / R3F / drei major version bump.
@@ -103,17 +110,23 @@ Refuse:
 
 ## 6. Project State
 
-- **v1 is complete**: M1–M7 of `project.md` §8. Six presets with per-floor
-  junction detection, module-driven facade with real openings, projecting and
-  loggia balconies, three render modes, metrics, glTF export, config I/O,
+- **v1 complete**: M1–M7 of `project.md` §8. Six presets with per-floor junction
+  detection, module-driven facade with real openings, projecting and loggia
+  balconies, three render modes, metrics, glTF export, config I/O,
   per-elevation overrides, bottom sheet under 900 px.
-- **Verified**: 480-case parameter sweep (no failures, seeded output
-  byte-identical), GLB header valid across four configs, config migration from
-  v1-shaped and future-versioned files, both Docker targets, fresh-clone build.
+- **v2 M8 complete** (`project-v2.md`): site of many placed buildings, free
+  rotation, drag on the ground, plot rectangle, site metrics with clash and
+  off-plot detection, config v3 with migration, whole-site glTF.
+- **Next**: M9 draw the plot, M10 image underlay + scale, M11 DXF import.
+- **Verified**: 480-case parameter sweep (seeded output byte-identical), site
+  layer checks (metrics, SAT clash detection, buffer reuse on move), config
+  v1/v2/v3 migration, site GLB with named groups, both Docker targets,
+  fresh-clone build.
 - **Deviations** (both in README): default `sillHeight` is 0.65 m because the
   spec's three facade defaults cannot coexist; windows are merged, not instanced.
 - **Not done yet**:
   - Vercel project is **not linked** — one dashboard step, see README.md ch.1.
+  - Plot is still a rectangle; drawing arrives in M9.
   - `npx plugins add vercel/vercel-plugin` was deliberately not run. User's call.
   - No test runner. `project.md` §9 answers are provisional.
   - 30-floor courtyard rebuilds in ~25 ms warm. If that needs to improve, the

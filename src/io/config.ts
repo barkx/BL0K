@@ -1,59 +1,123 @@
 import { DEFAULTS, resolveParams, type Params } from '../store/params'
+import { rectanglePoly, type Poly } from '../lib/poly'
+import {
+  DEFAULT_PLOT_DEPTH,
+  DEFAULT_PLOT_WIDTH,
+  makePlacement,
+  type Placement,
+  type Site,
+} from '../site/types'
 
-export const CONFIG_VERSION = 2
+/**
+ * v1: params at the top level.
+ * v2: `{ version, params }` — one building, no site.
+ * v3: `{ version, site }` — a plot and many placed buildings.
+ */
+export const CONFIG_VERSION = 3
 
 export interface SavedConfig {
   version: number
   app: 'apartment-block-generator'
-  params: Params
+  site: Site
 }
 
-export function serialize(params: Params): string {
+export function serialize(site: Site): string {
   const payload: SavedConfig = {
     version: CONFIG_VERSION,
     app: 'apartment-block-generator',
-    params,
+    site,
   }
   return JSON.stringify(payload, null, 2)
 }
 
 export interface LoadResult {
-  params: Params
+  site: Site
   version: number
-  /** Keys the file did not carry, filled from defaults. */
-  filled: string[]
+  /** A human note when the file had to be reshaped, else null. */
+  migrated: string | null
   /** Written by a newer build than this one. */
   future: boolean
 }
 
-/**
- * Migrate rather than reject. An older file is missing keys, so it gets
- * defaults for them; a newer file may carry keys we do not know, which are
- * simply dropped. Either way the user gets their building back.
- */
-export function parseConfig(text: string): LoadResult {
-  const raw = JSON.parse(text) as Partial<SavedConfig> & Partial<Params>
-  // v1 files stored params at the top level; v2 nests them under `params`.
-  const incoming = (raw.params ?? raw) as Partial<Params>
-  const version = typeof raw.version === 'number' ? raw.version : 1
-
+/** Fill any missing keys from defaults, so an older file still loads. */
+function readParams(incoming: unknown): { params: Params; filled: number } {
+  const source = (incoming ?? {}) as Partial<Params>
   const params = { ...DEFAULTS } as Params
-  const filled: string[] = []
-
+  let filled = 0
   for (const key of Object.keys(DEFAULTS) as (keyof Params)[]) {
-    const v = incoming[key]
-    if (v === undefined || v === null) {
-      filled.push(key)
-    } else {
-      ;(params as unknown as Record<string, unknown>)[key] = v
-    }
+    const v = source[key]
+    if (v === undefined || v === null) filled++
+    else (params as unknown as Record<string, unknown>)[key] = v
   }
   if (typeof params.overrides !== 'object' || params.overrides === null) params.overrides = {}
+  return { params: resolveParams(params), filled }
+}
 
+function readPlot(incoming: unknown): Poly {
+  if (Array.isArray(incoming)) {
+    const points = incoming
+      .filter((p) => p && typeof p === 'object')
+      .map((p) => ({ x: Number((p as Poly[number]).x), z: Number((p as Poly[number]).z) }))
+      .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.z))
+    if (points.length >= 3) return points
+  }
+  return rectanglePoly(DEFAULT_PLOT_WIDTH, DEFAULT_PLOT_DEPTH)
+}
+
+function readPlacement(incoming: unknown, index: number): Placement {
+  const source = (incoming ?? {}) as Partial<Placement> & { params?: unknown }
+  const { params } = readParams(source.raw ?? source.params)
+  return makePlacement({
+    id: typeof source.id === 'string' ? source.id : undefined,
+    name: typeof source.name === 'string' ? source.name : `Building ${index + 1}`,
+    position: {
+      x: Number(source.position?.x) || 0,
+      z: Number(source.position?.z) || 0,
+    },
+    rotation: Number.isFinite(Number(source.rotation)) ? Number(source.rotation) : 0,
+    raw: params,
+    params,
+  })
+}
+
+/**
+ * Migrate rather than reject. A v1 or v2 file describes a single building with
+ * no site, so it becomes a one-building site on a default plot. A file from a
+ * newer build loads with its unknown keys dropped.
+ */
+export function parseConfig(text: string): LoadResult {
+  const raw = JSON.parse(text) as Record<string, unknown>
+  const version = typeof raw.version === 'number' ? raw.version : 1
+
+  // v3 and later
+  if (raw.site && typeof raw.site === 'object') {
+    const site = raw.site as Partial<Site>
+    const buildings = Array.isArray(site.buildings) ? site.buildings : []
+    return {
+      site: {
+        plot: readPlot(site.plot),
+        buildings:
+          buildings.length > 0
+            ? buildings.map(readPlacement)
+            : [makePlacement({ name: 'Building A' })],
+      },
+      version,
+      migrated: null,
+      future: version > CONFIG_VERSION,
+    }
+  }
+
+  // v1 and v2: one building, params only.
+  const { params, filled } = readParams(raw.params ?? raw)
   return {
-    params: resolveParams(params),
+    site: {
+      plot: rectanglePoly(DEFAULT_PLOT_WIDTH, DEFAULT_PLOT_DEPTH),
+      buildings: [makePlacement({ name: 'Building A', raw: params, params })],
+    },
     version,
-    filled,
+    migrated:
+      `a single building became a one-building site on a default plot` +
+      (filled > 0 ? `, and ${filled} missing setting(s) took defaults` : ''),
     future: version > CONFIG_VERSION,
   }
 }

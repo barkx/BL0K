@@ -1,4 +1,4 @@
-import { useStore } from '../store/store'
+import { useSelectedParams, useSelectedRaw, useStore } from '../store/store'
 import { RANGE, type RangeKey } from '../store/params'
 import { round } from '../lib/clamp'
 
@@ -10,8 +10,8 @@ const decimals = (step: number) => (step >= 1 ? 0 : step >= 0.1 ? 1 : 2)
  * underneath rather than snapping the handle out from under the drag.
  */
 export function Slider({ name, note }: { name: RangeKey; note?: string }) {
-  const raw = useStore((s) => s.raw[name])
-  const resolved = useStore((s) => s.params[name])
+  const raw = useSelectedRaw()[name]
+  const resolved = useSelectedParams()[name]
   const set = useStore((s) => s.set)
 
   const r = RANGE[name]

@@ -2,11 +2,12 @@ import { useRef, useState } from 'react'
 import { Group } from './Group'
 import { Slider } from './Slider'
 import { Chips, Select } from './Field'
-import { useStore } from '../store/store'
+import { useSelectedParams, useStore } from '../store/store'
 import { PRESET_LABELS, PRESET_WINGS } from '../store/presets'
 import type { BalconyPattern, BalconyType, BalustradeKind, Preset } from '../store/params'
 import { mm } from '../lib/units'
 import { download, parseConfig, serialize, stamp } from '../io/config'
+import { BuildingList, PlacementControls, PlotControls } from './SitePanel'
 
 const PRESETS = Object.entries(PRESET_LABELS).map(([value, label]) => ({
   value: value as Preset,
@@ -35,8 +36,11 @@ const BALUSTRADES: { value: BalustradeKind; label: string }[] = [
 
 /** The snap is worth showing: the user asked for one width and got another. */
 function ModuleNote() {
-  const fit = useStore((s) => s.building.facade.fit)
-  const values = Object.values(fit).map((f) => f.actual)
+  const fit = useStore((s) => {
+    const placed = s.build.placed.find((p) => p.placement.id === s.selectedId)
+    return placed?.building.facade.fit
+  })
+  const values = Object.values(fit ?? {}).map((f) => f.actual)
   if (values.length === 0) return null
   const lo = Math.min(...values)
   const hi = Math.max(...values)
@@ -49,9 +53,9 @@ function ModuleNote() {
 }
 
 function ConfigButtons() {
-  const params = useStore((s) => s.params)
-  const building = useStore((s) => s.building)
-  const load = useStore((s) => s.load)
+  const site = useStore((s) => s.site)
+  const build = useStore((s) => s.build)
+  const loadSite = useStore((s) => s.loadSite)
   const reset = useStore((s) => s.reset)
   const file = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
@@ -60,16 +64,16 @@ function ConfigButtons() {
   const onFile = async (f: File) => {
     try {
       const result = parseConfig(await f.text())
-      load(result.params)
+      loadSite(result.site)
       setNote(
         result.future
-          ? `Loaded a v${result.version} file with a newer format — unknown settings were ignored.`
-          : result.filled.length > 0
-            ? `Loaded v${result.version}; ${result.filled.length} missing setting(s) took defaults.`
+          ? `Loaded a v${result.version} file from a newer build — unknown settings ignored.`
+          : result.migrated
+            ? `Loaded v${result.version} and migrated it: ${result.migrated}`
             : `Loaded v${result.version}.`,
       )
     } catch {
-      setNote('That file could not be read as a block config.')
+      setNote('That file could not be read as a site config.')
     }
   }
 
@@ -79,12 +83,12 @@ function ConfigButtons() {
         <div className="pair">
           <button
             className="ghost"
-            onClick={() => download(`block-${stamp()}.json`, serialize(params), 'application/json')}
+            onClick={() => download(`site-${stamp()}.json`, serialize(site), 'application/json')}
           >
-            Save config
+            Save site
           </button>
           <button className="ghost" onClick={() => file.current?.click()}>
-            Load config
+            Load site
           </button>
         </div>
         <button
@@ -94,11 +98,10 @@ function ConfigButtons() {
             setBusy(true)
             setNote(null)
             try {
-              // The exporter pulls in a good chunk of three-stdlib; nobody
-              // pays for it until they actually click export.
-              const { exportGltf } = await import('../io/exportGltf')
-              const glb = await exportGltf(building)
-              download(`block-${stamp()}.glb`, glb, 'model/gltf-binary')
+              // Pulls in a chunk of three-stdlib; nobody pays until they click.
+              const { exportSiteGltf } = await import('../io/exportGltf')
+              const glb = await exportSiteGltf(build)
+              download(`site-${stamp()}.glb`, glb, 'model/gltf-binary')
             } catch {
               setNote('glTF export failed.')
             } finally {
@@ -106,13 +109,17 @@ function ConfigButtons() {
             }
           }}
         >
-          {busy ? 'Exporting…' : 'Export glTF (.glb)'}
+          {busy ? 'Exporting…' : 'Export site glTF (.glb)'}
         </button>
         <button className="ghost" onClick={reset}>
-          Reset to defaults
+          Reset site
         </button>
       </div>
-      {note && <div className="field"><div className="hint">{note}</div></div>}
+      {note && (
+        <div className="field">
+          <div className="hint">{note}</div>
+        </div>
+      )}
       <input
         ref={file}
         type="file"
@@ -129,80 +136,101 @@ function ConfigButtons() {
 }
 
 export function Sidebar() {
-  const p = useStore((s) => s.params)
+  const p = useSelectedParams()
   const set = useStore((s) => s.set)
+  const hasSelection = useStore((s) => s.selectedId !== null)
   const wings = PRESET_WINGS[p.preset]
   const seeded = p.balconyPattern === 'random' || p.balconyType === 'mixed'
 
   return (
     <div className="sidebar">
-      <Group title="Massing">
-        <Chips value={p.preset} options={PRESETS} onChange={(v) => set({ preset: v })} />
-        <Slider name="floors" />
-        <Slider name="floorHeight" />
-        <Slider name="buildingDepth" note="Uniform across wings in v1." />
-        {wings.includes('A') && (
-          <Slider
-            name="wingLengthA"
-            note={p.preset === 'courtyard' ? 'Outer length of the block.' : undefined}
-          />
-        )}
-        {wings.includes('B') && <Slider name="wingLengthB" />}
-        {wings.includes('C') && <Slider name="wingLengthC" />}
-        {p.preset === 'courtyard' && (
-          <Slider name="courtyardWidth" note="Clear width of the void, across the block." />
-        )}
-        {p.preset === 'stacked' && (
-          <Slider name="massOffset" note="Each mass steps back by this much." />
-        )}
-        <Slider name="roofParapet" />
+      <Group title="Site">
+        <PlotControls />
+        <BuildingList />
       </Group>
 
-      <Group title="Facade">
-        <Slider name="moduleWidth" />
-        <ModuleNote />
-        <Slider name="windowsPerModule" />
-        <Slider name="windowWidth" />
-        <Slider name="windowHeight" />
-        <Slider name="sillHeight" />
-        <Slider name="reveal" />
+      <Group title="Placement">
+        <PlacementControls />
       </Group>
 
-      <Group title="Balconies">
-        <Chips
-          value={p.balconyType}
-          options={BALCONY_TYPES}
-          onChange={(v) => set({ balconyType: v })}
-        />
-        {p.balconyType !== 'none' && (
-          <>
-            <Select
-              label="Pattern"
-              value={p.balconyPattern}
-              options={PATTERNS}
-              onChange={(v) => set({ balconyPattern: v })}
-            />
-            <Slider name="balconyDepth" />
-            <Slider name="balconyWidthRatio" />
-            <Slider name="balconyStartFloor" note="Ground floor is 0." />
+      {!hasSelection ? (
+        <Group title="Building">
+          <div className="field">
+            <div className="hint">
+              No building selected. Pick one in the list, or click it in the viewport.
+            </div>
+          </div>
+        </Group>
+      ) : (
+        <>
+          <Group title="Massing">
+            <Chips value={p.preset} options={PRESETS} onChange={(v) => set({ preset: v })} />
+            <Slider name="floors" />
+            <Slider name="floorHeight" />
+            <Slider name="buildingDepth" note="Uniform across wings in v1." />
+            {wings.includes('A') && (
+              <Slider
+                name="wingLengthA"
+                note={p.preset === 'courtyard' ? 'Outer length of the block.' : undefined}
+              />
+            )}
+            {wings.includes('B') && <Slider name="wingLengthB" />}
+            {wings.includes('C') && <Slider name="wingLengthC" />}
+            {p.preset === 'courtyard' && (
+              <Slider name="courtyardWidth" note="Clear width of the void, across the block." />
+            )}
+            {p.preset === 'stacked' && (
+              <Slider name="massOffset" note="Each mass steps back by this much." />
+            )}
+            <Slider name="roofParapet" />
+          </Group>
+
+          <Group title="Facade" open={false}>
+            <Slider name="moduleWidth" />
+            <ModuleNote />
+            <Slider name="windowsPerModule" />
+            <Slider name="windowWidth" />
+            <Slider name="windowHeight" />
+            <Slider name="sillHeight" />
+            <Slider name="reveal" />
+          </Group>
+
+          <Group title="Balconies" open={false}>
             <Chips
-              label="Balustrade"
-              value={p.balustrade}
-              options={BALUSTRADES}
-              onChange={(v) => set({ balustrade: v })}
+              value={p.balconyType}
+              options={BALCONY_TYPES}
+              onChange={(v) => set({ balconyType: v })}
             />
-            {seeded && <Slider name="randomSeed" note="Same seed, same building." />}
-          </>
-        )}
-      </Group>
+            {p.balconyType !== 'none' && (
+              <>
+                <Select
+                  label="Pattern"
+                  value={p.balconyPattern}
+                  options={PATTERNS}
+                  onChange={(v) => set({ balconyPattern: v })}
+                />
+                <Slider name="balconyDepth" />
+                <Slider name="balconyWidthRatio" />
+                <Slider name="balconyStartFloor" note="Ground floor is 0." />
+                <Chips
+                  label="Balustrade"
+                  value={p.balustrade}
+                  options={BALUSTRADES}
+                  onChange={(v) => set({ balustrade: v })}
+                />
+                {seeded && <Slider name="randomSeed" note="Same seed, same building." />}
+              </>
+            )}
+          </Group>
 
-      <Group title="Site and units" open={false}>
-        <Slider name="siteArea" />
-        <Slider
-          name="modulesPerUnit"
-          note="Feeds the unit estimate only. Real counts arrive with floorplans."
-        />
-      </Group>
+          <Group title="Units" open={false}>
+            <Slider
+              name="modulesPerUnit"
+              note="Feeds the unit estimate only. Real counts arrive with floorplans."
+            />
+          </Group>
+        </>
+      )}
 
       <Group title="Config" open={false}>
         <ConfigButtons />

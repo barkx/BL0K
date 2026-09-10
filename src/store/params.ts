@@ -44,10 +44,8 @@ export interface Params {
   balustrade: BalustradeKind
   randomSeed: number
 
-  // appearance + metrics inputs
-  renderMode: RenderMode
+  // metrics inputs
   modulesPerUnit: number
-  siteArea: number
 
   overrides: Record<string, FacadeOverride>
 }
@@ -82,9 +80,7 @@ export const DEFAULTS: Params = {
   balustrade: 'glass',
   randomSeed: 1,
 
-  renderMode: 'white',
   modulesPerUnit: 1,
-  siteArea: 2000,
 
   overrides: {},
 }
@@ -122,7 +118,6 @@ const RANGES = {
   randomSeed: { min: 1, max: 999, step: 1, label: 'Seed' },
 
   modulesPerUnit: { min: 1, max: 3, step: 0.5, label: 'Modules per unit' },
-  siteArea: { min: 200, max: 20000, step: 50, label: 'Site area', unit: 'm²' },
 } satisfies Record<string, Range>
 
 /** Every range key is also a numeric param, which lets the UI bind generically. */

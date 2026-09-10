@@ -1,10 +1,12 @@
 # Apartment Block Generator
 
-Parametric 3D apartment building in the browser. Move a slider, the building
-rebuilds. v1 is massing + facade; floorplans come later.
+Parametric urbanism builder in the browser. Draw a plot, place buildings on it,
+and change a slider to rebuild any of them. Each building is massing + facade;
+floorplans come later.
 
-Built against [`project.md`](project.md), which remains the spec of record.
-Working rules for contributors are in [`CLAUDE.md`](CLAUDE.md).
+[`project.md`](project.md) is the spec of record for a building;
+[`project-v2.md`](project-v2.md) covers the site layer. Working rules for
+contributors are in [`CLAUDE.md`](CLAUDE.md).
 
 - **[Chapter 1 — Running, coding, publishing](#chapter-1--running-coding-publishing)**
 - **[Chapter 2 — The app](#chapter-2--the-app)**
@@ -134,6 +136,7 @@ which is ignored.
 | Directory | What lives there |
 |---|---|
 | `store/` | Params, ranges, `resolveParams`, presets, the Zustand store |
+| `site/` | Plot and placed buildings, site derivation, site metrics |
 | `geometry/` | Masses, elevation frames, facade model, walls, roof, balconies, edges |
 | `metrics/` | Area and unit-count derivation |
 | `scene/` | R3F components, material sets per render mode, lighting |
@@ -149,6 +152,8 @@ which is ignored.
 - Seeded randomness only, via `lib/rng.ts`. Never `Math.random()` in geometry.
 - Clamp in exactly one place: `resolveParams()` in `store/params.ts`.
 - No CSG. Openings and loggias are built as panels around the void.
+- Buildings stay axis-aligned in their own frame; placement is the site layer's
+  job. `geometry/` must never learn about rotation.
 
 ### Verifying a change
 
@@ -179,11 +184,36 @@ source. Never `git add -f` past it.
 
 ## What it does
 
-A single box cannot express an L, a courtyard or an offset stack, so the
-building is an **array of masses** — each an extruded rectangle with its own
-footprint, base level and floor count. Presets compose them; the facade is then
-driven by one apartment module width, and every window, balcony and metric
-derives from that.
+Two layers. A **building** is an array of masses — each an extruded rectangle
+with its own footprint, base level and floor count, because a single box cannot
+express an L, a courtyard or an offset stack. Presets compose them, and the
+facade is driven by one apartment module width, from which every window,
+balcony and metric follows.
+
+A **site** is a plot polygon plus a list of placed buildings, each with its own
+full parameter set, position and free rotation. Buildings are generated in
+their own local frame and placed with a transform, so the whole building
+pipeline stays axis-aligned and untouched by the site layer.
+
+## The site
+
+- **Plot** — set width and depth under *Site*; the area, coverage and plot
+  ratio all derive from it. Drawing an arbitrary polygon is M9.
+- **Buildings** — the list under *Site* selects one. **Add** starts a new
+  building clear of the last, **Duplicate** copies the selected one,
+  **Remove selected** deletes it (never the last one). Rename it in the field
+  below.
+- **Placement** — type a position and rotation, use the rotation slider, or the
+  0 / 45 / 90 / 135° chips. Or just **drag the building across the ground**.
+  Dragging suspends orbit; a press that does not travel stays a click.
+- **Selecting** — click a building to select it. Click a face of the *already
+  selected* building to open its elevation override, so a face override never
+  happens by accident on a building you were only trying to reach. Click bare
+  ground to deselect.
+- **Warnings** — a red `!` beside a building means it overlaps another one or
+  is not wholly inside the plot. Both are named at the bottom of the metrics
+  panel. Overlap is tested with a separating-axis test on the real rotated
+  footprints, so a rotated building near another is not falsely flagged.
 
 ## The viewport
 
@@ -272,16 +302,17 @@ keeps the value you asked for; the building uses the resolved one.
 
 ## Config
 
-- **Save config** — downloads `block-<timestamp>.json` as
-  `{ version, app, params }`.
-- **Load config** — reads one back. Older files load with missing settings
-  taking defaults; a file from a newer build loads with unknown keys dropped.
-  Either way you get a note under the buttons saying what happened.
-- **Export glTF (.glb)** — the whole building as a binary glTF: walls and roof
-  per mass, glazing, and balcony instances baked into merged meshes so any
-  downstream tool can open it. The exporter is code-split, so it only downloads
-  when you click.
-- **Reset to defaults** — back to the opening state, overrides cleared.
+- **Save site** — downloads `site-<timestamp>.json` as `{ version, app, site }`
+  with the plot and every building.
+- **Load site** — reads one back. A v1 or v2 file described a single building
+  with no site, so it becomes a one-building site on a default plot; missing
+  settings take defaults, and a file from a newer build loads with unknown keys
+  dropped. You get a note under the buttons saying what happened.
+- **Export site glTF (.glb)** — the whole site as one binary glTF, a named
+  group per building positioned and rotated as on the plot, with balcony
+  instances baked into merged meshes so any downstream tool can open it. The
+  exporter is code-split, so it only downloads when you click.
+- **Reset site** — back to the opening state.
 
 ## Elevation overrides
 
@@ -292,6 +323,15 @@ count, snapped module width and exterior area, and lets you override
 them. Overrides are saved and loaded with the config.
 
 ## Metrics
+
+Site totals first, then the selected building.
+
+- **Plot ratio (FAR)** — GFA over plot area. **Coverage** — summed level-0
+  footprints over plot area. Both assume nothing overlaps, which is why
+  overlaps are flagged rather than absorbed.
+- **Tallest** — the highest building on the site.
+
+Per building:
 
 - **GFA** — per-level footprint union (so an L-shape does not double-count its
   corner), minus loggia recesses. The deduction is shown when non-zero.

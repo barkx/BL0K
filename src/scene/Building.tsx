@@ -1,13 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { DoubleSide, Euler, InstancedMesh, Material, Matrix4, Quaternion, Vector3 } from 'three'
 import type { ThreeEvent } from '@react-three/fiber'
-import { useStore } from '../store/store'
 import type { MaterialSet } from './materials'
 import type { Instance } from '../geometry/balcony'
 import type { Dir } from '../store/params'
 import { footprint, type Mass } from '../geometry/masses'
 import { MeshBuilder } from '../lib/mesh'
-import { DIRS } from '../geometry/elevations'
+import { DIRS, type Elevation } from '../geometry/elevations'
+import type { PlacedBuilding } from '../site/build'
+import type { SiteDrag } from './useSiteDrag'
 
 function Instanced({
   items,
@@ -76,14 +77,16 @@ function dirAtPoint(mass: Mass, x: number, z: number): Dir {
 }
 
 /** A wash over the selected face, so the override panel refers to something visible. */
-function SelectionOverlay() {
-  const selected = useStore((s) => s.selected)
-  const elevation = useStore((s) => s.building.elevations.find((e) => e.key === selected))
-  const floorHeight = useStore((s) => s.params.floorHeight)
-
+function SelectionOverlay({
+  elevation,
+  floorHeight,
+}: {
+  elevation: Elevation | undefined
+  floorHeight: number
+}) {
   const geometry = useMemo(() => {
     if (!elevation) return null
-    const b = new MeshBuilder()
+    const b = new MeshBuilder(64)
     const out = 0.08
     for (let i = 0; i < elevation.floors; i++) {
       const y0 = (elevation.baseFloor + i) * floorHeight
@@ -117,21 +120,30 @@ function SelectionOverlay() {
   )
 }
 
-export function Building({ mat }: { mat: MaterialSet }) {
-  const building = useStore((s) => s.building)
-  const select = useStore((s) => s.select)
-  const selected = useStore((s) => s.selected)
+/**
+ * One placed building. Generated in its own local frame, then positioned and
+ * rotated here — which is why the whole geometry pipeline could stay
+ * axis-aligned and untouched when the site layer arrived.
+ */
+export function Building({
+  placed,
+  mat,
+  selected,
+  selectedElevation,
+  onSelectBuilding,
+  onSelectElevation,
+  drag,
+}: {
+  placed: PlacedBuilding
+  mat: MaterialSet
+  selected: boolean
+  selectedElevation: string | null
+  onSelectBuilding: () => void
+  onSelectElevation: (key: string | null) => void
+  drag: SiteDrag
+}) {
+  const { placement, building } = placed
 
-  const masses = useMemo(
-    () => new Map(building.masses.map((m) => [m.id, m])),
-    [building.masses],
-  )
-
-  /**
-   * Diagram mode tints by stacking order, not by absolute floor number — in a
-   * 30-storey stack the base floors would otherwise land on the same tint and
-   * the whole point of the mode would be lost.
-   */
   const tintIndex = useMemo(() => {
     const bases = [...new Set(building.masses.map((m) => m.baseFloor))].sort((a, b) => a - b)
     const byId = new Map<string, number>()
@@ -139,18 +151,42 @@ export function Building({ mat }: { mat: MaterialSet }) {
     return byId
   }, [building.masses])
 
-  const pick = (massId: string) => (event: ThreeEvent<MouseEvent>) => {
+  const masses = useMemo(
+    () => new Map(building.masses.map((m) => [m.id, m])),
+    [building.masses],
+  )
+
+  const elevation = building.elevations.find((e) => e.key === selectedElevation)
+
+  /** Press starts a possible drag; the click meaning is decided on release. */
+  const onPointerDown = (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation()
+    if (!selected) onSelectBuilding()
+    drag.begin(placement.id, placement.position, event)
+  }
+
+  /**
+   * A press that did not travel is a click. The first click selects the
+   * building; once it is selected, a click picks the face — so a face override
+   * never happens by accident on a building you were only trying to reach.
+   */
+  const onPointerUp = (massId: string) => (event: ThreeEvent<PointerEvent>) => {
+    if (drag.consumeMoved()) return
+    if (!selected) return
     const mass = masses.get(massId)
     if (!mass) return
-    // A roof hit is not an elevation.
     if (event.face && Math.abs(event.face.normal.y) > 0.8) return
-    event.stopPropagation()
-    const key = `${massId}:${dirAtPoint(mass, event.point.x, event.point.z)}`
-    select(selected === key ? null : key)
+    // The hit point is in world space; the AABB test needs the building's frame.
+    const local = event.object.worldToLocal(event.point.clone())
+    const key = `${massId}:${dirAtPoint(mass, local.x, local.z)}`
+    onSelectElevation(selectedElevation === key ? null : key)
   }
 
   return (
-    <group>
+    <group
+      position={[placement.position.x, 0, placement.position.z]}
+      rotation={[0, (placement.rotation * Math.PI) / 180, 0]}
+    >
       {Object.entries(building.walls.byMass).map(([id, geometry]) => (
         <mesh
           key={`wall-${id}`}
@@ -158,7 +194,8 @@ export function Building({ mat }: { mat: MaterialSet }) {
           material={mat.wall(tintIndex.get(id) ?? 0)}
           castShadow={mat.shadows}
           receiveShadow={mat.shadows}
-          onPointerDown={pick(id)}
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp(id)}
         />
       ))}
 
@@ -169,6 +206,8 @@ export function Building({ mat }: { mat: MaterialSet }) {
           material={mat.wall(tintIndex.get(id) ?? 0)}
           castShadow={mat.shadows}
           receiveShadow={mat.shadows}
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp(id)}
         />
       ))}
 
@@ -180,7 +219,10 @@ export function Building({ mat }: { mat: MaterialSet }) {
       <Instanced items={building.balconies.bars} material={mat.metal} shadows={false} />
 
       {mat.showLines && <lineSegments geometry={building.edges} material={mat.line} />}
-      <SelectionOverlay />
+
+      {selected && (
+        <SelectionOverlay elevation={elevation} floorHeight={placement.params.floorHeight} />
+      )}
     </group>
   )
 }

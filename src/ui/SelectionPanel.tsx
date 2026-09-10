@@ -1,8 +1,7 @@
 import { useStore } from '../store/store'
 import { Select } from './Field'
 import type { BalconyPattern, BalconyType, Dir } from '../store/params'
-import { mm } from '../lib/units'
-import { m2 } from '../lib/units'
+import { m2, mm } from '../lib/units'
 
 const DIR_NAMES: Record<Dir, string> = {
   N: 'North',
@@ -14,35 +13,39 @@ const DIR_NAMES: Record<Dir, string> = {
 const INHERIT = '__inherit__'
 
 /**
- * Per-elevation overrides. Click a face in the viewport, change it here; the
- * rest of the building keeps the global setting.
+ * Per-elevation overrides for the selected building. Click a face in the
+ * viewport; the rest of the building keeps the global setting.
  */
 export function SelectionPanel() {
-  const selected = useStore((s) => s.selected)
-  const select = useStore((s) => s.select)
-  const overrides = useStore((s) => s.params.overrides)
+  const key = useStore((s) => s.selectedElevation)
+  const selectElevation = useStore((s) => s.selectElevation)
   const setOverride = useStore((s) => s.setOverride)
-  const elevation = useStore((s) => s.building.elevations.find((e) => e.key === selected))
-  const fit = useStore((s) => (selected ? s.building.facade.fit[selected] : undefined))
+  const building = useStore((s) => s.site.buildings.find((b) => b.id === s.selectedId))
+  const placed = useStore((s) => s.build.placed.find((p) => p.placement.id === s.selectedId))
 
-  if (!selected || !elevation) return null
+  if (!key || !building || !placed) return null
 
-  const ov = overrides[selected] ?? {}
+  const elevation = placed.building.elevations.find((e) => e.key === key)
+  if (!elevation) return null
+
+  const fit = placed.building.facade.fit[key]
+  const ov = building.raw.overrides[key] ?? {}
   const hasOverride = Object.keys(ov).length > 0
 
   return (
     <div className="selection">
       <div className="head">
         <span>
-          {DIR_NAMES[elevation.dir]} elevation · mass {elevation.massId}
+          {DIR_NAMES[elevation.dir]} · {building.name}
         </span>
-        <button onClick={() => select(null)} title="Close">
+        <button onClick={() => selectElevation(null)} title="Close">
           ×
         </button>
       </div>
       <div className="sub">
-        {mm(elevation.length)} long · {fit ? `${fit.count} modules at ${mm(fit.actual)}` : 'no modules'}{' '}
-        · {m2(elevation.exteriorArea)} exterior
+        mass {elevation.massId} · {mm(elevation.length)} long ·{' '}
+        {fit ? `${fit.count} modules at ${mm(fit.actual)}` : 'no modules'} ·{' '}
+        {m2(elevation.exteriorArea)} exterior
       </div>
 
       <Select
@@ -56,7 +59,7 @@ export function SelectionPanel() {
           { value: 'mixed', label: 'Mixed' },
         ]}
         onChange={(v) =>
-          setOverride(selected, { balconyType: v === INHERIT ? undefined : (v as BalconyType) })
+          setOverride(key, { balconyType: v === INHERIT ? undefined : (v as BalconyType) })
         }
       />
 
@@ -71,7 +74,7 @@ export function SelectionPanel() {
           { value: 'random', label: 'Random (seeded)' },
         ]}
         onChange={(v) =>
-          setOverride(selected, {
+          setOverride(key, {
             balconyPattern: v === INHERIT ? undefined : (v as BalconyPattern),
           })
         }
@@ -87,12 +90,12 @@ export function SelectionPanel() {
           { value: '3', label: '3' },
         ]}
         onChange={(v) =>
-          setOverride(selected, { windowsPerModule: v === INHERIT ? undefined : Number(v) })
+          setOverride(key, { windowsPerModule: v === INHERIT ? undefined : Number(v) })
         }
       />
 
       <div className="stack">
-        <button className="ghost" disabled={!hasOverride} onClick={() => setOverride(selected, null)}>
+        <button className="ghost" disabled={!hasOverride} onClick={() => setOverride(key, null)}>
           Clear override
         </button>
       </div>
