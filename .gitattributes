@@ -1,0 +1,9 @@
+# Normalise line endings so a file edited on Windows and one uploaded through
+# the GitHub web UI do not show up as a whole-file rewrite.
+* text=auto eol=lf
+
+# Batch files are run by cmd.exe on Windows and want CRLF.
+*.bat text eol=crlf
+
+*.glb binary
+*.png binary

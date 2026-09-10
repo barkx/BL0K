@@ -1,0 +1,395 @@
+/*
+  Palette from the subject: drawing-office paper, pencil grey, blueprint ink.
+  No gradients, no card kit. The number is the point, so numerals are tabular.
+*/
+:root {
+  --paper: #f0eeea;
+  --panel: #fbfaf8;
+  --panel-sunk: #f4f2ee;
+  --ink: #1a1f26;
+  --ink-soft: #565c65;
+  --ink-faint: #8a9099;
+  --rule: #dbd6ce;
+  --rule-soft: #e8e4dd;
+  --blueprint: #2c5d8f;
+  --blueprint-soft: #e4ecf4;
+  --sidebar: 320px;
+
+  color-scheme: light;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+body { background: var(--paper); overflow: hidden; }
+
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- shell ---------- */
+
+.app {
+  display: grid;
+  grid-template-rows: 48px 1fr;
+  grid-template-columns: var(--sidebar) 1fr;
+  grid-template-areas: "bar bar" "side view";
+  height: 100%;
+}
+.app.collapsed { grid-template-columns: 0 1fr; }
+
+/* ---------- toolbar ---------- */
+
+.toolbar {
+  grid-area: bar;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--rule);
+}
+.toolbar h1 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin: 0;
+  white-space: nowrap;
+}
+.toolbar .spacer { flex: 1; }
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--panel-sunk);
+}
+.segmented button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 5px 11px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-right: 1px solid var(--rule-soft);
+}
+.segmented button:last-child { border-right: 0; }
+.segmented button:hover { color: var(--ink); background: #fff; }
+.segmented button[aria-pressed="true"] {
+  background: var(--blueprint);
+  color: #fff;
+}
+
+button.ghost {
+  appearance: none;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 5px 11px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  cursor: pointer;
+}
+button.ghost:hover { border-color: var(--ink-faint); background: #fff; }
+button.ghost:active { background: var(--panel-sunk); }
+button.ghost:disabled { color: var(--ink-faint); cursor: default; }
+
+/* ---------- sidebar ---------- */
+
+.sidebar {
+  grid-area: side;
+  background: var(--panel);
+  border-right: 1px solid var(--rule);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 24px;
+}
+.app.collapsed .sidebar { display: none; }
+
+.group { border-bottom: 1px solid var(--rule-soft); }
+.group > summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  list-style: none;
+  user-select: none;
+}
+.group > summary::-webkit-details-marker { display: none; }
+.group > summary::before {
+  content: "";
+  width: 0; height: 0;
+  border-left: 4px solid var(--ink-faint);
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  transition: transform 120ms ease;
+}
+.group[open] > summary::before { transform: rotate(90deg) translateX(-1px); }
+.group > summary:hover { background: var(--panel-sunk); }
+.group .body { padding: 2px 14px 14px; }
+
+/* ---------- fields ---------- */
+
+.field { margin: 10px 0 0; }
+.field:first-child { margin-top: 4px; }
+
+.field .row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.field label {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.field .value {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+.field input[type="number"] {
+  width: 58px;
+  text-align: right;
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: var(--panel-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 2px 4px;
+  -moz-appearance: textfield;
+}
+.field input[type="number"]::-webkit-outer-spin-button,
+.field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.field input[type="number"]:focus-visible {
+  outline: none;
+  border-color: var(--blueprint);
+  background: #fff;
+}
+.field .unit { color: var(--ink-faint); font-size: 11px; }
+
+.field .hint {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--ink-faint);
+  line-height: 1.35;
+}
+.field .hint.snap { color: var(--blueprint); }
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 16px;
+  background: transparent;
+  cursor: pointer;
+  display: block;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--rule);
+  border-radius: 1px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1.5px solid var(--ink-soft);
+}
+input[type="range"]:hover::-webkit-slider-thumb { border-color: var(--blueprint); }
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+  border-color: var(--blueprint);
+  box-shadow: 0 0 0 3px var(--blueprint-soft);
+}
+input[type="range"]::-moz-range-track { height: 2px; background: var(--rule); }
+input[type="range"]::-moz-range-thumb {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--panel); border: 1.5px solid var(--ink-soft);
+}
+
+select {
+  width: 100%;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--panel-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 4px 5px;
+}
+select:focus-visible { outline: none; border-color: var(--blueprint); background: #fff; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chips button {
+  appearance: none;
+  flex: 1 1 auto;
+  min-width: 62px;
+  background: var(--panel-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 5px 6px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.chips button:hover { background: #fff; color: var(--ink); }
+.chips button[aria-pressed="true"] {
+  background: var(--blueprint);
+  border-color: var(--blueprint);
+  color: #fff;
+}
+
+.stack { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.stack .pair { display: flex; gap: 6px; }
+.stack .pair > * { flex: 1; }
+
+/* ---------- viewport ---------- */
+
+.viewport {
+  grid-area: view;
+  position: relative;
+  min-width: 0;
+}
+.viewport canvas { display: block; }
+
+.metrics {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  background: rgba(251, 250, 248, 0.93);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 11px 13px;
+  width: 244px;
+  box-shadow: 0 1px 3px rgba(20, 24, 30, 0.07);
+}
+.metrics .head {
+  font-size: 12px;
+  font-weight: 600;
+  padding-bottom: 7px;
+  margin-bottom: 7px;
+  border-bottom: 1px solid var(--rule-soft);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.metrics dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 14px;
+}
+.metrics dt { color: var(--ink-soft); font-size: 12px; }
+.metrics dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}
+.metrics dd small { color: var(--ink-faint); font-size: 10.5px; }
+.metrics .foot {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid var(--rule-soft);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  line-height: 1.4;
+}
+
+.selection {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 250px;
+  background: rgba(251, 250, 248, 0.95);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 11px 13px;
+  box-shadow: 0 1px 3px rgba(20, 24, 30, 0.07);
+}
+.selection .head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.selection .head button {
+  appearance: none; background: none; border: 0;
+  color: var(--ink-faint); cursor: pointer; font-size: 15px; line-height: 1;
+  padding: 0 2px;
+}
+.selection .head button:hover { color: var(--ink); }
+.selection .sub { font-size: 11px; color: var(--ink-faint); margin-bottom: 6px; }
+
+.hintbar {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  font-size: 11px;
+  color: var(--ink-faint);
+  background: rgba(251, 250, 248, 0.8);
+  border: 1px solid var(--rule-soft);
+  border-radius: 999px;
+  padding: 4px 12px;
+  pointer-events: none;
+}
+
+/* ---------- narrow: the sidebar becomes a bottom sheet ---------- */
+
+@media (max-width: 900px) {
+  .app, .app.collapsed {
+    grid-template-columns: 1fr;
+    grid-template-rows: 48px 1fr auto;
+    grid-template-areas: "bar" "view" "side";
+  }
+  .sidebar {
+    border-right: 0;
+    border-top: 1px solid var(--rule);
+    max-height: 46vh;
+    box-shadow: 0 -2px 8px rgba(20, 24, 30, 0.08);
+  }
+  .app.collapsed .sidebar { display: none; }
+  .metrics {
+    left: 10px;
+    bottom: 10px;
+    width: auto;
+    max-width: min(260px, calc(100% - 20px));
+    padding: 8px 11px;
+  }
+  /* The viewport is small here — the engineering readout is a desktop luxury. */
+  .metrics .foot { display: none; }
+  .metrics dl { gap: 2px 12px; }
+  .selection { right: 10px; top: 10px; width: 210px; }
+  .hintbar { display: none; }
+}
+
+/* The toolbar cannot fit a title and five controls on a phone; the controls win. */
+@media (max-width: 700px) {
+  .toolbar { gap: 8px; padding: 0 8px; }
+  .toolbar h1 { display: none; }
+  .toolbar .label { display: none; }
+  .segmented button { padding: 5px 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

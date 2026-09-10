@@ -1,0 +1,25 @@
+# Local container runs. Neither service is used by Vercel.
+#
+#   npm run docker:dev    -> http://localhost:5173  (hot reload)
+#   npm run docker:prod   -> http://localhost:8080  (production bundle)
+
+services:
+  dev:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      # Anonymous volume: keeps the image's Linux node_modules, hides the host's.
+      - /app/node_modules
+    environment:
+      VITE_POLLING: "1"
+
+  prod:
+    build:
+      context: .
+      target: prod
+    ports:
+      - "8080:80"
