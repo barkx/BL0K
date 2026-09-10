@@ -436,10 +436,14 @@ These were answered to keep moving; all are cheap to revisit.
 - **Sun study.** The directional light is positioned from
   `sunPosition(azimuth, altitude, distance)`. A date/time control drives two
   numbers.
-- **Config versioning.** Saved JSON is `{ version, app, params }`. The loader
-  migrates: a v1 file with params at the top level still loads, missing keys
-  take defaults, and a file from a newer build loads with unknown keys dropped
-  and a note in the UI.
+- **Config versioning.** Saved JSON is `{ version, app, site }`, currently
+  version 3. The loader migrates rather than rejects, in three ways: a missing
+  key takes its default, an unknown key is dropped, and a changed *shape* gets
+  its own branch — a v1 (bare params) or v2 (`{ version, params }`) file
+  becomes a one-building site on a default plot. A file from a newer build
+  loads with what it does not recognise discarded. The UI says what happened.
+  Note the loader detects the shape rather than switching on the number, so a
+  file with a missing or wrong `version` still loads.
 
 ## Performance
 
