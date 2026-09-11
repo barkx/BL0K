@@ -9,7 +9,7 @@ import {
   type Placement,
   type Site,
 } from '../site/types'
-import { rectanglePoly, type Vec2 } from '../lib/poly'
+import { rectanglePoly, type Poly, type Vec2 } from '../lib/poly'
 
 interface State {
   site: Site
@@ -22,6 +22,10 @@ interface State {
   fitRequest: number
   /** A view setting, not a property of any one building. */
   renderMode: RenderMode
+  /** Tracing a new boundary, or editing the existing one. */
+  plotMode: 'idle' | 'draw'
+  /** Points collected so far while tracing. */
+  plotDraft: Poly
 
   selectBuilding: (id: string | null) => void
   selectElevation: (key: string | null) => void
@@ -38,6 +42,14 @@ interface State {
   removeBuilding: (id: string) => void
 
   setPlotRect: (width: number, depth: number) => void
+  startPlotDraw: () => void
+  addDraftPoint: (point: Vec2) => void
+  undoDraftPoint: () => void
+  finishPlotDraw: () => void
+  cancelPlotDraw: () => void
+  movePlotVertex: (index: number, point: Vec2) => void
+  insertPlotVertex: (index: number, point: Vec2) => void
+  removePlotVertex: (index: number) => void
   setRenderMode: (mode: RenderMode) => void
 
   reset: () => void
@@ -96,6 +108,8 @@ export const useStore = create<State>((set, get) => {
     selectedElevation: null,
     fitRequest: 0,
     renderMode: 'white',
+    plotMode: 'idle',
+    plotDraft: [],
 
     selectBuilding: (id) => set({ selectedId: id, selectedElevation: null }),
     selectElevation: (key) => set({ selectedElevation: key }),
@@ -163,6 +177,43 @@ export const useStore = create<State>((set, get) => {
     setPlotRect: (width, depth) => {
       const site = get().site
       commit({ ...site, plot: rectanglePoly(width, depth) })
+    },
+
+    // --- tracing a new boundary ---------------------------------------------
+    startPlotDraw: () => set({ plotMode: 'draw', plotDraft: [], selectedId: null, selectedElevation: null }),
+    addDraftPoint: (point) => set({ plotDraft: [...get().plotDraft, point] }),
+    undoDraftPoint: () => set({ plotDraft: get().plotDraft.slice(0, -1) }),
+    cancelPlotDraw: () => set({ plotMode: 'idle', plotDraft: [] }),
+
+    finishPlotDraw: () => {
+      const draft = get().plotDraft
+      // Fewer than three points is not a plot; keep drawing rather than commit.
+      if (draft.length < 3) return
+      const site = get().site
+      set({ plotMode: 'idle', plotDraft: [] })
+      commit({ ...site, plot: draft })
+    },
+
+    // --- editing the existing boundary ---------------------------------------
+    movePlotVertex: (index, point) => {
+      const site = get().site
+      if (index < 0 || index >= site.plot.length) return
+      const plot = site.plot.map((p, i) => (i === index ? point : p))
+      commit({ ...site, plot })
+    },
+
+    insertPlotVertex: (index, point) => {
+      const site = get().site
+      const plot = [...site.plot]
+      plot.splice(index + 1, 0, point)
+      commit({ ...site, plot })
+    },
+
+    removePlotVertex: (index) => {
+      const site = get().site
+      // A polygon needs three corners; refuse to go below that.
+      if (site.plot.length <= 3) return
+      commit({ ...site, plot: site.plot.filter((_, i) => i !== index) })
     },
 
     reset: () => {

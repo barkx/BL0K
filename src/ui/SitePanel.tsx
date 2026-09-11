@@ -176,25 +176,84 @@ export function PlacementControls() {
   )
 }
 
-/**
- * Plot size. A rectangle for now — M9 replaces this with a drawn polygon, at
- * which point the width and depth become a "reset to rectangle" convenience.
- */
+/** Draw a boundary, edit its corners, or reset it to a rectangle. */
 export function PlotControls() {
   const plot = useStore((s) => s.site.plot)
   const setPlotRect = useStore((s) => s.setPlotRect)
+  const plotMode = useStore((s) => s.plotMode)
+  const plotDraft = useStore((s) => s.plotDraft)
+  const startPlotDraw = useStore((s) => s.startPlotDraw)
+  const finishPlotDraw = useStore((s) => s.finishPlotDraw)
+  const cancelPlotDraw = useStore((s) => s.cancelPlotDraw)
+  const undoDraftPoint = useStore((s) => s.undoDraftPoint)
+  const simple = useStore((s) => s.build.metrics.plotSimple)
 
   const b = bounds(plot)
   const width = b.x1 - b.x0
   const depth = b.z1 - b.z0
   const area = polygonArea(plot)
-  const rectangular = Math.abs(area - width * depth) < 0.01
+  const rectangular = plot.length === 4 && Math.abs(area - width * depth) < 0.01
+
+  if (plotMode === 'draw') {
+    return (
+      <>
+        <div className="field">
+          <div className="hint snap">
+            Click the ground to place corners. Click the red first corner, or
+            press Enter, to close the boundary.
+          </div>
+          <div className="hint">
+            {plotDraft.length} corner{plotDraft.length === 1 ? '' : 's'} placed
+            {plotDraft.length >= 3 ? ` · ${m2(polygonArea(plotDraft))}` : ''}
+          </div>
+        </div>
+        <div className="stack">
+          <div className="pair">
+            <button className="ghost" disabled={plotDraft.length < 3} onClick={finishPlotDraw}>
+              Finish
+            </button>
+            <button className="ghost" disabled={plotDraft.length === 0} onClick={undoDraftPoint}>
+              Undo point
+            </button>
+          </div>
+          <button className="ghost" onClick={cancelPlotDraw}>
+            Cancel
+          </button>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
       <div className="field">
         <div className="row">
-          <label>Plot size</label>
+          <label>Plot</label>
+          <span className="value num" style={{ fontSize: 12 }}>
+            {m2(area)}
+          </span>
+        </div>
+        <div className="hint">
+          {plot.length} corners · {m(width)} × {m(depth)} envelope
+          {rectangular ? ' · rectangular' : ''}
+        </div>
+        {!simple && (
+          <div className="hint error">
+            The boundary crosses itself, so the area is meaningless. Move a
+            corner, or reset to a rectangle.
+          </div>
+        )}
+      </div>
+
+      <div className="stack">
+        <button className="ghost" onClick={startPlotDraw}>
+          Draw new boundary
+        </button>
+      </div>
+
+      <div className="field">
+        <div className="row">
+          <label>Reset to rectangle</label>
           <span className="value">
             <input
               type="number"
@@ -220,8 +279,8 @@ export function PlotControls() {
           </span>
         </div>
         <div className="hint">
-          {m2(area)}
-          {rectangular ? '' : ` — polygon, ${m(width)} × ${m(depth)} envelope`}
+          Drag a corner to move it, click a small handle to add one, right-click
+          a corner to remove it.
         </div>
       </div>
     </>

@@ -13,7 +13,7 @@ export function MetricsPanel() {
     s.build.placed.find((p) => p.placement.id === s.selectedId),
   )
   const k = build.metrics
-  const invalid = k.clashes.length > 0 || k.offPlot.length > 0
+  const invalid = k.clashes.length > 0 || k.offPlot.length > 0 || !k.plotSimple
 
   return (
     <div className="metrics">
@@ -77,6 +77,7 @@ export function MetricsPanel() {
             <div key={`${a}-${b}`}>{a} overlaps {b}</div>
           ))}
           {k.offPlot.length > 0 && <div>Outside the plot: {k.offPlot.join(', ')}</div>}
+          {!k.plotSimple && <div>The plot boundary crosses itself — its area is meaningless.</div>}
           <div>Coverage and plot ratio assume no overlap.</div>
         </div>
       )}

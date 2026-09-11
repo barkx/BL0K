@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useThree, type ThreeEvent } from '@react-three/fiber'
-import { Plane, Raycaster, Vector2, Vector3 } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { useStore } from '../store/store'
+import { useGroundProjector } from './useGroundProjector'
 import type { Vec2 } from '../lib/poly'
 
 /**
@@ -23,17 +23,14 @@ export interface SiteDrag {
   consumeMoved: () => boolean
 }
 
-const GROUND = new Plane(new Vector3(0, 1, 0), 0)
 /** Pixels of travel before a press counts as a drag rather than a click. */
 const THRESHOLD = 4
 
 export function useSiteDrag(): SiteDrag {
-  const camera = useThree((s) => s.camera)
-  const gl = useThree((s) => s.gl)
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null
   const move = useStore((s) => s.move)
+  const toGround = useGroundProjector()
 
-  const raycaster = useMemo(() => new Raycaster(), [])
   const drag = useRef<{
     id: string
     grab: Vec2
@@ -42,21 +39,6 @@ export function useSiteDrag(): SiteDrag {
     moved: boolean
   } | null>(null)
   const moved = useRef(false)
-
-  const toGround = useCallback(
-    (clientX: number, clientY: number): Vec2 | null => {
-      const rect = gl.domElement.getBoundingClientRect()
-      if (rect.width === 0 || rect.height === 0) return null
-      const ndc = new Vector2(
-        ((clientX - rect.left) / rect.width) * 2 - 1,
-        -((clientY - rect.top) / rect.height) * 2 + 1,
-      )
-      raycaster.setFromCamera(ndc, camera)
-      const hit = new Vector3()
-      return raycaster.ray.intersectPlane(GROUND, hit) ? { x: hit.x, z: hit.z } : null
-    },
-    [camera, gl, raycaster],
-  )
 
   useEffect(() => {
     const onMove = (event: PointerEvent) => {

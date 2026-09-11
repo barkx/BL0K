@@ -471,3 +471,14 @@ select:focus-visible { outline: none; border-color: var(--blueprint); background
   border-top-color: #e3c6bd;
 }
 .metrics .foot.warn-block div { margin-bottom: 2px; }
+
+.field .hint.error {
+  color: #8d3722;
+  margin-top: 6px;
+}
+
+.hintbar.drawing {
+  color: var(--blueprint);
+  border-color: var(--blueprint);
+  background: rgba(228, 236, 244, 0.92);
+}

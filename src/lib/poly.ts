@@ -3,8 +3,10 @@
  *
  * Buildings are generated axis-aligned in their own local frame and then placed
  * with a rotation and an offset, so the site has to reason about *rotated*
- * quads rather than the AABBs `lib/rect.ts` handles. Everything here works on
- * convex polygons in the XZ plane, wound either way.
+ * quads rather than the AABBs `lib/rect.ts` handles. Everything works in the XZ
+ * plane, wound either way. Area, containment and simplicity handle concave
+ * polygons — the plot may be any shape. Only `convexOverlap` requires convex
+ * input, and it is only ever given building footprint quads.
  */
 
 export interface Vec2 {
@@ -140,4 +142,59 @@ export function rectanglePoly(width: number, depth: number, centre: Vec2 = { x: 
     { x: centre.x + w, z: centre.z + d },
     { x: centre.x - w, z: centre.z + d },
   ]
+}
+
+const cross3 = (o: Vec2, a: Vec2, b: Vec2) =>
+  (a.x - o.x) * (b.z - o.z) - (a.z - o.z) * (b.x - o.x)
+
+/** Is `q` on segment `pr`, given the three are collinear? */
+const onSegment = (p: Vec2, q: Vec2, r: Vec2) =>
+  q.x >= Math.min(p.x, r.x) - EPS &&
+  q.x <= Math.max(p.x, r.x) + EPS &&
+  q.z >= Math.min(p.z, r.z) - EPS &&
+  q.z <= Math.max(p.z, r.z) + EPS
+
+export function segmentsIntersect(p1: Vec2, p2: Vec2, p3: Vec2, p4: Vec2): boolean {
+  const d1 = cross3(p3, p4, p1)
+  const d2 = cross3(p3, p4, p2)
+  const d3 = cross3(p1, p2, p3)
+  const d4 = cross3(p1, p2, p4)
+
+  if (((d1 > EPS && d2 < -EPS) || (d1 < -EPS && d2 > EPS)) &&
+      ((d3 > EPS && d4 < -EPS) || (d3 < -EPS && d4 > EPS))) return true
+
+  // Collinear touching counts: a plot that doubles back on itself is not simple.
+  if (Math.abs(d1) <= EPS && onSegment(p3, p1, p4)) return true
+  if (Math.abs(d2) <= EPS && onSegment(p3, p2, p4)) return true
+  if (Math.abs(d3) <= EPS && onSegment(p1, p3, p2)) return true
+  if (Math.abs(d4) <= EPS && onSegment(p1, p4, p2)) return true
+  return false
+}
+
+/**
+ * Does the boundary cross itself? Shoelace area is meaningless on a
+ * self-intersecting polygon — the lobes cancel — so coverage and plot ratio
+ * would quietly report nonsense. Cheap to check: the plot has a handful of
+ * vertices.
+ */
+export function isSimple(poly: Poly): boolean {
+  const n = poly.length
+  if (n < 3) return false
+  for (let i = 0; i < n; i++) {
+    const a1 = poly[i]
+    const a2 = poly[(i + 1) % n]
+    for (let j = i + 1; j < n; j++) {
+      // Skip adjacent edges: they legitimately share an endpoint.
+      if (j === i || (j + 1) % n === i || (i + 1) % n === j) continue
+      if (segmentsIntersect(a1, a2, poly[j], poly[(j + 1) % n])) return false
+    }
+  }
+  return true
+}
+
+/** Midpoint of the edge leaving vertex `i`. */
+export const edgeMidpoint = (poly: Poly, i: number): Vec2 => {
+  const a = poly[i]
+  const b = poly[(i + 1) % poly.length]
+  return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 }
 }

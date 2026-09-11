@@ -16,7 +16,7 @@ up. Edit it freely — unlike `project.md`, it is a working doc.
 | Location import | Georeferenced **image underlay** + set scale by two points, and **DXF** from CAD |
 | Not importing | Live map tiles (needs a runtime API key), GeoJSON for now |
 | 3D context | **Flat plot only.** No terrain, no neighbour volumes yet |
-| Plot | A plan polygon. A rectangle until M9 lets you draw one |
+| Plot | A plan polygon, drawn and edited on the ground. Concave allowed |
 | Buildings | Many per site, each with its own full parameter set |
 | Rotation | Free about Y, not snapped to 90° |
 | Site area | Comes from the plot polygon. The old `siteArea` param is gone |
@@ -96,9 +96,21 @@ rename, drag a building across the ground, plot rectangle, site metrics with
 clash and off-plot warnings, config v3 with migration from the single-building
 format, whole-site glTF export.
 
-**M9 — Draw the plot.** Click a polygon on the ground, drag vertices, insert
-and delete them. Replaces the width/depth rectangle control, which becomes a
-"reset to rectangle" convenience. Area readout follows the polygon.
+**M9 — Draw the plot. Done.**
+Trace a boundary by clicking corners on the ground, close it on the first
+corner or with Enter, and edit it afterwards: drag a corner, click a midpoint
+handle to add one, right-click a corner to remove one. The width/depth control
+became "reset to rectangle". Area, coverage, plot ratio and off-plot detection
+all follow the polygon, concave included.
+
+A self-intersecting boundary is detected and flagged, because shoelace area
+cancels the lobes on one — coverage and plot ratio would otherwise report
+confident nonsense.
+
+Handles size themselves per frame from the camera distance so they stay
+clickable at any zoom, and they respect depth: drawing them over the buildings
+would look better, but raycasting still puts the building first, so a handle
+that appeared to be in front would refuse to be clicked.
 
 **M10 — Image underlay.** Drop a screenshot or site plan onto the ground,
 position it, and set its scale by clicking two points a known distance apart.
@@ -116,7 +128,7 @@ Each milestone should end in something demoable, as in v1.
 1. **Setbacks.** Worth a minimum distance to the plot boundary and between
    buildings, checked like clashes are? Planners ask for it.
 2. **Snapping.** Should dragging snap to a grid, to the plot edge, or to
-   another building's face?
+   another building's face? Corners and buildings both drag freely today.
 3. **Plot subdivision.** One plot, or several with their own coverage limits?
 4. **Building height limit.** A per-site cap that flags buildings exceeding it?
 5. **Shared parameters.** If ten buildings should share a facade spec, does

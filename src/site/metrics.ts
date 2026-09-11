@@ -3,6 +3,7 @@ import type { Building } from '../geometry/build'
 import {
   bounds,
   convexOverlap,
+  isSimple,
   place,
   pointInPolygon,
   polygonArea,
@@ -31,6 +32,8 @@ export interface SiteMetrics {
   clashes: [string, string][]
   /** Buildings not entirely inside the plot. */
   offPlot: string[]
+  /** False when the boundary crosses itself, which makes area meaningless. */
+  plotSimple: boolean
 }
 
 /** A mass footprint as a plan quad in site coordinates. */
@@ -125,5 +128,6 @@ export function computeSiteMetrics(
     maxHeight,
     clashes,
     offPlot,
+    plotSimple: isSimple(site.plot),
   }
 }

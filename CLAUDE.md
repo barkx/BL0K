@@ -17,6 +17,9 @@
   `geometry/`. Do not rotate masses within a building.
 - Site area comes from the plot polygon. Render mode is store state. Neither is
   a per-building parameter.
+- Anything draggable in plan projects through `useGroundProjector` and runs on
+  window listeners. A drag must survive the cursor leaving the mesh it started
+  on, so never handle one with mesh-local pointermove.
 
 ### Secrets and privacy
 - Never commit credentials. Not in code, `vercel.json`, `Dockerfile`,
@@ -117,16 +120,19 @@ Refuse:
 - **v2 M8 complete** (`project-v2.md`): site of many placed buildings, free
   rotation, drag on the ground, plot rectangle, site metrics with clash and
   off-plot detection, config v3 with migration, whole-site glTF.
-- **Next**: M9 draw the plot, M10 image underlay + scale, M11 DXF import.
+- **v2 M9 complete**: draw a plot boundary by clicking corners, close it, then
+  drag / insert / remove corners. Concave plots supported; a self-intersecting
+  boundary is detected and flagged.
+- **Next**: M10 image underlay + scale, M11 DXF import.
 - **Verified**: 480-case parameter sweep (seeded output byte-identical), site
-  layer checks (metrics, SAT clash detection, buffer reuse on move), config
+  layer checks (metrics, SAT clash detection, buffer reuse on move), polygon
+  checks (self-intersection, concave area and containment, winding), config
   v1/v2/v3 migration, site GLB with named groups, both Docker targets,
   fresh-clone build.
 - **Deviations** (both in README): default `sillHeight` is 0.65 m because the
   spec's three facade defaults cannot coexist; windows are merged, not instanced.
 - **Not done yet**:
   - Vercel project is **not linked** — one dashboard step, see README.md ch.1.
-  - Plot is still a rectangle; drawing arrives in M9.
   - `npx plugins add vercel/vercel-plugin` was deliberately not run. User's call.
   - No test runner. `project.md` §9 answers are provisional.
   - 30-floor courtyard rebuilds in ~25 ms warm. If that needs to improve, the

@@ -9,6 +9,7 @@ import { Lighting } from './Lighting'
 import { Building } from './Building'
 import { Plot } from './Plot'
 import { useSiteDrag } from './useSiteDrag'
+import { PlotDraft, PlotHandles } from './PlotEditor'
 import type { PlacedBuilding } from '../site/build'
 
 const VIEW_DIRECTION = new Vector3(0.62, 0.46, 0.64).normalize()
@@ -62,7 +63,10 @@ function CameraRig({
   return null
 }
 
-/** The ground catches shadows and clears the selection when clicked. */
+/**
+ * The ground catches shadows, clears the selection, and collects points while
+ * a boundary is being traced.
+ */
 function Ground({
   radius,
   colour,
@@ -73,13 +77,23 @@ function Ground({
   shadows: boolean
 }) {
   const selectBuilding = useStore((s) => s.selectBuilding)
+  const plotMode = useStore((s) => s.plotMode)
+  const addDraftPoint = useStore((s) => s.addDraftPoint)
 
   return (
     <mesh
       rotation={[-Math.PI / 2, 0, 0]}
       position={[0, -0.02, 0]}
       receiveShadow={shadows}
-      onPointerDown={() => selectBuilding(null)}
+      onPointerDown={(e) => {
+        if (plotMode === 'draw') {
+          if (e.nativeEvent.button !== 0) return
+          e.stopPropagation()
+          addDraftPoint({ x: e.point.x, z: e.point.z })
+          return
+        }
+        selectBuilding(null)
+      }}
     >
       <circleGeometry args={[radius * 8, 64]} />
       <meshStandardMaterial color={colour} roughness={0.95} />
@@ -134,6 +148,8 @@ export function Scene() {
   const selectedElevation = useStore((s) => s.selectedElevation)
   const selectBuilding = useStore((s) => s.selectBuilding)
   const selectElevation = useStore((s) => s.selectElevation)
+  const plotMode = useStore((s) => s.plotMode)
+  const plotDraft = useStore((s) => s.plotDraft)
 
   const mat = useMemo(() => makeMaterials(mode), [mode])
   useEffect(() => () => mat.dispose(), [mat])
@@ -184,6 +200,8 @@ export function Scene() {
       />
 
       <Ground radius={radius} colour={mat.groundColor} shadows={mat.shadows} />
+
+      {plotMode === 'draw' ? <PlotDraft draft={plotDraft} /> : <PlotHandles plot={site.plot} />}
 
       {mat.mode === 'white' && (
         <ContactShadows

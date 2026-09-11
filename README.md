@@ -137,6 +137,7 @@ which is ignored.
 |---|---|
 | `store/` | Params, ranges, `resolveParams`, presets, the Zustand store |
 | `site/` | Plot and placed buildings, site derivation, site metrics |
+| `lib/poly.ts` | Plan polygon maths: area, containment, self-intersection, overlap |
 | `geometry/` | Masses, elevation frames, facade model, walls, roof, balconies, edges |
 | `metrics/` | Area and unit-count derivation |
 | `scene/` | R3F components, material sets per render mode, lighting |
@@ -197,8 +198,13 @@ pipeline stays axis-aligned and untouched by the site layer.
 
 ## The site
 
-- **Plot** — set width and depth under *Site*; the area, coverage and plot
-  ratio all derive from it. Drawing an arbitrary polygon is M9.
+- **Plot** — **Draw new boundary**, then click corners on the ground. Close it
+  by clicking the red first corner or pressing Enter; Backspace undoes a
+  corner, Esc cancels. Afterwards, drag a corner to move it, click a small
+  midpoint handle to add one, right-click a corner to remove one. *Reset to
+  rectangle* takes a width and depth. Area, coverage, plot ratio and the
+  off-plot check all follow the polygon, concave shapes included. A boundary
+  that crosses itself is flagged, because its area is meaningless.
 - **Buildings** — the list under *Site* selects one. **Add** starts a new
   building clear of the last, **Duplicate** copies the selected one,
   **Remove selected** deletes it (never the last one). Rename it in the field
@@ -327,8 +333,9 @@ them. Overrides are saved and loaded with the config.
 Site totals first, then the selected building.
 
 - **Plot ratio (FAR)** — GFA over plot area. **Coverage** — summed level-0
-  footprints over plot area. Both assume nothing overlaps, which is why
-  overlaps are flagged rather than absorbed.
+  footprints over plot area. Both assume nothing overlaps and that the
+  boundary is simple, which is why overlaps and a self-crossing plot are
+  flagged rather than absorbed.
 - **Tallest** — the highest building on the site.
 
 Per building:
