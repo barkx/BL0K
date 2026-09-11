@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" width="900" height="520" role="img">
+<rect width="900" height="520" fill="#f0eeea"/>
+<defs><pattern id="h" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+<line x1="0" y1="0" x2="0" y2="9" stroke="#2c5d8f" stroke-width="2.4"/></pattern></defs>
+<rect x="70" y="90" width="330" height="112" fill="#ffffff" stroke="#1a1f26" stroke-width="1.6"/>
+<rect x="288" y="90" width="112" height="300" fill="#ffffff" stroke="#1a1f26" stroke-width="1.6"/>
+<rect x="288" y="90" width="112" height="112" fill="url(#h)" opacity="0.45"/>
+<rect x="288" y="90" width="112" height="112" fill="none" stroke="#2c5d8f" stroke-width="1.6"/>
+<g stroke="#2c5d8f" stroke-width="1.2">
+  <line x1="288" y1="66" x2="400" y2="66"/><line x1="288" y1="60" x2="288" y2="72"/><line x1="400" y1="60" x2="400" y2="72"/>
+</g>
+<text x="344" y="50" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="15" font-weight="400" fill="#2c5d8f" text-anchor="middle">counted once</text>
+<line x1="500" y1="96" x2="840" y2="96" stroke="#dbd6ce" stroke-width="1"/>
+<text x="500" y="134" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" font-weight="400" fill="#565c65" text-anchor="start">Wing A</text><text x="840" y="134" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" font-weight="400" fill="#1a1f26" text-anchor="end">2 640 m²</text>
+<text x="500" y="170" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" font-weight="400" fill="#565c65" text-anchor="start">Wing B</text><text x="840" y="170" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" font-weight="400" fill="#1a1f26" text-anchor="end">1 680 m²</text>
+<text x="500" y="206" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" font-weight="400" fill="#2c5d8f" text-anchor="start">Overlap at the junction</text><text x="840" y="206" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" font-weight="400" fill="#2c5d8f" text-anchor="end">− 448 m²</text>
+<line x1="500" y1="228" x2="840" y2="228" stroke="#dbd6ce" stroke-width="1"/>
+<text x="500" y="266" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="18" font-weight="600" fill="#1a1f26" text-anchor="start">GFA</text><text x="840" y="266" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="18" font-weight="600" fill="#1a1f26" text-anchor="end">3 872 m²</text>
+<text x="500" y="306" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" font-weight="400" fill="#565c65" text-anchor="start">less core area</text><text x="840" y="306" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" font-weight="400" fill="#1a1f26" text-anchor="end">− 296 m²</text>
+<text x="500" y="342" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" font-weight="400" fill="#565c65" text-anchor="start">efficiency factor</text><text x="840" y="342" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" font-weight="400" fill="#1a1f26" text-anchor="end">× 0.88</text>
+<line x1="500" y1="364" x2="840" y2="364" stroke="#dbd6ce" stroke-width="1"/>
+<text x="500" y="402" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="18" font-weight="600" fill="#1a1f26" text-anchor="start">NIA</text><text x="840" y="402" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="18" font-weight="600" fill="#1a1f26" text-anchor="end">3 147 m²</text>
+<text x="70" y="446" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="16" font-weight="400" fill="#565c65" text-anchor="start">Where two wings meet, the shared volume is counted once.</text>
+</svg>

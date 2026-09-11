@@ -22,12 +22,6 @@ dist/
 secrets.json
 credentials.json
 
-# --- the homepage lives here but belongs to its own repo ---
-# urbgen.com is a separate project with a separate Vercel deployment. It sits
-# in this folder for convenience only; committing it here would put two repos
-# on top of each other.
-homepage/
-
 # --- noise ---
 *.log
 *.local
