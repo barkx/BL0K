@@ -25,13 +25,18 @@ current as the app changes, and record any deviation in `README.md`.
 | Window rhythm | Driven by apartment module width |
 | Balconies | Projecting slabs, recessed loggias, and per-elevation config |
 | Render modes | Toggle: white model / PBR / diagram |
-| Metrics | GFA, facade area, unit estimate, footprint, coverage, plot ratio |
-| Export | glTF + save/load the whole site as JSON |
+| Metrics | GFA, NIA, facade area, unit estimate, footprint, coverage, plot ratio |
+| Site rules | Setback, separation, height cap, FAR and coverage limits; zero is off |
+| Interaction | A tab is a tool: it scopes the viewport's handles and drags. Selection is always live |
+| Core | A rectangular shaft on the perimeter or the spine, draggable along its track. Massing only |
+| Export | glTF, metrics as CSV, save/load the whole site as JSON |
 | Units | Metric throughout (metres, m², internally always metres) |
 | Backend | None. A static site. Anything needing a server is a scope decision |
 
 ### Explicit non-goals, for now
-- Apartment floorplans, cores, corridors, stairs, lifts.
+- Apartment floorplans, corridors, stairs, lifts. **Cores were taken on in
+  M12** — as a massing shaft only, the volume those things would occupy. The
+  things themselves stay out.
 - Terrain, slope, cut and fill. The ground is flat.
 - Neighbouring building volumes as 3D context.
 - Differentiated ground-floor plinth (retail).
@@ -51,6 +56,7 @@ to add — see §7. Items that have since been taken on are in §9.
 Site
  ├── plot: Vec2[]              // plan polygon, metres
  ├── underlay: image | null    // a map or plan to trace over
+ ├── rules: SiteRules          // planning limits; 0 means a rule is off
  └── buildings: Placement[]
       ├── position { x, z }    // where the building's local origin sits
       ├── rotation             // degrees about Y, free
@@ -303,6 +309,9 @@ Do these cheaply now so the deferred features are not rewrites:
 
 - **Floorplans.** Modules already exist as data (`elevation × moduleIndex ×
   floor`). Keep that addressable so a plan can later attach to a module range.
+  Since M12 the core gives that plan somewhere to start: a corridor would run
+  from a shaft whose position is already known, derived or placed by hand, and
+  the facade already knows which modules that shaft takes out.
 - **Plinth.** Let `floorHeight` become a per-level array rather than a scalar,
   even if v1 only ever fills it with one repeated value.
 - **Sun study.** The directional light is positioned from
@@ -335,12 +344,21 @@ Do these cheaply now so the deferred features are not rewrites:
 | **M8 Site** | Many placed buildings, free rotation, drag on the ground, site metrics, clash and off-plot detection, config v3, whole-site glTF |
 | **M9 Plot** | Draw a boundary, drag / insert / remove corners, concave supported, self-intersection flagged |
 | **M10 Underlay** | Drop a map or plan, set true scale from two known points, position / rotate / fade / lock |
+| **M11 Rules & reporting** | Site rules (setback, separation, height cap, FAR, coverage) checked like clashes; NIA from a per-building efficiency factor; metrics as CSV; config v4 |
+| **M12 Core** | A shaft of stairs, lift and risers as massing: count, size, overrun, and a perimeter or centre track it is shared along and can be dragged on. A perimeter shaft blanks the facade it meets — no windows, no units behind a lift. NIA becomes `(GFA − core) × efficiency`. Config v5. Reopens part of a §1 non-goal, by decision |
+
+| **M13 Tabs as tools** | The open section scopes what the viewport does. Selection and camera stay live everywhere; handles and drags belong to their tab. Clicking drills in — ground and first click to Placement, again to Massing, a face to Facade — and the plot boundary opens Site |
 
 ### Next
 
-**M11 — DXF import.** Plot boundary and context linework from CAD. Needs a DXF
-parser, which would be the first real new dependency, so it wants a decision on
-which one before any code.
+**M14 — IFC export.** The gap in §9 that caps everything else. Decide a
+dependency versus an own IFC4 writer before any code: a hand-written STEP
+physical file keeps the no-dependency, offline rule intact, but "valid file" and
+"opens cleanly in Revit" are different bars.
+
+DXF import — plot boundary and context linework from CAD — sits behind it, at
+its place in the §9 order. It needs a parser, which would be the first real new
+dependency, so it wants the same kind of decision first.
 
 Each milestone should end in something demoable. If one stops being demoable,
 it is too big — split it.
@@ -399,13 +417,17 @@ absence caps the tool's usefulness no matter how good everything else gets.
 4. **Unit mix to target ratios.** Modules are already addressable as
    `(elevation, floor, index)` — that address was kept for exactly this. Turns
    the crude estimate into a real number.
-5. **Site rules: setback, height cap, FAR and coverage limits.** Identical in
-   shape to the clash and off-plot checks already running, so they land in the
-   same panel with the same warning style.
-6. **Metrics export** to CSV. The data exists; it is a formatter.
-7. **NIA and efficiency ratio.** GFA times a per-building factor.
-8. **DXF export**, then **plans, elevations and sections** — orthographic
-   cameras over geometry that already exists.
+5. ~~**Site rules: setback, height cap, FAR and coverage limits.**~~ **Done in
+   M11**, and they did land in the same panel with the same warning style.
+   Separation between buildings came with them, which answers §10 question 5.
+6. ~~**Metrics export** to CSV.~~ **Done in M11.** Site totals, a row per
+   building, every rule with its result, and the warnings.
+7. ~~**NIA and efficiency ratio.**~~ **Done in M11**, then sharpened in M12:
+   NIA is `(GFA − core area) × efficiency`, with the core measured off the
+   geometry and the factor — now 0.85 to 0.97, default 0.90 — covering only
+   what is still not modelled.
+8. **DXF import**, then **DXF export**, then **plans, elevations and sections**
+   — orthographic cameras over geometry that already exists.
 
 ### Not planned
 
@@ -433,8 +455,11 @@ absence caps the tool's usefulness no matter how good everything else gets.
 
 **Site**
 
-5. **Setbacks** — a minimum distance to the boundary and between buildings,
-   checked the way clashes are?
+5. ~~**Setbacks**~~ — **answered in M11.** Both: a minimum to the boundary and
+   a minimum between buildings, each measured in plan to the outside face and
+   checked the way clashes are. Zero means off, so no scheme inherits a limit
+   nobody set. Still open underneath it: whether a setback should vary per plot
+   edge — a street frontage and a party boundary rarely take the same number.
 6. **Snapping** — should dragging snap to a grid, the plot edge, or another
    building's face? Everything drags freely today.
 7. **Plot subdivision** — one plot, or several with their own limits?

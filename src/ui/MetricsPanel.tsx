@@ -1,6 +1,17 @@
 import { useStore } from '../store/store'
 import { int, m, m2, pct } from '../lib/units'
 import { round } from '../lib/clamp'
+import { RULE_KIND, RULE_LABEL, RULE_SENSE, type Breach } from '../site/rules'
+
+/** A breach in one line: what the scheme does, against what the rule allows. */
+function breachLine(b: Breach): string {
+  const kind = RULE_KIND[b.rule]
+  const show = (v: number) =>
+    kind === 'length' ? m(v) : kind === 'share' ? pct(v) : round(v, 2).toFixed(2)
+  const who = b.names.length ? `${b.names.join(' and ')}: ` : ''
+  const verb = RULE_SENSE[b.rule] === 'minimum' ? 'needs' : 'allows'
+  return `${who}${RULE_LABEL[b.rule].toLowerCase()} ${show(b.actual)}, ${verb} ${show(b.limit)}`
+}
 
 /**
  * Site totals first — the numbers a scheme is judged on — then the selected
@@ -13,7 +24,8 @@ export function MetricsPanel() {
     s.build.placed.find((p) => p.placement.id === s.selectedId),
   )
   const k = build.metrics
-  const invalid = k.clashes.length > 0 || k.offPlot.length > 0 || !k.plotSimple
+  const invalid =
+    k.clashes.length > 0 || k.offPlot.length > 0 || !k.plotSimple || k.breaches.length > 0
 
   return (
     <div className="metrics">
@@ -41,6 +53,20 @@ export function MetricsPanel() {
           {pct(k.coverage)} <small>{m2(k.footprint)}</small>
         </dd>
 
+        <dt>NIA</dt>
+        <dd>
+          {m2(k.nia)} <small>{pct(k.gfa > 0 ? k.nia / k.gfa : 0)}</small>
+        </dd>
+
+        {k.coreArea > 0.5 && (
+          <>
+            <dt>Core</dt>
+            <dd>
+              {m2(k.coreArea)} <small>{pct(k.gfa > 0 ? k.coreArea / k.gfa : 0)} of GFA</small>
+            </dd>
+          </>
+        )}
+
         <dt>Units</dt>
         <dd>
           {int(k.units)} <small>est.</small>
@@ -61,7 +87,10 @@ export function MetricsPanel() {
               {selected.building.metrics.topLevel} <small>{m(selected.building.metrics.height)}</small>
             </dd>
             <dt>GFA</dt>
-            <dd>{m2(selected.building.metrics.gfa)}</dd>
+            <dd>
+              {m2(selected.building.metrics.gfa)}{' '}
+              <small>{m2(selected.building.metrics.nia)} net</small>
+            </dd>
             <dt>Facade</dt>
             <dd>
               {m2(selected.building.metrics.facadeArea)}{' '}
@@ -78,7 +107,12 @@ export function MetricsPanel() {
           ))}
           {k.offPlot.length > 0 && <div>Outside the plot: {k.offPlot.join(', ')}</div>}
           {!k.plotSimple && <div>The plot boundary crosses itself — its area is meaningless.</div>}
-          <div>Coverage and plot ratio assume no overlap.</div>
+          {k.breaches.map((b) => (
+            <div key={`${b.rule}-${b.names.join('-')}`}>{breachLine(b)}</div>
+          ))}
+          {(k.clashes.length > 0 || k.offPlot.length > 0) && (
+            <div>Coverage and plot ratio assume no overlap.</div>
+          )}
         </div>
       )}
 

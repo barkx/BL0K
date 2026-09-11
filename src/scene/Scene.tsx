@@ -3,12 +3,13 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { ContactShadows, Environment, Grid, OrbitControls } from '@react-three/drei'
 import { PerspectiveCamera, Vector3 } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
-import { useStore } from '../store/store'
+import { useStore, type Tool } from '../store/store'
 import { makeMaterials, type MaterialSet } from './materials'
 import { Lighting } from './Lighting'
 import { Building } from './Building'
 import { Plot } from './Plot'
 import { useSiteDrag } from './useSiteDrag'
+import { useCoreDrag } from './useCoreDrag'
 import { PlotDraft, PlotHandles } from './PlotEditor'
 import { Underlay } from './Underlay'
 import type { PlacedBuilding } from '../site/build'
@@ -65,8 +66,8 @@ function CameraRig({
 }
 
 /**
- * The ground catches shadows, clears the selection, and collects points while
- * a boundary is being traced.
+ * The ground catches shadows, clears the selection, frames the site on a
+ * double-click, and collects points while a boundary is being traced.
  */
 function Ground({
   radius,
@@ -81,6 +82,8 @@ function Ground({
   const plotMode = useStore((s) => s.plotMode)
   const addDraftPoint = useStore((s) => s.addDraftPoint)
   const addCalibrationPoint = useStore((s) => s.addCalibrationPoint)
+  const fitView = useStore((s) => s.fitView)
+  const setTool = useStore((s) => s.setTool)
 
   return (
     <mesh
@@ -96,7 +99,19 @@ function Ground({
           else addCalibrationPoint(point)
           return
         }
+        // The ground is the site surface, so a press on it drops back to where
+        // buildings are arranged — the top of the ladder. The boundary line has
+        // its own handler and opens Site instead, since that is where the
+        // boundary itself is edited.
         selectBuilding(null)
+        setTool('placement')
+      }}
+      onDoubleClick={(e) => {
+        // While tracing, a double-click is just two corners. Reframing then
+        // would yank the ground out from under the point being placed.
+        if (plotMode !== 'idle') return
+        e.stopPropagation()
+        fitView()
       }}
     >
       <circleGeometry args={[radius * 8, 64]} />
@@ -117,6 +132,8 @@ function Buildings({
   selectedElevation,
   onSelectBuilding,
   onSelectElevation,
+  tool,
+  onUseTool,
 }: {
   placed: PlacedBuilding[]
   mat: MaterialSet
@@ -124,8 +141,11 @@ function Buildings({
   selectedElevation: string | null
   onSelectBuilding: (id: string | null) => void
   onSelectElevation: (key: string | null) => void
+  tool: Tool
+  onUseTool: (tool: Tool) => void
 }) {
   const drag = useSiteDrag()
+  const coreDrag = useCoreDrag()
   return (
     <>
       {placed.map((p) => (
@@ -138,6 +158,9 @@ function Buildings({
           onSelectBuilding={() => onSelectBuilding(p.placement.id)}
           onSelectElevation={onSelectElevation}
           drag={drag}
+          coreDrag={coreDrag}
+          tool={tool}
+          onUseTool={onUseTool}
         />
       ))}
     </>
@@ -154,6 +177,8 @@ export function Scene() {
   const selectElevation = useStore((s) => s.selectElevation)
   const plotMode = useStore((s) => s.plotMode)
   const plotDraft = useStore((s) => s.plotDraft)
+  const tool = useStore((s) => s.tool)
+  const setTool = useStore((s) => s.setTool)
 
   const mat = useMemo(() => makeMaterials(mode), [mode])
   useEffect(() => () => mat.dispose(), [mat])
@@ -180,6 +205,10 @@ export function Scene() {
       dpr={[1, 2]}
       gl={{ antialias: true, preserveDrawingBuffer: true }}
       camera={{ fov: 36, position: [60, 45, 70] }}
+      // A one-pixel line is not a click target. 1.5 m of slack makes the plot
+      // boundary reachable without making it grabby — it is the only line in
+      // the scene with a handler, so nothing else is affected.
+      raycaster={{ params: { Line: { threshold: 1.5 } } as never }}
     >
       <color attach="background" args={[mat.background]} />
       <fog attach="fog" args={[mat.background, radius * 6, radius * 16]} />
@@ -193,6 +222,8 @@ export function Scene() {
         selectedElevation={selectedElevation}
         onSelectBuilding={selectBuilding}
         onSelectElevation={selectElevation}
+        tool={tool}
+        onUseTool={setTool}
       />
 
       <Plot
@@ -202,14 +233,20 @@ export function Scene() {
         clashing={clashing}
         mat={mat}
         showFill={!(site.underlay && site.underlay.visible)}
+        onPickBoundary={() => setTool('site')}
       />
 
       <Ground radius={radius} colour={mat.groundColor} shadows={mat.shadows} />
       <Underlay />
 
+      {/*
+        Corner handles belong to the Site tab. The boundary line itself stays
+        drawn in every tab — it is the thing the scheme is measured against, and
+        losing it would be losing context, not clutter.
+      */}
       {plotMode === 'draw' ? (
         <PlotDraft draft={plotDraft} />
-      ) : plotMode === 'idle' ? (
+      ) : plotMode === 'idle' && tool === 'site' ? (
         <PlotHandles plot={site.plot} />
       ) : null}
 

@@ -3,9 +3,12 @@ import { rectanglePoly, type Poly } from '../lib/poly'
 import {
   DEFAULT_PLOT_DEPTH,
   DEFAULT_PLOT_WIDTH,
+  NO_RULES,
   makePlacement,
+  resolveRules,
   type Placement,
   type Site,
+  type SiteRules,
   type Underlay,
 } from '../site/types'
 
@@ -14,11 +17,17 @@ import {
  * v2: `{ version, params }` — one building, no site.
  * v3: `{ version, site }` — a plot and many placed buildings, and from M10 an
  *     optional underlay image carried inline as a data URL.
+ * v4: the site carries `rules` — the plot's planning limits. A v3 file has no
+ *     rules, so it loads with every rule off, which is what it meant.
+ * v5: buildings carry a core — count, placement, size, and a hand-placed
+ *     position per shaft. A file written before cores existed described a
+ *     building without one, so a missing `coreCount` means none rather than
+ *     the default, the same bargain v3 files get over rules.
  *
  * The `app` field is informational only — the loader never reads it — so files
  * written before the BL0K rename still load unchanged.
  */
-export const CONFIG_VERSION = 3
+export const CONFIG_VERSION = 5
 
 export interface SavedConfig {
   version: number
@@ -55,6 +64,16 @@ function readParams(incoming: unknown): { params: Params; filled: number } {
     else (params as unknown as Record<string, unknown>)[key] = v
   }
   if (typeof params.overrides !== 'object' || params.overrides === null) params.overrides = {}
+  // Silence is not consent to a core: only a file that names `coreCount` gets
+  // the default. Otherwise loading an old scheme would quietly change its GFA
+  // split and put a shaft on a roof the author never drew.
+  if (source.coreCount === undefined || source.coreCount === null) params.coreCount = 0
+  // An offset list of the wrong shape would place shafts at arbitrary points on
+  // a track it was never measured against. `resolveParams` sizes it; this makes
+  // sure what it sizes is a list of numbers and nulls.
+  params.coreOffsets = Array.isArray(source.coreOffsets)
+    ? source.coreOffsets.map((v) => (typeof v === 'number' && Number.isFinite(v) ? v : null))
+    : []
   return { params: resolveParams(params), filled }
 }
 
@@ -98,6 +117,20 @@ function readUnderlay(incoming: unknown): Underlay | null {
   }
 }
 
+/** Missing or unreadable rules mean no rules, never an invented limit. */
+function readRules(incoming: unknown): SiteRules {
+  if (!incoming || typeof incoming !== 'object') return { ...NO_RULES }
+  const r = incoming as Partial<SiteRules>
+  const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0)
+  return resolveRules({
+    setback: num(r.setback),
+    separation: num(r.separation),
+    heightCap: num(r.heightCap),
+    farCap: num(r.farCap),
+    coverageCap: num(r.coverageCap),
+  })
+}
+
 function readPlacement(incoming: unknown, index: number): Placement {
   const source = (incoming ?? {}) as Partial<Placement> & { params?: unknown }
   const { params } = readParams(source.raw ?? source.params)
@@ -135,6 +168,7 @@ export function parseConfig(text: string): LoadResult {
             ? buildings.map(readPlacement)
             : [makePlacement({ name: 'Building A' })],
         underlay: readUnderlay(site.underlay),
+        rules: readRules(site.rules),
       },
       version,
       migrated: null,
@@ -149,6 +183,7 @@ export function parseConfig(text: string): LoadResult {
       plot: rectanglePoly(DEFAULT_PLOT_WIDTH, DEFAULT_PLOT_DEPTH),
       buildings: [makePlacement({ name: 'Building A', raw: params, params })],
       underlay: null,
+      rules: { ...NO_RULES },
     },
     version,
     migrated:

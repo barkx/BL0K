@@ -2,6 +2,8 @@ import { useStore } from '../store/store'
 import { bounds, polygonArea } from '../lib/poly'
 import { m, m2 } from '../lib/units'
 import { round } from '../lib/clamp'
+import { anyRuleSet } from '../site/rules'
+import type { SiteRules } from '../site/types'
 
 /** The list of buildings on the plot: select, add, duplicate, remove, rename. */
 export function BuildingList() {
@@ -281,6 +283,111 @@ export function PlotControls() {
         <div className="hint">
           Drag a corner to move it, click a small handle to add one, right-click
           a corner to remove it.
+        </div>
+      </div>
+    </>
+  )
+}
+
+interface RuleFieldProps {
+  id: keyof SiteRules
+  label: string
+  unit: string
+  step: number
+  /** What a value of zero means, spelled out rather than left blank. */
+  hint: string
+  value: number
+  onChange: (v: number) => void
+}
+
+function RuleField({ id, label, unit, step, hint, value, onChange }: RuleFieldProps) {
+  return (
+    <div className="field">
+      <div className="row">
+        <label htmlFor={`rule-${id}`}>{label}</label>
+        <span className="value">
+          <input
+            id={`rule-${id}`}
+            type="number"
+            min={0}
+            step={step}
+            value={round(value, 2)}
+            onChange={(e) => Number.isFinite(Number(e.target.value)) && onChange(Number(e.target.value))}
+          />
+          <span className="unit">{unit}</span>
+        </span>
+      </div>
+      <div className="hint">{value > 0 ? hint : 'Off'}</div>
+    </div>
+  )
+}
+
+/**
+ * The plot's planning limits. Every rule is off at zero, so a fresh site shows
+ * no warnings it did not earn; what each one checks is spelled out because a
+ * number alone does not say whether it is measured in plan or in section.
+ */
+export function RuleControls() {
+  const rules = useStore((s) => s.site.rules)
+  const setRules = useStore((s) => s.setRules)
+  const breaches = useStore((s) => s.build.metrics.breaches)
+  const armed = anyRuleSet(rules)
+
+  return (
+    <>
+      <RuleField
+        id="setback"
+        label="Setback"
+        unit="m"
+        step={0.5}
+        hint="Nearest face to the boundary, in plan."
+        value={rules.setback}
+        onChange={(setback) => setRules({ setback })}
+      />
+      <RuleField
+        id="separation"
+        label="Separation"
+        unit="m"
+        step={0.5}
+        hint="Clear gap between any two buildings."
+        value={rules.separation}
+        onChange={(separation) => setRules({ separation })}
+      />
+      <RuleField
+        id="heightCap"
+        label="Height cap"
+        unit="m"
+        step={1}
+        hint="Ground to the top of the parapet."
+        value={rules.heightCap}
+        onChange={(heightCap) => setRules({ heightCap })}
+      />
+      <RuleField
+        id="farCap"
+        label="Plot ratio cap"
+        unit="FAR"
+        step={0.1}
+        hint="GFA over plot area."
+        value={rules.farCap}
+        onChange={(farCap) => setRules({ farCap })}
+      />
+      <RuleField
+        id="coverageCap"
+        label="Coverage cap"
+        unit="%"
+        step={5}
+        hint="Ground-floor footprint over plot area."
+        value={rules.coverageCap * 100}
+        onChange={(v) => setRules({ coverageCap: v / 100 })}
+      />
+
+      <div className="field">
+        <div className="hint">
+          {!armed
+            ? 'No limits set. Zero means a rule is off.'
+            : breaches.length === 0
+              ? 'The scheme meets every limit set.'
+              : `${breaches.length} breach${breaches.length === 1 ? '' : 'es'} — see the metrics panel.`}
         </div>
       </div>
     </>

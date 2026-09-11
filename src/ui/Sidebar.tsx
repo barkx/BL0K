@@ -1,12 +1,20 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { Slider } from './Slider'
 import { Chips, Select } from './Field'
-import { useSelectedParams, useStore } from '../store/store'
+import { useSelectedParams, useStore, type Tool } from '../store/store'
 import { PRESET_LABELS, PRESET_WINGS } from '../store/presets'
-import type { BalconyPattern, BalconyType, BalustradeKind, Preset } from '../store/params'
+import type {
+  BalconyPattern,
+  BalconyType,
+  BalustradeKind,
+  CorePlacement,
+  Preset,
+  RenderMode,
+} from '../store/params'
 import { mm } from '../lib/units'
 import { download, parseConfig, serialize, stamp } from '../io/config'
-import { BuildingList, PlacementControls, PlotControls } from './SitePanel'
+import { siteCsv } from '../io/exportCsv'
+import { BuildingList, PlacementControls, PlotControls, RuleControls } from './SitePanel'
 import { UnderlayPanel } from './UnderlayPanel'
 import {
   IconFacade,
@@ -41,6 +49,32 @@ const BALUSTRADES: { value: BalustradeKind; label: string }[] = [
   { value: 'solid', label: 'Solid' },
   { value: 'bars', label: 'Bars' },
 ]
+
+const CORE_PLACEMENTS: { value: CorePlacement; label: string }[] = [
+  { value: 'perimeter', label: 'On the perimeter' },
+  { value: 'centre', label: 'In the centre' },
+]
+
+const MODES: { value: RenderMode; label: string }[] = [
+  { value: 'white', label: 'White' },
+  { value: 'pbr', label: 'PBR' },
+  { value: 'diagram', label: 'Diagram' },
+]
+
+/**
+ * The viewport as a PNG, at whatever size it is on screen.
+ *
+ * Reaches for the canvas by selector rather than through a ref: the canvas
+ * belongs to R3F inside `<Scene>`, and threading a ref up through the app just
+ * to serve one button would be more coupling than the button is worth.
+ */
+function saveImage() {
+  const canvas = document.querySelector('.viewport canvas') as HTMLCanvasElement | null
+  if (!canvas) return
+  canvas.toBlob((blob) => {
+    if (blob) download(`bl0k-${stamp()}.png`, blob, 'image/png')
+  }, 'image/png')
+}
 
 /** A labelled block inside a panel, replacing the old accordion groups. */
 function Block({ title, children }: { title: string; children: ReactNode }) {
@@ -80,6 +114,53 @@ function ModuleNote() {
   )
 }
 
+/**
+ * A core can be shrunk to fit a short or shallow wing, exactly as a module is
+ * snapped to divide an elevation. Say so rather than letting the slider lie.
+ */
+function CoreNote() {
+  const cores = useStore((s) => {
+    const placed = s.build.placed.find((p) => p.placement.id === s.selectedId)
+    return placed?.building.cores
+  })
+  const placed = useStore((s) => s.site.buildings.find((b) => b.id === s.selectedId))
+  const resetCoreOffsets = useStore((s) => s.resetCoreOffsets)
+  const p = useSelectedParams()
+  if (!cores || cores.fit === null) return null
+
+  const shrunk = cores.fit.width < p.coreWidth - 0.01 || cores.fit.depth < p.coreDepth - 0.01
+  const missing = p.coreCount - cores.cores.length
+  const moved = (placed?.raw.coreOffsets ?? []).filter((v) => v !== null).length
+
+  return (
+    <>
+      {(shrunk || missing > 0) && (
+        <div className="field">
+          <div className="hint snap">
+            {shrunk &&
+              `Built at ${mm(cores.fit.width)} × ${mm(cores.fit.depth)} — the run is too tight for the size asked. `}
+            {missing > 0 && `${missing} core${missing === 1 ? '' : 's'} dropped: no run can hold one.`}
+          </div>
+        </div>
+      )}
+      <div className="field">
+        <div className="hint">
+          {moved > 0
+            ? `${moved} core${moved === 1 ? '' : 's'} placed by hand. Select the building, then drag a shaft along its track.`
+            : 'Spread evenly. Select the building, then drag a shaft to place it by hand.'}
+        </div>
+      </div>
+      {moved > 0 && (
+        <div className="stack">
+          <button className="ghost" onClick={resetCoreOffsets}>
+            Space them evenly again
+          </button>
+        </div>
+      )}
+    </>
+  )
+}
+
 function SettingsPanel() {
   const site = useStore((s) => s.site)
   const build = useStore((s) => s.build)
@@ -105,8 +186,24 @@ function SettingsPanel() {
     }
   }
 
+  const mode = useStore((s) => s.renderMode)
+  const setRenderMode = useStore((s) => s.setRenderMode)
+
   return (
     <>
+      <Block title="View">
+        <Chips value={mode} options={MODES} onChange={setRenderMode} />
+        <div className="stack">
+          <button className="ghost" onClick={saveImage}>
+            Save image (.png)
+          </button>
+          <div className="hint">
+            The viewport as it stands, at its size on screen. Double-click the
+            ground to frame the whole site.
+          </div>
+        </div>
+      </Block>
+
       <Block title="This site">
         <div className="stack">
           <div className="pair">
@@ -151,6 +248,19 @@ function SettingsPanel() {
             {busy ? 'Exporting…' : 'Export glTF (.glb)'}
           </button>
           <div className="hint">One named group per building, placed as on the plot.</div>
+          <button
+            className="ghost"
+            onClick={() =>
+              // No lazy import here: unlike the glTF exporter this is a few
+              // hundred lines of string building with no library behind it.
+              download(`bl0k-metrics-${stamp()}.csv`, siteCsv(site, build), 'text/csv')
+            }
+          >
+            Export metrics (.csv)
+          </button>
+          <div className="hint">
+            Site totals, a row per building, and every rule with its result.
+          </div>
         </div>
       </Block>
 
@@ -182,9 +292,7 @@ function SettingsPanel() {
   )
 }
 
-type SectionId = 'site' | 'placement' | 'massing' | 'facade' | 'units' | 'settings'
-
-const SECTIONS: { id: SectionId; label: string; icon: () => JSX.Element }[] = [
+const SECTIONS: { id: Tool; label: string; icon: () => JSX.Element }[] = [
   { id: 'site', label: 'Site', icon: IconSite },
   { id: 'placement', label: 'Placement', icon: IconPlacement },
   { id: 'massing', label: 'Massing', icon: IconMassing },
@@ -194,7 +302,10 @@ const SECTIONS: { id: SectionId; label: string; icon: () => JSX.Element }[] = [
 ]
 
 export function Sidebar() {
-  const [active, setActive] = useState<SectionId>('site')
+  // The open section is store state, not local: the viewport reads it to decide
+  // which handles to show and what a press means.
+  const active = useStore((s) => s.tool)
+  const setActive = useStore((s) => s.setTool)
   const p = useSelectedParams()
   const set = useStore((s) => s.set)
   const hasSelection = useStore((s) => s.selectedId !== null)
@@ -229,6 +340,9 @@ export function Sidebar() {
             <>
               <Block title="Boundary">
                 <PlotControls />
+              </Block>
+              <Block title="Rules">
+                <RuleControls />
               </Block>
               <Block title="Overlay image">
                 <UnderlayPanel />
@@ -275,6 +389,26 @@ export function Sidebar() {
                   <Slider name="floors" />
                   <Slider name="floorHeight" />
                   <Slider name="roofParapet" />
+                </Block>
+                <Block title="Core">
+                  <Slider
+                    name="coreCount"
+                    note="Massing only — no stairs, lifts or corridors."
+                  />
+                  {p.coreCount > 0 && (
+                    <>
+                      <Chips
+                        value={p.corePlacement}
+                        options={CORE_PLACEMENTS}
+                        onChange={(v) => set({ corePlacement: v })}
+                        hint="On the perimeter the shaft meets an exterior wall, and that stretch of facade loses its units."
+                      />
+                      <Slider name="coreWidth" />
+                      <Slider name="coreDepth" />
+                      <Slider name="coreOverrun" note="The only part of the shaft you can see." />
+                      <CoreNote />
+                    </>
+                  )}
                 </Block>
               </>
             ) : (
@@ -329,12 +463,20 @@ export function Sidebar() {
 
           {active === 'units' &&
             (hasSelection ? (
-              <Block title="Estimate">
-                <Slider
-                  name="modulesPerUnit"
-                  note="Feeds the unit estimate only. Real counts arrive with floorplans."
-                />
-              </Block>
+              <>
+                <Block title="Estimate">
+                  <Slider
+                    name="modulesPerUnit"
+                    note="Feeds the unit estimate only. Real counts arrive with floorplans."
+                  />
+                </Block>
+                <Block title="Net area">
+                  <Slider
+                    name="efficiency"
+                    note="NIA is GFA times this. Cores, walls and plant are not modelled, so it is a factor rather than a measurement."
+                  />
+                </Block>
+              </>
             ) : (
               <NoSelection />
             ))}

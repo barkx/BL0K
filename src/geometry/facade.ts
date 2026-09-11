@@ -1,7 +1,7 @@
 import { hash01 } from '../lib/rng'
 import { clamp } from '../lib/clamp'
 import { PIER_MIN, type BalconyType, type Dir, type Params } from '../store/params'
-import { spanIsOpen, type Elevation } from './elevations'
+import { spanIsBlanked, spanIsOpen, type Elevation } from './elevations'
 
 /** What a module actually got, once patterns and junctions had their say. */
 export type ModuleBalcony = 'none' | 'projecting' | 'loggia'
@@ -124,12 +124,15 @@ export function buildFacade(elevations: Elevation[], p: Params): FacadeModel {
       const floor = e.baseFloor + i
       const yBase = floor * p.floorHeight
       const open = e.openByFloor[i]
+      const blank = e.blankByFloor[i] ?? []
 
       for (let k = 0; k < count; k++) {
         const u0 = k * actual
         const u1 = u0 + actual
-        // A module straddling a junction is not a facade module at all.
+        // A module straddling a junction is not a facade module at all, and
+        // nor is one over a core: there are no units behind a lift shaft.
         if (!spanIsOpen(open, u0, u1)) continue
+        if (spanIsBlanked(blank, u0, u1)) continue
         if (floor === 0) modulesOnGround++
 
         const bWidth = actual * p.balconyWidthRatio

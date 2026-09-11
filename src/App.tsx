@@ -4,7 +4,7 @@ import { Sidebar } from './ui/Sidebar'
 import { Toolbar } from './ui/Toolbar'
 import { MetricsPanel } from './ui/MetricsPanel'
 import { SelectionPanel } from './ui/SelectionPanel'
-import { useStore } from './store/store'
+import { useStore, type Tool } from './store/store'
 import { DEFAULT_UNDERLAY_WIDTH } from './site/types'
 import { loadUnderlayImage } from './io/image'
 
@@ -88,15 +88,33 @@ function useImageDrop() {
   return { handlers, dropping, error, clearError: () => setError(null) }
 }
 
-const HINTS: Record<string, string> = {
+const DRAWING: Record<string, string> = {
   draw: 'Click to place a corner · Enter or the red corner closes it · Backspace undoes · Esc cancels',
   calibrate: 'Click two points whose real distance you know, then enter that distance',
-  idle: 'Drag to orbit · scroll to zoom · drag a building to place it · click its face to override',
 }
+
+/**
+ * What the viewport does right now, which depends on the open tab.
+ *
+ * A tab is also a tool, so the same press means different things in different
+ * sections. That is only workable if the app says which — a modal interface
+ * that keeps its modes secret is just an unreliable one.
+ */
+const BY_TOOL: Record<Tool, string> = {
+  site: 'Drag a corner to reshape the plot · click a midpoint to add one · right-click a corner to remove it',
+  placement: 'Drag a building to place it · click it again for Massing',
+  massing: 'Drag a core along its track · click a face for Facade',
+  facade: 'Click a face to override it · click it again to clear',
+  units: 'Click a building to select it',
+  settings: 'Click a building to select it',
+}
+
+const NAVIGATION = 'Drag to orbit · scroll to zoom · double-click the ground to frame the site'
 
 export default function App() {
   const [collapsed, setCollapsed] = useState(false)
   const plotMode = useStore((s) => s.plotMode)
+  const tool = useStore((s) => s.tool)
   const { handlers, dropping, error, clearError } = useImageDrop()
   useDrawShortcuts()
 
@@ -109,7 +127,7 @@ export default function App() {
         <MetricsPanel />
         <SelectionPanel />
         <div className={plotMode === 'idle' ? 'hintbar' : 'hintbar drawing'}>
-          {HINTS[plotMode] ?? HINTS.idle}
+          {DRAWING[plotMode] ?? `${NAVIGATION} · ${BY_TOOL[tool]}`}
         </div>
         {dropping && <div className="dropzone">Drop the image to lay it on the ground</div>}
         {error && (

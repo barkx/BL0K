@@ -1,19 +1,40 @@
 import { create } from 'zustand'
-import { DEFAULTS, resolveParams, type FacadeOverride, type Params, type RenderMode } from './params'
+import {
+  clearsCorePlacement,
+  DEFAULTS,
+  resolveParams,
+  type FacadeOverride,
+  type Params,
+  type RenderMode,
+} from './params'
 import { buildSite, disposeReplaced, disposeSite, type SiteBuild } from '../site/build'
 import {
   defaultSite,
   makePlacement,
   nextId,
+  resolveRules,
   suggestName,
   type Placement,
   type Site,
+  type SiteRules,
   type Underlay,
 } from '../site/types'
 import { rectanglePoly, type Poly, type Vec2 } from '../lib/poly'
 
+/**
+ * The sidebar section, which is also the active tool.
+ *
+ * It lives in the store rather than in the sidebar because the viewport reads
+ * it: a tab decides which handles are on screen and what a press means. That is
+ * the whole point — one place to ask "what does a click do right now" instead of
+ * a precedence ladder inside every pointer handler.
+ */
+export type Tool = 'site' | 'placement' | 'massing' | 'facade' | 'units' | 'settings'
+
 interface State {
   site: Site
+  /** Which section is open, and so which editing gestures are live. */
+  tool: Tool
   build: SiteBuild
   /** Which building the parameter sidebar edits. */
   selectedId: string | null
@@ -33,12 +54,17 @@ interface State {
   /** The two points whose real-world distance sets the underlay scale. */
   calibration: Poly
 
+  setTool: (tool: Tool) => void
   selectBuilding: (id: string | null) => void
   selectElevation: (key: string | null) => void
 
   /** Edits the selected building's parameters. */
   set: (patch: Partial<Params>) => void
   setOverride: (key: string, patch: FacadeOverride | null) => void
+  /** Position one core along its track, 0 to 1. `null` returns it to automatic. */
+  setCoreOffset: (index: number, t: number | null) => void
+  /** Every core back to the even spread. */
+  resetCoreOffsets: () => void
 
   move: (id: string, position: Vec2) => void
   rotate: (id: string, degrees: number) => void
@@ -56,6 +82,8 @@ interface State {
   movePlotVertex: (index: number, point: Vec2) => void
   insertPlotVertex: (index: number, point: Vec2) => void
   removePlotVertex: (index: number) => void
+
+  setRules: (patch: Partial<SiteRules>) => void
 
   setUnderlay: (underlay: Underlay | null) => void
   updateUnderlay: (patch: Partial<Underlay>) => void
@@ -117,6 +145,7 @@ export const useStore = create<State>((set, get) => {
   return {
     site: initialSite,
     build: buildSite(initialSite, null),
+    tool: 'site',
     selectedId: initialSite.buildings[0]?.id ?? null,
     selectedElevation: null,
     fitRequest: 0,
@@ -124,6 +153,24 @@ export const useStore = create<State>((set, get) => {
     plotMode: 'idle',
     plotDraft: [],
     calibration: [],
+
+    /**
+     * Leaving a tab puts away what belonged to it. A half-drawn boundary or a
+     * face override left live under another tool would be a mode you cannot
+     * see, which is the failure this whole arrangement exists to avoid.
+     */
+    setTool: (tool) => {
+      const was = get().tool
+      if (was === tool) return
+      const next: Partial<State> = { tool }
+      if (was === 'site') {
+        next.plotMode = 'idle'
+        next.plotDraft = []
+        next.calibration = []
+      }
+      if (was === 'facade') next.selectedElevation = null
+      set(next)
+    },
 
     selectBuilding: (id) => set({ selectedId: id, selectedElevation: null }),
     selectElevation: (key) => set({ selectedElevation: key }),
@@ -133,6 +180,35 @@ export const useStore = create<State>((set, get) => {
       if (!id) return
       mapBuilding(id, (b) => {
         const raw = { ...b.raw, ...patch }
+        // Hand-placed cores are positions on a track the massing defines. Edit
+        // the massing and those numbers point at a path that no longer exists.
+        if (clearsCorePlacement(patch)) raw.coreOffsets = raw.coreOffsets.map(() => null)
+        return { ...b, raw, params: resolveParams(raw) }
+      })
+    },
+
+    /**
+     * A dragged core is the one thing about a building the geometry cannot
+     * derive, so it is stored as a position on the track rather than a point in
+     * space — resize the block and the shaft stays where it was put, relative
+     * to the wall it is on.
+     */
+    setCoreOffset: (index, t) => {
+      const id = get().selectedId
+      if (!id) return
+      mapBuilding(id, (b) => {
+        const coreOffsets = [...b.raw.coreOffsets]
+        coreOffsets[index] = t === null ? null : Math.min(1, Math.max(0, t))
+        const raw = { ...b.raw, coreOffsets }
+        return { ...b, raw, params: resolveParams(raw) }
+      })
+    },
+
+    resetCoreOffsets: () => {
+      const id = get().selectedId
+      if (!id) return
+      mapBuilding(id, (b) => {
+        const raw = { ...b.raw, coreOffsets: b.raw.coreOffsets.map(() => null) }
         return { ...b, raw, params: resolveParams(raw) }
       })
     },
@@ -229,6 +305,16 @@ export const useStore = create<State>((set, get) => {
       // A polygon needs three corners; refuse to go below that.
       if (site.plot.length <= 3) return
       commit({ ...site, plot: site.plot.filter((_, i) => i !== index) })
+    },
+
+    /**
+     * Rules change no geometry, but the breach list is part of the metrics, so
+     * this goes through `commit` like any other site edit. Nothing rebuilds:
+     * every `params` object keeps its identity.
+     */
+    setRules: (patch) => {
+      const site = get().site
+      commit({ ...site, rules: resolveRules({ ...site.rules, ...patch }) })
     },
 
     reset: () => {

@@ -9,6 +9,8 @@ import { MeshBuilder } from '../lib/mesh'
 import { DIRS, type Elevation } from '../geometry/elevations'
 import type { PlacedBuilding } from '../site/build'
 import type { SiteDrag } from './useSiteDrag'
+import type { CoreDrag } from './useCoreDrag'
+import type { Tool } from '../store/store'
 
 function Instanced({
   items,
@@ -76,6 +78,9 @@ function dirAtPoint(mass: Mass, x: number, z: number): Dir {
   return DIRS.reduce((best, d) => (distance[d] < distance[best] ? d : best), DIRS[0])
 }
 
+/** Pixels of travel that turn a press into an orbit rather than a click. */
+const CLICK_SLOP = 4
+
 /** A wash over the selected face, so the override panel refers to something visible. */
 function SelectionOverlay({
   elevation,
@@ -133,6 +138,9 @@ export function Building({
   onSelectBuilding,
   onSelectElevation,
   drag,
+  coreDrag,
+  tool,
+  onUseTool,
 }: {
   placed: PlacedBuilding
   mat: MaterialSet
@@ -141,6 +149,11 @@ export function Building({
   onSelectBuilding: () => void
   onSelectElevation: (key: string | null) => void
   drag: SiteDrag
+  coreDrag: CoreDrag
+  /** Which section is open, and so which gestures are live on this building. */
+  tool: Tool
+  /** Jump to the tab that owns whatever was just clicked. */
+  onUseTool: (tool: Tool) => void
 }) {
   const { placement, building } = placed
 
@@ -158,28 +171,95 @@ export function Building({
 
   const elevation = building.elevations.find((e) => e.key === selectedElevation)
 
-  /** Press starts a possible drag; the click meaning is decided on release. */
+  /**
+   * Where the press landed, and whether this building was already selected when
+   * it landed.
+   *
+   * The screen position tells a click from an orbit — `useSiteDrag` answers that
+   * only while it owns the drag, and outside Placement it does not. The
+   * selection flag is what keeps the ladder honest: the press that selects a
+   * building is rung one, so its release must not immediately count as rung two.
+   */
+  const press = useRef<{ x: number; y: number; wasSelected: boolean } | null>(null)
+
+  /**
+   * Rung one of the ladder: select the building and open Placement, which is
+   * where you would put it. Moving it is editing, so the drag itself still
+   * belongs to Placement — anywhere else the press falls through to orbit.
+   */
   const onPointerDown = (event: ThreeEvent<PointerEvent>) => {
+    // Always consume the press, in every tab. The ground behind this building
+    // clears the selection on a press, so letting one through would deselect
+    // the very building being clicked. Stopping here does not reach the native
+    // event, so orbit still works when no tool claims the drag.
     event.stopPropagation()
-    if (!selected) onSelectBuilding()
+    press.current = {
+      x: event.nativeEvent.clientX,
+      y: event.nativeEvent.clientY,
+      wasSelected: selected,
+    }
+    if (!selected) {
+      onSelectBuilding()
+      onUseTool('placement')
+    }
+    if (tool !== 'placement') return
     drag.begin(placement.id, placement.position, event)
   }
 
+  /** The press, if it stayed still enough to mean a click. */
+  const clickOf = (event: ThreeEvent<PointerEvent>) => {
+    const start = press.current
+    press.current = null
+    if (drag.consumeMoved()) return null
+    if (!start) return null
+    const travel = Math.hypot(
+      event.nativeEvent.clientX - start.x,
+      event.nativeEvent.clientY - start.y,
+    )
+    return travel < CLICK_SLOP ? start : null
+  }
+
   /**
-   * A press that did not travel is a click. The first click selects the
-   * building; once it is selected, a click picks the face — so a face override
-   * never happens by accident on a building you were only trying to reach.
+   * Clicking the same building again walks down the ladder: Placement, then
+   * Massing, then Facade — place it, shape it, detail it.
+   *
+   * Each rung is the scale you would work at next, so repeated clicks drill in
+   * rather than cycling through unrelated panels. Rung one happens on the press
+   * that selects; this handles the rest. The Facade rung needs a *vertical*
+   * face, because that is the thing being overridden — a click on a roof, or on
+   * a sill, has no elevation to name.
    */
   const onPointerUp = (massId: string) => (event: ThreeEvent<PointerEvent>) => {
-    if (drag.consumeMoved()) return
-    if (!selected) return
+    const click = clickOf(event)
+    // The press that selected this building was rung one. Its release is not
+    // also rung two, or one click would land you in Massing.
+    if (!click || !click.wasSelected) return
+
+    // Clicked in from outside the ladder — Site, Units, Settings — so start it.
+    if (tool !== 'placement' && tool !== 'massing' && tool !== 'facade') {
+      onUseTool('placement')
+      return
+    }
+
+    if (tool === 'placement') {
+      onUseTool('massing')
+      return
+    }
+
     const mass = masses.get(massId)
     if (!mass) return
     if (event.face && Math.abs(event.face.normal.y) > 0.8) return
     // The hit point is in world space; the AABB test needs the building's frame.
     const local = event.object.worldToLocal(event.point.clone())
     const key = `${massId}:${dirAtPoint(mass, local.x, local.z)}`
-    onSelectElevation(selectedElevation === key ? null : key)
+
+    if (tool === 'facade') {
+      // Already at the bottom: further clicks just move between faces.
+      onSelectElevation(selectedElevation === key ? null : key)
+      return
+    }
+    onUseTool('facade')
+    onSelectElevation(key)
   }
 
   return (
@@ -213,6 +293,31 @@ export function Building({
 
       <mesh geometry={building.walls.glass} material={mat.glass} receiveShadow={false} />
 
+      {building.cores.cores.map((core, index) => (
+        <mesh
+          key={core.id}
+          geometry={core.geometry}
+          material={mat.core}
+          castShadow={mat.shadows}
+          receiveShadow={mat.shadows}
+          onPointerDown={(event) => {
+            // Same bargain as a face override: the first click selects the
+            // building, and only then does a press on a shaft move the shaft
+            // rather than the block. Otherwise reaching for a building by its
+            // roof would shove its core across the plan.
+            if (!selected) {
+              onPointerDown(event)
+              return
+            }
+            event.stopPropagation()
+            // A shaft belongs to Massing, so grabbing one goes there and drags
+            // in the same gesture — no need to find the tab first.
+            onUseTool('massing')
+            coreDrag.begin(index, building.cores.track, placement, event)
+          }}
+        />
+      ))}
+
       <Instanced items={building.balconies.slabs} material={mat.slab} shadows={mat.shadows} />
       <Instanced items={building.balconies.panels} material={mat.panel} shadows={false} />
       <Instanced items={building.balconies.rails} material={mat.metal} shadows={mat.shadows} />
@@ -220,7 +325,7 @@ export function Building({
 
       {mat.showLines && <lineSegments geometry={building.edges} material={mat.line} />}
 
-      {selected && (
+      {selected && tool === 'facade' && (
         <SelectionOverlay elevation={elevation} floorHeight={placement.params.floorHeight} />
       )}
     </group>

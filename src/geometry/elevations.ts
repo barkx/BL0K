@@ -32,6 +32,13 @@ export interface Elevation {
    * long elevation.
    */
   openByFloor: Span[][]
+  /**
+   * Exterior but unusable: where a core is pressed against this face. Filled
+   * after the cores are built, by `blankForCores`. The facade skips modules
+   * here and the wall builder fills the gap with solid wall, so a lift shaft
+   * reads as blank masonry rather than as windows onto a lift.
+   */
+  blankByFloor: Span[][]
   /** Nothing exterior on any floor: hide it entirely. */
   abutting: boolean
   exteriorArea: number
@@ -126,6 +133,7 @@ export function buildElevations(masses: Mass[], floorHeight: number): Elevation[
         baseFloor: m.baseFloor,
         floors: m.floors,
         openByFloor,
+        blankByFloor: openByFloor.map(() => []),
         abutting: exteriorArea < EPS,
         exteriorArea,
       })
@@ -138,4 +146,9 @@ export function buildElevations(masses: Mass[], floorHeight: number): Elevation[
 /** Is a module's span fully in the open on this floor? */
 export function spanIsOpen(open: Span[], a: number, b: number): boolean {
   return open.some((s) => a > s.a - EPS && b < s.b + EPS)
+}
+
+/** Does a module's span touch a blanked stretch at all? Any overlap kills it. */
+export function spanIsBlanked(blank: Span[], a: number, b: number): boolean {
+  return blank.some((s) => Math.min(b, s.b) - Math.max(a, s.a) > EPS)
 }

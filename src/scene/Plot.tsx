@@ -42,6 +42,7 @@ export function Plot({
   clashing,
   mat,
   showFill = true,
+  onPickBoundary,
 }: {
   plot: Poly
   placed: PlacedBuilding[]
@@ -50,6 +51,8 @@ export function Plot({
   mat: MaterialSet
   /** Off while an underlay is showing — an opaque plot would hide it. */
   showFill?: boolean
+  /** Clicking the boundary line is how you get to the Site tab from the model. */
+  onPickBoundary?: () => void
 }) {
   const fill = useMemo(() => fillGeometry(plot), [plot])
   const boundary = useMemo(() => loopGeometry(plot, 0.03), [plot])
@@ -90,7 +93,17 @@ export function Plot({
       )}
 
       {boundary && (
-        <lineSegments geometry={boundary}>
+        <lineSegments
+          geometry={boundary}
+          onPointerDown={
+            onPickBoundary &&
+            ((event) => {
+              if (event.nativeEvent.button !== 0) return
+              event.stopPropagation()
+              onPickBoundary()
+            })
+          }
+        >
           <lineBasicMaterial color="#2c5d8f" />
         </lineSegments>
       )}

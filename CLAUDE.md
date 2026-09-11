@@ -7,7 +7,9 @@
 - Geometry is derived, never stored. Params in, `BufferGeometry` out.
 - Geometry builders stay pure: no scene access, no side effects, no React.
 - Never `Math.random()` in geometry. Seeded only, via `src/lib/rng.ts`.
-- Clamp in exactly one place: `resolveParams()` in `src/store/params.ts`.
+- Clamp in exactly one place per kind of data: `resolveParams()` in
+  `src/store/params.ts` for building params, `resolveRules()` in
+  `src/site/types.ts` for site rules. Never clamp at an input.
 - No CSG. Openings and loggias are built as panels around the void.
 - Rebuild geometry at most once per frame. Never once per pixel of a drag.
 - Instance repeated boxes; merge static walls. Do not regress to per-element meshes.
@@ -17,9 +19,27 @@
   `geometry/`. Do not rotate masses within a building.
 - Site area comes from the plot polygon. Render mode is store state. Neither is
   a per-building parameter.
+- **A tab is a tool.** `store.tool` scopes what the viewport does: handles and
+  drags belong to their section, while selection and the camera stay live
+  everywhere. Add a new viewport gesture by gating it on `tool`, never by
+  stacking another condition onto an existing pointer handler.
+- **Clicking drills in.** Ground and a first click go to Placement, a second to
+  Massing, a click on a vertical face to Facade; the plot boundary goes to Site
+  and a core to Massing. The rung is read from the current `tool`, so there is
+  no separate counter to keep in step. The press that selects a building records
+  `wasSelected`, because its release must not also count as the next rung.
+- A press on a building always calls `stopPropagation()`, in every tab. The
+  ground behind it clears the selection on a press, so letting one through
+  deselects the very building being clicked. It does not reach the native event,
+  so orbit still works when no tool claims the drag.
 - Anything draggable in plan projects through `useGroundProjector` and runs on
   window listeners. A drag must survive the cursor leaving the mesh it started
-  on, so never handle one with mesh-local pointermove.
+  on, so never handle one with mesh-local pointermove. Buildings, plot corners
+  and cores all go through it; a core is additionally constrained to its track
+  rather than following the cursor.
+- Two passes over the elevations, in this order: cores need the exterior faces
+  to sit on, and the facade needs to know which stretches the cores took. Do not
+  collapse `buildElevations` then `buildCores` then `blankForCores` into one.
 
 ### Secrets and privacy
 - Never commit credentials. Not in code, `vercel.json`, `Dockerfile`,
@@ -93,8 +113,9 @@ push.bat               :: commit + push to main -> Vercel deploys
 Ask before proceeding:
 
 - A change touches a locked decision in `project.md` §1.
-- A change implements a `project.md` §1 non-goal (floorplans, cores, terrain,
-  neighbour volumes, plinth, cost, collaboration).
+- A change implements a `project.md` §1 non-goal (floorplans, corridors,
+  stairs, lifts, terrain, neighbour volumes, plinth, cost, collaboration).
+  Cores came in at M12 as a massing shaft; the circulation inside one did not.
 - A change needs a backend. There is none, by decision.
 - An open question in `project.md` §10 would be answered differently from
   `README.md`.
@@ -112,7 +133,7 @@ Refuse:
 
 ## 6. Project State
 
-- **M1–M10 complete**, see `project.md` §8.
+- **M1–M12 complete**, see `project.md` §8.
   - **M1–M7, the building**: six presets with per-floor junction detection,
     module-driven facade with real openings, projecting and loggia balconies,
     three render modes, metrics, glTF export, config I/O, per-elevation
@@ -124,15 +145,49 @@ Refuse:
   - **M10, the underlay**: drop a map or site plan, set its true scale from two
     points, position / rotate / fade / lock it, trace over it. The image rides
     in the config as a downscaled data URL.
+  - **M11, rules and reporting**: five site rules — setback, separation, height
+    cap, FAR cap, coverage cap — checked in the same pass as clashes and
+    reported in the same warning block. Zero means a rule is off, so no scheme
+    inherits a limit nobody set. NIA from a per-building `efficiency` factor.
+    Metrics out as CSV. Config v4.
+  - **M12, the core**: a rectangular shaft — count, width, depth, overrun —
+    sitting on a **track**: the exterior faces (`perimeter`) or the wing spines
+    (`centre`). Shared between runs by length, and draggable along the track on
+    a selected building; a hand position is `coreOffsets[i]`, a fraction of the
+    track, `null` meaning automatic. Editing the footprint or the mode releases
+    them, because the track is rebuilt. Rises to the top of the tallest mass
+    covering it; only the overrun is visible. A perimeter shaft **blanks the
+    facade it meets** via `Elevation.blankByFloor` — no modules, so no windows,
+    balconies or units, and `buildWalls` fills the gap with solid wall down the
+    path a junction sliver already takes. The test is geometric, not
+    mode-flagged. NIA is `(GFA − core area) × efficiency`, and the factor moved
+    to 0.85–0.97 now it no longer has to swallow the core. Config v5: a file
+    with no `coreCount` predates cores and loads with none. Reopens part of a §1
+    non-goal — massing shaft only, no stairs, lifts or corridors.
 - **UI**: the sidebar is an icon rail with six sections — Site, Placement,
-  Massing, Facade (balconies live here), Units, Settings. Inside a panel,
+  Massing, Facade (balconies live here), Units, Settings. Rules sit in Site;
+  the core sits in Massing; the efficiency factor sits in Units. The top bar is
+  deliberately bare — render mode and the PNG snapshot are in Settings, and
+  double-clicking the ground frames the site, so there is no Fit button.
+  - **M13, tabs as tools**: the open section is `store.tool`, not local sidebar
+    state, because the viewport reads it. Plot handles only in Site, block drag
+    only in Placement, core drag only in Massing, face override only in Facade;
+    selection and camera are live everywhere. Leaving a tab cancels what belongs
+    to it — a half-drawn boundary, an open face override. The hint bar names the
+    current tab's gestures, since an invisible mode is the failure case here.
+    The plot boundary is a click target, which needs the canvas raycaster's
+    `Line.threshold` widened — a one-pixel line is not something you can hit.
+    Clicking drills in: ground and first click to Placement, second to Massing,
+    a vertical face to Facade with that elevation open. Consequence to know
+    about: a click on the ground *inside* the plot leaves the Site tab, because
+    the ground is the site surface and returns you to the site scale. Inside a panel,
   sections are flat `Block`s, not nested accordions. Roads and parking are
   intended for Placement. Horizontal rail in the bottom sheet under 900 px.
 - **Brand**: BL0K, "Parametric building design". One axonometric block, three
   flat faces, no strokes — `src/ui/Logo.tsx`, same shape as the favicon. The
   palette is unchanged drawing-office greys and blueprint ink. There is no AI
   in this app and the branding must not claim otherwise.
-- **Next**: M11 DXF import.
+- **Next**: M14 IFC export — see the gap below. DXF import sits behind it.
 - **Biggest gap, by decision**: no **IFC export**. glTF is a visualisation
   format — nobody continues a project from it, so today the tool dead-ends
   rather than feeding Revit or ArchiCAD. Treated as a blocker, not a backlog
@@ -143,10 +198,22 @@ Refuse:
 - **Verified**: 480-case parameter sweep (seeded output byte-identical), site
   layer checks (metrics, SAT clash detection, buffer reuse on move), polygon
   checks (self-intersection, concave area and containment, winding), config
-  v1/v2/v3 migration, site GLB with named groups, both Docker targets,
+  v1/v2/v3/v4/v5 migration, site GLB with named groups, both Docker targets,
   fresh-clone build.
-- **Deviations** (both in README): default `sillHeight` is 0.65 m because the
-  spec's three facade defaults cannot coexist; windows are merged, not instanced.
+  - **M11**: 40 checks against hand values — plan distances, every rule's breach
+    numbers and its met and off cases, the clamps, NIA, CSV shape and quoting,
+    and a v3 file loading with every rule off.
+  - **M12**: 35 checks — both tracks against hand-computed perimeter lengths,
+    flush-to-wall and straddle-the-spine placement, the per-run share, facade
+    blanking (module counts, glazing, and facade area unchanged), drag
+    resolution onto the nearest run, clamping at a run's ends, offset list
+    sizing, determinism, NIA arithmetic, and a pre-core file loading with none.
+  - Checked in the browser too: every rule breaching at its hand-computed
+    figure, a core dragged along a wall moving the blanked bays with it, and the
+    unit count following.
+- **Deviations** (all in README): default `sillHeight` is 0.65 m because the
+  spec's three facade defaults cannot coexist; windows are merged, not
+  instanced; site rules get a second clamping function, `resolveRules()`.
 - **Not done yet**:
   - Vercel project is **not linked** — one dashboard step, see README.md ch.1.
   - `npx plugins add vercel/vercel-plugin` was deliberately not run. User's call.

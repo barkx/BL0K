@@ -1,22 +1,13 @@
-import { useStore } from '../store/store'
 import { Wordmark } from './Logo'
-import type { RenderMode } from '../store/params'
-import { download, stamp } from '../io/config'
 
-const MODES: { value: RenderMode; label: string }[] = [
-  { value: 'white', label: 'White' },
-  { value: 'pbr', label: 'PBR' },
-  { value: 'diagram', label: 'Diagram' },
-]
-
-function saveImage() {
-  const canvas = document.querySelector('.viewport canvas') as HTMLCanvasElement | null
-  if (!canvas) return
-  canvas.toBlob((blob) => {
-    if (blob) download(`bl0k-${stamp()}.png`, blob, 'image/png')
-  }, 'image/png')
-}
-
+/**
+ * Deliberately bare: the mark and the sidebar toggle, nothing else.
+ *
+ * Render mode and the image snapshot moved to Settings, and framing the view
+ * moved onto the ground itself — double-click it. A toolbar that holds three
+ * unrelated controls is a place things accumulate, and the viewport is worth
+ * more than the strip above it.
+ */
 export function Toolbar({
   collapsed,
   onToggle,
@@ -24,10 +15,6 @@ export function Toolbar({
   collapsed: boolean
   onToggle: () => void
 }) {
-  const mode = useStore((s) => s.renderMode)
-  const setRenderMode = useStore((s) => s.setRenderMode)
-  const fitView = useStore((s) => s.fitView)
-
   return (
     <div className="toolbar">
       <button
@@ -40,24 +27,6 @@ export function Toolbar({
       </button>
       <h1><Wordmark /></h1>
       <span className="spacer" />
-      <div className="segmented" role="group" aria-label="Render mode">
-        {MODES.map((o) => (
-          <button
-            key={o.value}
-            type="button"
-            aria-pressed={o.value === mode}
-            onClick={() => setRenderMode(o.value)}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
-      <button className="ghost" onClick={fitView} title="Frame the whole building">
-        Fit
-      </button>
-      <button className="ghost" onClick={saveImage} title="Save the viewport as a PNG">
-        ⤓<span className="label"> Image</span>
-      </button>
     </div>
   )
 }

@@ -150,6 +150,7 @@ export function Underlay() {
   const underlay = useStore((s) => s.site.underlay)
   const calibration = useStore((s) => s.calibration)
   const plotMode = useStore((s) => s.plotMode)
+  const tool = useStore((s) => s.tool)
   const texture = useDataUrlTexture(underlay?.src)
   const beginDrag = useUnderlayDrag(underlay)
 
@@ -159,7 +160,8 @@ export function Underlay() {
 
   const height = underlay.width * underlay.aspect
   // Locked, or while tracing, the image must never intercept a ground click.
-  const inert = underlay.locked || plotMode !== 'idle'
+  // Outside the Site tab the image is scenery: still traced over, never nudged.
+  const inert = underlay.locked || plotMode !== 'idle' || tool !== 'site'
 
   return (
     <>

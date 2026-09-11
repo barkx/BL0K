@@ -10,12 +10,17 @@ import {
   type Bounds2,
   type Poly,
 } from '../lib/poly'
+import { checkRules, type Breach } from './rules'
 import type { Placement, Site } from './types'
 
 export interface SiteMetrics {
   buildings: number
   /** Sum across every building. */
   gfa: number
+  /** Sum of the floor area cores take out of every storey. */
+  coreArea: number
+  /** Sum of per-building NIA, each GFA less its cores, times its own factor. */
+  nia: number
   units: number
   facadeArea: number
   balconyArea: number
@@ -34,6 +39,8 @@ export interface SiteMetrics {
   offPlot: string[]
   /** False when the boundary crosses itself, which makes area meaningless. */
   plotSimple: boolean
+  /** Planning limits the scheme breaks. Empty when every rule is off or met. */
+  breaches: Breach[]
 }
 
 /** A mass footprint as a plan quad in site coordinates. */
@@ -74,6 +81,8 @@ export function computeSiteMetrics(
   const plotArea = polygonArea(site.plot)
 
   let gfa = 0
+  let coreArea = 0
+  let nia = 0
   let units = 0
   let facadeArea = 0
   let balconyArea = 0
@@ -83,6 +92,8 @@ export function computeSiteMetrics(
 
   for (const { building } of placed) {
     gfa += building.metrics.gfa
+    coreArea += building.metrics.coreArea
+    nia += building.metrics.nia
     units += building.metrics.units
     facadeArea += building.metrics.facadeArea
     balconyArea += building.metrics.balconyArea
@@ -114,20 +125,41 @@ export function computeSiteMetrics(
     }
   }
 
+  const coverage = plotArea > 0 ? footprintTotal / plotArea : 0
+  const far = plotArea > 0 ? gfa / plotArea : 0
+  const offPlotNames = new Set(offPlot)
+
+  const breaches = checkRules(
+    site.rules,
+    site.plot,
+    placed.map(({ placement, building }) => ({
+      name: placement.name,
+      height: building.metrics.height,
+      ground: groundQuads(building, placement),
+      all: allQuads(building, placement),
+      offPlot: offPlotNames.has(placement.name),
+    })),
+    { far, coverage },
+    clashes,
+  )
+
   return {
     buildings: placed.length,
     gfa,
+    coreArea,
+    nia,
     units,
     facadeArea,
     balconyArea,
     loggiaLoss,
     footprint: footprintTotal,
     plotArea,
-    coverage: plotArea > 0 ? footprintTotal / plotArea : 0,
-    far: plotArea > 0 ? gfa / plotArea : 0,
+    coverage,
+    far,
     maxHeight,
     clashes,
     offPlot,
     plotSimple: isSimple(site.plot),
+    breaches,
   }
 }

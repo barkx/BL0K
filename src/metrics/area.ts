@@ -1,6 +1,7 @@
 import { footprintsAt, levels, topLevel, type Mass } from '../geometry/masses'
 import type { Elevation } from '../geometry/elevations'
 import type { FacadeModel } from '../geometry/facade'
+import type { BuiltCores } from '../geometry/core'
 import { unionArea } from '../lib/rect'
 import type { Params } from '../store/params'
 
@@ -8,6 +9,10 @@ export interface AreaMetrics {
   /** Per-level union, before loggias are deducted. */
   gfaGross: number
   gfa: number
+  /** Floor area the cores take, summed over every level they pass through. */
+  coreArea: number
+  /** Net internal area: GFA less the cores, then less the efficiency factor. */
+  nia: number
   loggiaLoss: number
   footprintArea: number
   facadeArea: number
@@ -23,6 +28,7 @@ export function computeAreas(
   masses: Mass[],
   elevations: Elevation[],
   facade: FacadeModel,
+  cores: BuiltCores,
   p: Params,
 ): AreaMetrics {
   // A naive sum double-counts the corner where two wings meet, so take the
@@ -32,6 +38,10 @@ export function computeAreas(
     gfaGross += unionArea(footprintsAt(masses, level))
   }
 
+  // Core area is real floor area, so it stays in GFA and comes out of NIA. The
+  // factor then covers only what is not modelled: internal walls, risers, plant.
+  const gfa = gfaGross - facade.loggiaArea
+  const nia = Math.max(0, gfa - cores.area) * p.efficiency
   const footprintArea = unionArea(footprintsAt(masses, 0))
   const facadeArea = elevations.reduce((s, e) => s + e.exteriorArea, 0)
   const glazedArea = facade.glazedArea
@@ -39,7 +49,9 @@ export function computeAreas(
 
   return {
     gfaGross,
-    gfa: gfaGross - facade.loggiaArea,
+    gfa,
+    coreArea: cores.area,
+    nia,
     loggiaLoss: facade.loggiaArea,
     footprintArea,
     facadeArea,

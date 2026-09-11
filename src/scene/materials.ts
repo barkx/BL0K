@@ -13,6 +13,8 @@ export interface MaterialSet {
   /** Diagram mode tints masses by their position in the stack. */
   wall: (tintIndex: number) => Material
   glass: Material
+  /** The core shaft. Only its overrun is ever above the roof to be seen. */
+  core: Material
   slab: Material
   panel: Material
   metal: Material
@@ -52,6 +54,9 @@ function build(mode: RenderMode, keep: <T extends Material>(m: T) => T): Kit {
       mode,
       wall: (tintIndex) => tints[Math.min(tintIndex, tints.length - 1)],
       glass: keep(new MeshBasicMaterial({ color: '#4d6a8a', transparent: true, opacity: 0.55 })),
+      // Darker than every mass tint, so the core reads as the one thing on the
+      // roof that is not the building.
+      core: keep(new MeshBasicMaterial({ color: '#33495f' })),
       slab: keep(new MeshBasicMaterial({ color: '#f4f6f8' })),
       panel: keep(new MeshBasicMaterial({ color: '#6d8caa', transparent: true, opacity: 0.4, side: DoubleSide })),
       metal: keep(new MeshBasicMaterial({ color: '#3f556b' })),
@@ -82,6 +87,7 @@ function build(mode: RenderMode, keep: <T extends Material>(m: T) => T): Kit {
           envMapIntensity: 1.4,
         }),
       ),
+      core: keep(new MeshStandardMaterial({ color: '#b3aea6', roughness: 0.93 })),
       slab: keep(new MeshStandardMaterial({ color: '#bdb8b0', roughness: 0.9 })),
       panel: keep(
         new MeshStandardMaterial({
@@ -111,6 +117,9 @@ function build(mode: RenderMode, keep: <T extends Material>(m: T) => T): Kit {
     mode,
     wall: () => wall,
     glass: keep(new MeshStandardMaterial({ color: '#b9c2c7', roughness: 0.4, metalness: 0.05 })),
+    // A shade off the wall white: on a study model the core is the same
+    // material, read only by its shadow and its edge.
+    core: keep(new MeshStandardMaterial({ color: '#e4e1dd', roughness: 0.92 })),
     slab: keep(new MeshStandardMaterial({ color: '#e9e6e2', roughness: 0.9 })),
     panel: keep(
       new MeshStandardMaterial({

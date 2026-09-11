@@ -50,6 +50,7 @@ function makeMaterials() {
       transparent: true,
       opacity: 0.45,
     }),
+    core: new MeshStandardMaterial({ name: 'Core', color: '#b3aea6', roughness: 0.93 }),
     slab: new MeshStandardMaterial({ name: 'Slab', color: '#bdb8b0', roughness: 0.9 }),
     metal: new MeshStandardMaterial({
       name: 'Metal',
@@ -99,6 +100,12 @@ export async function exportSiteGltf(build: SiteBuild): Promise<ArrayBuffer> {
     glazing.name = 'Glazing'
     group.add(glazing)
 
+    for (const core of building.cores.cores) {
+      const mesh = new Mesh(core.geometry, m.core)
+      mesh.name = `Core_${core.id}`
+      group.add(mesh)
+    }
+
     const baked: [string, Instance[], MeshStandardMaterial][] = [
       ['BalconySlabs', building.balconies.slabs, m.slab],
       ['Balustrades', building.balconies.panels, m.infill],
@@ -128,7 +135,7 @@ export async function exportSiteGltf(build: SiteBuild): Promise<ArrayBuffer> {
       )
     })
   } finally {
-    // The wall, roof and glass buffers belong to the live site — leave those.
+    // The wall, roof, glass and core buffers belong to the live site — leave those.
     temporary.forEach((g) => g.dispose())
     Object.values(m).forEach((mat) => mat.dispose())
   }

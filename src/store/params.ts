@@ -6,6 +6,7 @@ export type BalconyType = 'none' | 'projecting' | 'loggia' | 'mixed'
 export type BalconyPattern = 'every' | 'alternate' | 'checkerboard' | 'random'
 export type BalustradeKind = 'glass' | 'solid' | 'bars'
 export type RenderMode = 'white' | 'pbr' | 'diagram'
+export type CorePlacement = 'perimeter' | 'centre'
 
 /** Per-elevation escape hatch, keyed `${massId}:${dir}`. */
 export interface FacadeOverride {
@@ -44,8 +45,24 @@ export interface Params {
   balustrade: BalustradeKind
   randomSeed: number
 
+  // core
+  coreCount: number
+  /** Which track the shafts sit on: against an exterior face, or on the spine. */
+  corePlacement: CorePlacement
+  /**
+   * Position of each core along that track, 0 to 1. `null` means "wherever the
+   * even spread puts it" — a dragged core takes a number, and everything else
+   * stays automatic. One entry per core.
+   */
+  coreOffsets: (number | null)[]
+  coreWidth: number
+  coreDepth: number
+  coreOverrun: number
+
   // metrics inputs
   modulesPerUnit: number
+  /** Net internal area as a share of GFA *after* the cores are taken out. */
+  efficiency: number
 
   overrides: Record<string, FacadeOverride>
 }
@@ -80,7 +97,19 @@ export const DEFAULTS: Params = {
   balustrade: 'glass',
   randomSeed: 1,
 
+  coreCount: 1,
+  corePlacement: 'perimeter',
+  coreOffsets: [null],
+  coreWidth: 6.5,
+  coreDepth: 6.5,
+  // A lift overrun clears the parapet, which is the only reason a core is
+  // visible at all on a massing model.
+  coreOverrun: 1.6,
+
   modulesPerUnit: 1,
+  // What is left after the core is already deducted: internal walls, risers
+  // and plant. Still a factor, not a measurement.
+  efficiency: 0.9,
 
   overrides: {},
 }
@@ -117,7 +146,13 @@ const RANGES = {
   balconyStartFloor: { min: 0, max: 29, step: 1, label: 'Start floor' },
   randomSeed: { min: 1, max: 999, step: 1, label: 'Seed' },
 
+  coreCount: { min: 0, max: 4, step: 1, label: 'Cores', hint: '0 = none' },
+  coreWidth: { min: 2, max: 10, step: 0.1, label: 'Core width', unit: 'm', hint: 'Along the wing' },
+  coreDepth: { min: 2, max: 10, step: 0.1, label: 'Core depth', unit: 'm', hint: 'Across the wing' },
+  coreOverrun: { min: 0, max: 3.5, step: 0.1, label: 'Overrun', unit: 'm', hint: 'Lift rise above the roof' },
+
   modulesPerUnit: { min: 1, max: 3, step: 0.5, label: 'Modules per unit' },
+  efficiency: { min: 0.85, max: 0.97, step: 0.01, label: 'Efficiency', hint: 'NIA as a share of GFA less cores' },
 } satisfies Record<string, Range>
 
 /** Every range key is also a numeric param, which lets the UI bind generically. */
@@ -129,6 +164,31 @@ export type RangeKey = keyof typeof RANGES & keyof Params
  * generic consumers like the slider.
  */
 export const RANGE = RANGES as Record<RangeKey, Range>
+
+/**
+ * Which edits invalidate hand-placed cores.
+ *
+ * An offset means nothing on its own — it is a position along a track, and the
+ * track is rebuilt from the massing. Change the footprint, the placement mode
+ * or the number of cores and the old numbers would point at arbitrary places on
+ * a different path, so they go back to automatic. Everything else (floors,
+ * window sizes, balconies) leaves the track alone and keeps them.
+ */
+const RETRACKING: (keyof Params)[] = [
+  'preset',
+  'corePlacement',
+  'coreCount',
+  'wingLengthA',
+  'wingLengthB',
+  'wingLengthC',
+  'courtyardWidth',
+  'buildingDepth',
+  'massOffset',
+]
+
+export function clearsCorePlacement(patch: Partial<Params>): boolean {
+  return RETRACKING.some((k) => k in patch)
+}
 
 /** Minimum masonry above a window head, and beside one. */
 export const HEAD_MIN = 0.25
@@ -181,6 +241,18 @@ export function resolveParams(raw: Params): Params {
 
   // A loggia is carved out of the wing, so it cannot eat more than half its depth.
   p.balconyDepth = clamp(p.balconyDepth, RANGE.balconyDepth.min, Math.max(RANGE.balconyDepth.min, p.buildingDepth / 2 - 1))
+
+  // A core has to live inside the wing it sits in, with wall either side. The
+  // builder shrinks it further when a particular wing is short, because only it
+  // knows the mass sizes — this is the part that can be settled from params.
+  p.coreCount = Math.round(p.coreCount)
+  p.coreDepth = clamp(p.coreDepth, RANGE.coreDepth.min, Math.max(RANGE.coreDepth.min, p.buildingDepth - 1))
+  // One offset per core, always: shorter means a new core has nowhere to sit,
+  // longer means a stale entry decides where a core goes when the count grows.
+  p.coreOffsets = Array.from({ length: p.coreCount }, (_, i) => {
+    const v = p.coreOffsets?.[i]
+    return typeof v === 'number' && Number.isFinite(v) ? clamp(v, 0, 1) : null
+  })
 
   p.reveal = Math.min(p.reveal, 0.4)
   p.balconyStartFloor = clamp(Math.round(p.balconyStartFloor), 0, Math.max(0, p.floors - 1))

@@ -5,8 +5,8 @@
  * with a rotation and an offset, so the site has to reason about *rotated*
  * quads rather than the AABBs `lib/rect.ts` handles. Everything works in the XZ
  * plane, wound either way. Area, containment and simplicity handle concave
- * polygons — the plot may be any shape. Only `convexOverlap` requires convex
- * input, and it is only ever given building footprint quads.
+ * polygons — the plot may be any shape. Only `convexOverlap` and `polygonGap`
+ * require convex input, and both are only ever given building footprint quads.
  */
 
 export interface Vec2 {
@@ -197,4 +197,40 @@ export const edgeMidpoint = (poly: Poly, i: number): Vec2 => {
   const a = poly[i]
   const b = poly[(i + 1) % poly.length]
   return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 }
+}
+
+/** Distance from `p` to the segment `ab`, zero when it lands on it. */
+export function pointSegmentDistance(p: Vec2, a: Vec2, b: Vec2): number {
+  const ex = b.x - a.x
+  const ez = b.z - a.z
+  const len2 = ex * ex + ez * ez
+  // A degenerate edge collapses to its start point.
+  const t = len2 < EPS ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * ex + (p.z - a.z) * ez) / len2))
+  return Math.hypot(p.x - (a.x + t * ex), p.z - (a.z + t * ez))
+}
+
+/**
+ * Distance from `p` to the nearest point on the polygon's *boundary*. Always
+ * positive, inside or out — a setback is measured to the line, and which side
+ * of it you are on is `pointInPolygon`'s question, not this one's.
+ */
+export function distanceToBoundary(p: Vec2, poly: Poly): number {
+  let best = Infinity
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const d = pointSegmentDistance(p, poly[j], poly[i])
+    if (d < best) best = d
+  }
+  return best
+}
+
+/**
+ * Gap between two polygons that do not overlap, as the smallest vertex-to-edge
+ * distance either way. Exact for convex input, which is all the site gives it:
+ * the closest pair of disjoint convex shapes always involves a vertex.
+ */
+export function polygonGap(a: Poly, b: Poly): number {
+  let best = Infinity
+  for (const p of a) best = Math.min(best, distanceToBoundary(p, b))
+  for (const p of b) best = Math.min(best, distanceToBoundary(p, a))
+  return best
 }

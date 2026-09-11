@@ -1,6 +1,7 @@
 import { BufferAttribute, BufferGeometry } from 'three'
 import { footprint, massBase, massTop, type Mass } from './masses'
 import type { Elevation } from './elevations'
+import type { Core } from './core'
 import type { Params } from '../store/params'
 
 /**
@@ -9,7 +10,12 @@ import type { Params } from '../store/params'
  * EdgesGeometry — the wall buffer is non-indexed triangle soup, so edge
  * extraction there would draw every internal seam.
  */
-export function buildEdges(masses: Mass[], elevations: Elevation[], p: Params): BufferGeometry {
+export function buildEdges(
+  masses: Mass[],
+  elevations: Elevation[],
+  cores: Core[],
+  p: Params,
+): BufferGeometry {
   const v: number[] = []
   const seg = (
     x0: number, y0: number, z0: number,
@@ -22,6 +28,28 @@ export function buildEdges(masses: Mass[], elevations: Elevation[], p: Params): 
     const r = footprint(m)
     const y0 = massBase(m, p.floorHeight)
     const y1 = massTop(m, p.floorHeight) + p.roofParapet
+    const corners: [number, number][] = [
+      [r.x0, r.z0],
+      [r.x1, r.z0],
+      [r.x1, r.z1],
+      [r.x0, r.z1],
+    ]
+    for (const [x, z] of corners) seg(x, y0, z, x, y1, z)
+    for (let i = 0; i < 4; i++) {
+      const a = corners[i]
+      const b = corners[(i + 1) % 4]
+      seg(a[0], y0, a[1], b[0], y0, b[1])
+      seg(a[0], y1, a[1], b[0], y1, b[1])
+    }
+  }
+
+  // Only the overrun is above the roof, so only the overrun is drawn. Outlining
+  // the buried shaft would print a box through the middle of every elevation.
+  for (const core of cores) {
+    if (core.overrun <= 0) continue
+    const r = core.rect
+    const y0 = core.topFloor * p.floorHeight
+    const y1 = y0 + core.overrun
     const corners: [number, number][] = [
       [r.x0, r.z0],
       [r.x1, r.z0],
