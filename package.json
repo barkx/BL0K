@@ -36,5 +36,5 @@
   "engines": {
     "node": ">=20"
   },
-  "description": "Early-stage urbanism: plot, massing and facade studies in the browser"
+  "description": "Parametric building design: plot, massing and facade studies in the browser"
 }

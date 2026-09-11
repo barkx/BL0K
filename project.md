@@ -1,7 +1,7 @@
 # BL0K
 
-A browser app for early-stage urbanism. Draw a plot, place buildings on it, and
-change a slider to rebuild any of them. Each building is parametric massing plus
+A browser app for parametric building design. Draw a plot, place buildings on
+it, and change a slider to rebuild any of them. Each building is parametric massing plus
 a module-driven facade; real apartment floorplans come later.
 
 **This is the single spec of record.** It is a working document — keep it
@@ -176,7 +176,7 @@ mode change.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  ◧ BL0K  Early-stage urbanism   [white|pbr|diagram]  ⤓   │
+│  ◧ BL0K  Parametric building design  [white|pbr|diagram] ⤓│
 ├───────────────┬──────────────────────────────────────────┤
 │               │                                          │
 │   PARAMETERS  │            3D VIEWPORT                   │

@@ -1,6 +1,6 @@
 # BL0K
 
-**Early-stage urbanism, in the browser.** Draw a plot, place buildings on it,
+**Parametric building design, in the browser.** Draw a plot, place buildings on it,
 and change a slider to rebuild any of them. Each building is parametric massing
 plus a module-driven facade; floorplans come later.
 
