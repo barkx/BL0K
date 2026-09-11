@@ -347,43 +347,75 @@ it is too big — split it.
 
 ---
 
-## 9. Roadmap
+## 9. Positioning and roadmap
 
-Informed by what comparable tools in this category offer. Ordered by what the
-existing architecture makes cheap, not by what sounds impressive.
+### Deliberately a simpler tool
 
-### Phase A — cheap, because the groundwork is already there
+The competitors in this category are Autodesk **Forma** (Site Design for
+massing and environment, Building Design for schematic facades, floor plans and
+unit mix, then a native Revit handoff) and **Spacio** (massing, environmental
+analysis, national code checks, IFC). Both are cloud products with teams behind
+them; Forma is roughly EUR 1 500 a year.
 
-1. **Metrics export** to CSV/Excel. The data exists; it is a formatter.
-2. **NIA and efficiency ratio.** GFA times a per-building factor.
-3. **Unit mix to target ratios.** Modules are already addressable as
-   `(elevation, floor, index)` — that address was kept for exactly this.
-4. **Site rules: setback, height cap, FAR and coverage limits.** Identical in
+**BL0K is not trying to match them, and should not.** Simulation breadth — wind
+CFD, microclimate, embodied carbon — and generative AI are not winnable here.
+Being a worse Forma is not a position.
+
+### What BL0K actually has that they do not
+
+Defend these; they are the reason to use it.
+
+- **Facade depth.** Real openings built as panels, reveals with jambs, loggias
+  with cheeks and soffits, per-elevation overrides, a module rhythm that always
+  divides evenly. Spacio does not do this. Forma Building Design is the only
+  close thing and it is new.
+- **Determinism.** Seeded and byte-identical. For a tool whose job is comparing
+  options, reproducibility is a real claim, and neither rival makes it.
+- **No account, no cloud, no subscription.** A static page that works offline.
+  Forma's own reviews list cloud dependency as friction. For students and small
+  practices this is a position, not a limitation.
+- **Metrics you can show your working on.** Union-corrected GFA, separating-axis
+  clash detection, self-intersection flagging.
+
+### ⚠ The gap that matters most: BIM handoff
+
+**glTF is a visualisation format. Nobody continues a project from it.** Both
+rivals let you carry work into Revit or ArchiCAD, which is the entire point of a
+schematic tool. Until BL0K exports **IFC**, it is a study toy rather than a step
+in a real workflow.
+
+This is the one missing feature worth treating as a blocker rather than a
+backlog item. It is not cheap — either a dependency or a schema writer — but its
+absence caps the tool's usefulness no matter how good everything else gets.
+
+### Order of work
+
+1. **IFC export.** See above. Decide dependency vs. own writer first.
+2. **Sun hours and shadow.** The cheapest of the analyses and the most visible,
+   and the hook in §7 is already in place waiting to be claimed.
+3. **Geolocated context via OpenStreetMap.** Overpass needs no API key, so it
+   keeps the no-credentials rule intact. Closes the biggest workflow gap:
+   today the site arrives as a hand-calibrated image.
+4. **Unit mix to target ratios.** Modules are already addressable as
+   `(elevation, floor, index)` — that address was kept for exactly this. Turns
+   the crude estimate into a real number.
+5. **Site rules: setback, height cap, FAR and coverage limits.** Identical in
    shape to the clash and off-plot checks already running, so they land in the
    same panel with the same warning style.
-5. **Sun and shadow study.** The hook in §7 is already in place; this claims it.
-
-### Phase B — real work, high value
-
-6. **DXF export**, then **plans, elevations and sections** — orthographic
+6. **Metrics export** to CSV. The data exists; it is a formatter.
+7. **NIA and efficiency ratio.** GFA times a per-building factor.
+8. **DXF export**, then **plans, elevations and sections** — orthographic
    cameras over geometry that already exists.
-7. **Geolocated context via OpenStreetMap.** Overpass needs no API key, which
-   keeps the no-credentials rule intact. Gives auto site outlines and
-   neighbouring footprints.
-8. **Daylight factor and sun hours.** Genuine compute, but tractable on a grid.
 
-### Phase C — decide before writing any code
+### Not planned
 
-9. **IFC export.** Large. Either a dependency or a schema writer.
-10. **Multi-user collaboration.** This changes what the project *is*: BL0K is a
-    static site with no backend. Collaboration means servers, accounts, auth and
-    storage, and it collides with the privacy rules in `CLAUDE.md`.
-
-### Deliberately not chasing
-
-The module-driven facade — real openings, reveals, loggias, balconies,
-per-elevation overrides — is the thing BL0K does that massing-and-simulation
-tools do not. Do not trade it away for feature parity.
+- Wind, noise, microclimate, embodied carbon. Out of reach, and not the point.
+- Generative or AI layout. There is no AI in this and the branding must not
+  claim otherwise.
+- Terrain, floor plans, parking layout.
+- **Multi-user collaboration.** It would change what the project *is*: a static
+  site with no backend. Servers, accounts, auth and storage, and it collides
+  with the privacy rules in `CLAUDE.md`.
 
 ---
 

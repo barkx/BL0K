@@ -126,6 +126,13 @@ Refuse:
   scale from two points, position / rotate / fade / lock it, trace over it. The
   image rides in the config as a downscaled data URL.
 - **Next**: M11 DXF import.
+- **Biggest gap, by decision**: no **IFC export**. glTF is a visualisation
+  format — nobody continues a project from it, so today the tool dead-ends
+  rather than feeding Revit or ArchiCAD. Treated as a blocker, not a backlog
+  item. See `project.md` §9.
+- **Positioning**: deliberately a simpler tool than Forma or Spacio. Do not
+  chase simulation breadth or generative AI. Defend facade depth, determinism,
+  offline-and-free, and metrics that show their working. `project.md` §9.
 - **Verified**: 480-case parameter sweep (seeded output byte-identical), site
   layer checks (metrics, SAT clash detection, buffer reuse on move), polygon
   checks (self-intersection, concave area and containment, winding), config
