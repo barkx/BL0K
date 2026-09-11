@@ -177,29 +177,43 @@ mode change.
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  ◧ BL0K  Parametric building design  [white|pbr|diagram] ⤓│
-├───────────────┬──────────────────────────────────────────┤
-│               │                                          │
-│   PARAMETERS  │            3D VIEWPORT                   │
-│               │                                          │
-│  ▸ Massing    │        (orbit / pan / zoom)               │
-│  ▸ Facade     │                                          │
-│  ▸ Balconies  │                                          │
-│  ▸ Appearance │   ┌────────────────────┐                 │
-│               │   │ 8 floors · 24.0 m  │  ← metrics,     │
-│  [Presets]    │   │ GFA    4 160 m²    │    over the      │
-│               │   │ Units  52          │    viewport      │
-│  Save / Load  │   │ Facade 2 890 m²    │                 │
-│  Export glTF  │   │ Cover  520 m²      │                 │
-└───────────────┴──────────────────────────────────────────┘
+├────┬─────────────┬───────────────────────────────────────┤
+│ ◇  │  SITE       │                                       │
+│Site│             │           3D VIEWPORT                 │
+│ ▣  │ Boundary    │                                       │
+│Plce│  ...        │        (orbit / pan / zoom)            │
+│ ◲  │ Overlay     │                                       │
+│Mass│  ...        │   ┌────────────────────┐              │
+│ ▦  │             │   │ 1 building · 9900m²│  ← metrics,  │
+│Fcde│             │   │ GFA    8 320 m²    │    over the   │
+│ ▤  │             │   │ FAR    0.84        │    viewport   │
+│Unit│             │   │ Cover  10.5%       │              │
+│ ⚙  │             │   └────────────────────┘              │
+│Set │             │                                       │
+└────┴─────────────┴───────────────────────────────────────┘
 ```
 
-Sidebar ~320 px, collapsible. Under 900 px viewport width it becomes a bottom
-sheet and the viewport takes the full screen.
+An icon rail selects one of six sections; the panel beside it shows that
+section only. Six accordion groups in a 320 px column was too much to scan.
+
+| Section | Holds |
+|---|---|
+| **Site** | Plot boundary, overlay image |
+| **Placement** | The building list, and position/rotation of the selected one. Roads and parking go here |
+| **Massing** | Footprint preset and wings; floors, floor height, parapet |
+| **Facade** | Module, windows, balconies |
+| **Units** | The unit estimate |
+| **Settings** | Save, load, export, reset |
+
+Rail ~56 px, panel ~264 px, collapsible together. Under 900 px the whole
+sidebar becomes a bottom sheet and the rail lays out horizontally — six items
+stacked vertically will not fit a sheet.
 
 Design notes: the building is the hero, so the chrome stays quiet. The palette
-should come from the subject — drawing-office greys and blueprint ink rather
-than a generic SaaS card kit. Sentence case labels, no all-caps eyebrows, no
-decorative gradients. Sliders show live values; the number is the point.
+comes from the subject — drawing-office greys and blueprint ink rather than a
+generic SaaS card kit. Sentence case labels, no all-caps eyebrows except the
+small block titles inside a panel, no decorative gradients. Sliders show live
+values; the number is the point.
 
 ---
 
