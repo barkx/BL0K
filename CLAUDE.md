@@ -112,19 +112,26 @@ Refuse:
 
 ## 6. Project State
 
-- **M1–M10 complete**, see `project.md` §8. Six presets with per-floor junction
-  detection, module-driven facade with real openings, projecting and loggia
-  balconies, three render modes, metrics, glTF export, config I/O,
-  per-elevation overrides, bottom sheet under 900 px.
-- **M8**: site of many placed buildings, free
-  rotation, drag on the ground, plot rectangle, site metrics with clash and
-  off-plot detection, config v3 with migration, whole-site glTF.
-- **M9**: draw a plot boundary by clicking corners, close it, then
-  drag / insert / remove corners. Concave plots supported; a self-intersecting
-  boundary is detected and flagged.
-- **M10**: drop a map or site plan on the ground, set its true
-  scale from two points, position / rotate / fade / lock it, trace over it. The
-  image rides in the config as a downscaled data URL.
+- **M1–M10 complete**, see `project.md` §8.
+  - **M1–M7, the building**: six presets with per-floor junction detection,
+    module-driven facade with real openings, projecting and loggia balconies,
+    three render modes, metrics, glTF export, config I/O, per-elevation
+    overrides, bottom sheet under 900 px.
+  - **M8, the site**: many placed buildings, free rotation, drag on the ground,
+    site metrics with clash and off-plot detection, config v3, whole-site glTF.
+  - **M9, the plot**: draw a boundary, drag / insert / remove corners. Concave
+    supported; a self-intersecting boundary is detected and flagged.
+  - **M10, the underlay**: drop a map or site plan, set its true scale from two
+    points, position / rotate / fade / lock it, trace over it. The image rides
+    in the config as a downscaled data URL.
+- **UI**: the sidebar is an icon rail with six sections — Site, Placement,
+  Massing, Facade (balconies live here), Units, Settings. Inside a panel,
+  sections are flat `Block`s, not nested accordions. Roads and parking are
+  intended for Placement. Horizontal rail in the bottom sheet under 900 px.
+- **Brand**: BL0K, "Parametric building design". One axonometric block, three
+  flat faces, no strokes — `src/ui/Logo.tsx`, same shape as the favicon. The
+  palette is unchanged drawing-office greys and blueprint ink. There is no AI
+  in this app and the branding must not claim otherwise.
 - **Next**: M11 DXF import.
 - **Biggest gap, by decision**: no **IFC export**. glTF is a visualisation
   format — nobody continues a project from it, so today the tool dead-ends

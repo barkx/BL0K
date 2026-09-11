@@ -195,7 +195,47 @@ full parameter set, position and free rotation. Buildings are generated in
 their own local frame and placed with a transform, so the whole building
 pipeline stays axis-aligned and untouched by the site layer.
 
-## The site
+## Getting around
+
+The sidebar is an icon rail with six sections, and the rest of this chapter
+follows them in order:
+
+| Section | Holds |
+|---|---|
+| **Site** | Plot boundary, overlay image |
+| **Placement** | The list of buildings, and where the selected one sits |
+| **Massing** | Footprint preset and wings; floors, floor height, parapet |
+| **Facade** | Module, windows, balconies |
+| **Units** | The unit estimate |
+| **Settings** | Save, load, export, reset |
+
+Under 900 px the whole sidebar becomes a bottom sheet and the rail lays out
+horizontally.
+
+## The viewport
+
+- **Orbit** — drag with the left mouse button.
+- **Pan** — drag with the right mouse button.
+- **Zoom** — scroll wheel.
+- **Fit** — toolbar button. Reframes the whole building. The camera also
+  reframes by itself when you switch preset, and never mid-drag.
+- **Click an elevation** — selects that face and opens the override panel
+  (top right). Click it again, or the ×, to deselect. Roof clicks are ignored.
+
+## Toolbar
+
+- **☰** — collapses the parameter sidebar to give the model the full width.
+- **White / PBR / Diagram** — render mode. All three swap materials on the same
+  geometry, so switching is instant and never rebuilds.
+  - *White* — matte white study model, soft contact shadow, thin ink edges.
+  - *PBR* — concrete, reflective glass, metal handrails, image-based lighting.
+  - *Diagram* — flat fills, no shadows, blueprint grid. Masses are tinted by
+    their position in the stack, so a stepped block reads at a glance. This is
+    the mode for report screenshots.
+- **Fit** — see above.
+- **⤓ Image** — saves the viewport as a PNG at the current canvas resolution.
+
+## Site
 
 - **Underlay** — drop a map screenshot or site plan anywhere on the viewport,
   or pick one under *Underlay image*. Then **Set scale from two points**: click
@@ -227,30 +267,15 @@ pipeline stays axis-aligned and untouched by the site layer.
   panel. Overlap is tested with a separating-axis test on the real rotated
   footprints, so a rotated building near another is not falsely flagged.
 
-## The viewport
+## Placement and elevation overrides
 
-- **Orbit** — drag with the left mouse button.
-- **Pan** — drag with the right mouse button.
-- **Zoom** — scroll wheel.
-- **Fit** — toolbar button. Reframes the whole building. The camera also
-  reframes by itself when you switch preset, and never mid-drag.
-- **Click an elevation** — selects that face and opens the override panel
-  (top right). Click it again, or the ×, to deselect. Roof clicks are ignored.
+Click a face in the viewport. The panel shows that elevation's length, module
+count, snapped module width and exterior area, and lets you override
+**Balconies**, **Pattern** and **Windows per module** for that face alone.
+`Inherit` returns a field to the global value; **Clear override** returns all of
+them. Overrides are saved and loaded with the config.
 
-## Toolbar
-
-- **☰** — collapses the parameter sidebar to give the model the full width.
-- **White / PBR / Diagram** — render mode. All three swap materials on the same
-  geometry, so switching is instant and never rebuilds.
-  - *White* — matte white study model, soft contact shadow, thin ink edges.
-  - *PBR* — concrete, reflective glass, metal handrails, image-based lighting.
-  - *Diagram* — flat fills, no shadows, blueprint grid. Masses are tinted by
-    their position in the stack, so a stepped block reads at a glance. This is
-    the mode for report screenshots.
-- **Fit** — see above.
-- **⤓ Image** — saves the viewport as a PNG at the current canvas resolution.
-
-## Parameters — Massing
+## Massing
 
 - **Preset** — `Bar`, `L-shape`, `T-shape`, `U-shape`, `Courtyard`, `Stacked`.
   Changing it regenerates the masses and reframes the camera. Only the wing
@@ -267,7 +292,7 @@ pipeline stays axis-aligned and untouched by the site layer.
 - **Parapet** 0–1.5 m — upstand around exposed roof edges only, so a mass with
   another sitting on it does not get a parapet buried in the wall above.
 
-## Parameters — Facade
+## Facade
 
 - **Module width** 3.0–9.0 m — the width of one apartment module, and the thing
   the whole window rhythm derives from. Modules always divide an elevation
@@ -286,7 +311,7 @@ pipeline stays axis-aligned and untouched by the site layer.
 Any slider that had to be overruled says **"Built at …"** underneath. The handle
 keeps the value you asked for; the building uses the resolved one.
 
-## Parameters — Balconies
+### Balconies
 
 - **Type** — `None`, `Projecting`, `Loggia`, `Mixed`.
   - *Projecting* — a slab cantilevers past the wall, balustrade on three sides.
@@ -306,15 +331,14 @@ keeps the value you asked for; the building uses the resolved one.
 - **Seed** — shown when the pattern or type needs randomness. The same seed
   always gives the same building.
 
-## Parameters — Site and units
+## Units
 
-- **Site area** 200–20 000 m² — denominator for the coverage figure only.
 - **Modules per unit** 1–3 — divides the module count into the unit estimate.
-  Nothing else uses it.
+  Nothing else uses it. Site area is not a parameter; it comes from the plot.
 
-## Config
+## Settings
 
-- **Save site** — downloads `site-<timestamp>.json` as `{ version, app, site }`
+- **Save site** — downloads `bl0k-site-<timestamp>.json` as `{ version, app, site }`
   with the plot, every building and the underlay image. The image travels
   inline as a data URL so the file is self-contained, which is why anything
   over 2048 px is downscaled before it is stored.
@@ -327,14 +351,6 @@ keeps the value you asked for; the building uses the resolved one.
   instances baked into merged meshes so any downstream tool can open it. The
   exporter is code-split, so it only downloads when you click.
 - **Reset site** — back to the opening state.
-
-## Elevation overrides
-
-Click a face in the viewport. The panel shows that elevation's length, module
-count, snapped module width and exterior area, and lets you override
-**Balconies**, **Pattern** and **Windows per module** for that face alone.
-`Inherit` returns a field to the global value; **Clear override** returns all of
-them. Overrides are saved and loaded with the config.
 
 ## Metrics
 
@@ -427,7 +443,7 @@ building had to be built from something else, the slider says so underneath.
 - **Windows are merged rather than instanced.** See "Walls and glass are
   merged" above — same draw-call count, less per-frame work.
 
-## Open questions from §9, as built
+## Open questions from the spec, as built
 
 These were answered to keep moving; all are cheap to revisit.
 
