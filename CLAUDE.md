@@ -123,7 +123,10 @@ Refuse:
 - **v2 M9 complete**: draw a plot boundary by clicking corners, close it, then
   drag / insert / remove corners. Concave plots supported; a self-intersecting
   boundary is detected and flagged.
-- **Next**: M10 image underlay + scale, M11 DXF import.
+- **v2 M10 complete**: drop a map or site plan on the ground, set its true
+  scale from two points, position / rotate / fade / lock it, trace over it. The
+  image rides in the config as a downscaled data URL.
+- **Next**: M11 DXF import.
 - **Verified**: 480-case parameter sweep (seeded output byte-identical), site
   layer checks (metrics, SAT clash detection, buffer reuse on move), polygon
   checks (self-intersection, concave area and containment, winding), config

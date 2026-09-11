@@ -8,6 +8,7 @@ import type { BalconyPattern, BalconyType, BalustradeKind, Preset } from '../sto
 import { mm } from '../lib/units'
 import { download, parseConfig, serialize, stamp } from '../io/config'
 import { BuildingList, PlacementControls, PlotControls } from './SitePanel'
+import { UnderlayPanel } from './UnderlayPanel'
 
 const PRESETS = Object.entries(PRESET_LABELS).map(([value, label]) => ({
   value: value as Preset,
@@ -147,6 +148,10 @@ export function Sidebar() {
       <Group title="Site">
         <PlotControls />
         <BuildingList />
+      </Group>
+
+      <Group title="Underlay image" open={false}>
+        <UnderlayPanel />
       </Group>
 
       <Group title="Placement">

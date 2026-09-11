@@ -13,7 +13,7 @@ up. Edit it freely — unlike `project.md`, it is a working doc.
 
 | Area | Decision |
 |---|---|
-| Location import | Georeferenced **image underlay** + set scale by two points, and **DXF** from CAD |
+| Location import | **Image underlay** + set scale by two points (done), and **DXF** from CAD (M11) |
 | Not importing | Live map tiles (needs a runtime API key), GeoJSON for now |
 | 3D context | **Flat plot only.** No terrain, no neighbour volumes yet |
 | Plot | A plan polygon, drawn and edited on the ground. Concave allowed |
@@ -112,9 +112,23 @@ clickable at any zoom, and they respect depth: drawing them over the buildings
 would look better, but raycasting still puts the building first, so a handle
 that appeared to be in front would refuse to be clicked.
 
-**M10 — Image underlay.** Drop a screenshot or site plan onto the ground,
-position it, and set its scale by clicking two points a known distance apart.
-No dependencies, no keys, works offline. Then trace the plot over it.
+**M10 — Image underlay. Done.**
+Drop a map screenshot or site plan anywhere on the viewport, or choose one.
+Set its true scale by clicking two points whose real distance you know and
+typing that distance; the image rescales about the midpoint of those two
+points, so whatever you measured stays where you put it. Then position,
+rotate, fade, lock and trace the plot over it. No dependencies, no keys,
+works offline.
+
+The image is carried in the site config as a data URL, so a saved scheme
+travels whole. That makes size a real concern, so anything over 2048 px is
+downscaled and re-encoded before it is stored — PNG first, since linework and
+map text survive it far better than JPEG, with JPEG as the fallback only when
+the PNG comes out over 6 MB.
+
+The plot fill steps aside whenever an underlay is showing, and the image is
+inert while you are tracing or calibrating so it can never swallow a ground
+click.
 
 **M11 — DXF import.** Plot boundary and context linework from CAD. Needs a DXF
 parser — the first real new dependency, so it wants a decision on which.

@@ -22,10 +22,35 @@ export interface Placement {
   params: Params
 }
 
+/**
+ * A site plan or map screenshot laid on the ground to trace over.
+ *
+ * The image sits in the config as a data URL so a saved scheme travels whole.
+ * Its ground size is one number — `width` in metres — with the height
+ * following the pixel aspect, which is what calibration adjusts.
+ */
+export interface Underlay {
+  src: string
+  name: string
+  /** Width on the ground in metres; height follows `aspect`. */
+  width: number
+  /** Pixel height over pixel width. */
+  aspect: number
+  position: Vec2
+  /** Degrees about Y. */
+  rotation: number
+  opacity: number
+  visible: boolean
+  /** Locked images are inert, so they never steal a click while you trace. */
+  locked: boolean
+}
+
 export interface Site {
-  /** Plot boundary as a plan polygon. A rectangle until M9 lets you draw one. */
+  /** Plot boundary as a plan polygon; drawn and edited on the ground. */
   plot: Poly
   buildings: Placement[]
+  /** Optional image to trace over. */
+  underlay: Underlay | null
 }
 
 // Big enough to hold the default L-shape (40 x 53 m) with room to place a
@@ -49,10 +74,14 @@ export function makePlacement(patch: Partial<Placement> = {}): Placement {
   }
 }
 
+/** Ground width a freshly dropped image takes, before it is calibrated. */
+export const DEFAULT_UNDERLAY_WIDTH = 120
+
 export function defaultSite(): Site {
   return {
     plot: rectanglePoly(DEFAULT_PLOT_WIDTH, DEFAULT_PLOT_DEPTH),
     buildings: [makePlacement({ name: 'Building A' })],
+    underlay: null,
   }
 }
 

@@ -6,12 +6,14 @@ import {
   makePlacement,
   type Placement,
   type Site,
+  type Underlay,
 } from '../site/types'
 
 /**
  * v1: params at the top level.
  * v2: `{ version, params }` — one building, no site.
- * v3: `{ version, site }` — a plot and many placed buildings.
+ * v3: `{ version, site }` — a plot and many placed buildings, and from M10 an
+ *     optional underlay image carried inline as a data URL.
  */
 export const CONFIG_VERSION = 3
 
@@ -64,6 +66,35 @@ function readPlot(incoming: unknown): Poly {
   return rectanglePoly(DEFAULT_PLOT_WIDTH, DEFAULT_PLOT_DEPTH)
 }
 
+/**
+ * An underlay is only restored if the image itself is there and the numbers are
+ * sane. A half-read one would sit on the ground at the wrong scale looking like
+ * real survey data, which is worse than no underlay at all.
+ */
+function readUnderlay(incoming: unknown): Underlay | null {
+  if (!incoming || typeof incoming !== 'object') return null
+  const u = incoming as Partial<Underlay>
+  if (typeof u.src !== 'string' || !u.src.startsWith('data:image/')) return null
+
+  const width = Number(u.width)
+  const aspect = Number(u.aspect)
+  if (!Number.isFinite(width) || width <= 0) return null
+  if (!Number.isFinite(aspect) || aspect <= 0) return null
+
+  const opacity = Number(u.opacity)
+  return {
+    src: u.src,
+    name: typeof u.name === 'string' ? u.name : 'Underlay',
+    width,
+    aspect,
+    position: { x: Number(u.position?.x) || 0, z: Number(u.position?.z) || 0 },
+    rotation: Number.isFinite(Number(u.rotation)) ? Number(u.rotation) : 0,
+    opacity: Number.isFinite(opacity) ? Math.min(1, Math.max(0.05, opacity)) : 0.7,
+    visible: u.visible !== false,
+    locked: u.locked === true,
+  }
+}
+
 function readPlacement(incoming: unknown, index: number): Placement {
   const source = (incoming ?? {}) as Partial<Placement> & { params?: unknown }
   const { params } = readParams(source.raw ?? source.params)
@@ -100,6 +131,7 @@ export function parseConfig(text: string): LoadResult {
           buildings.length > 0
             ? buildings.map(readPlacement)
             : [makePlacement({ name: 'Building A' })],
+        underlay: readUnderlay(site.underlay),
       },
       version,
       migrated: null,
@@ -113,6 +145,7 @@ export function parseConfig(text: string): LoadResult {
     site: {
       plot: rectanglePoly(DEFAULT_PLOT_WIDTH, DEFAULT_PLOT_DEPTH),
       buildings: [makePlacement({ name: 'Building A', raw: params, params })],
+      underlay: null,
     },
     version,
     migrated:

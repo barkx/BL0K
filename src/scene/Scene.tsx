@@ -10,6 +10,7 @@ import { Building } from './Building'
 import { Plot } from './Plot'
 import { useSiteDrag } from './useSiteDrag'
 import { PlotDraft, PlotHandles } from './PlotEditor'
+import { Underlay } from './Underlay'
 import type { PlacedBuilding } from '../site/build'
 
 const VIEW_DIRECTION = new Vector3(0.62, 0.46, 0.64).normalize()
@@ -79,6 +80,7 @@ function Ground({
   const selectBuilding = useStore((s) => s.selectBuilding)
   const plotMode = useStore((s) => s.plotMode)
   const addDraftPoint = useStore((s) => s.addDraftPoint)
+  const addCalibrationPoint = useStore((s) => s.addCalibrationPoint)
 
   return (
     <mesh
@@ -86,10 +88,12 @@ function Ground({
       position={[0, -0.02, 0]}
       receiveShadow={shadows}
       onPointerDown={(e) => {
-        if (plotMode === 'draw') {
+        if (plotMode !== 'idle') {
           if (e.nativeEvent.button !== 0) return
           e.stopPropagation()
-          addDraftPoint({ x: e.point.x, z: e.point.z })
+          const point = { x: e.point.x, z: e.point.z }
+          if (plotMode === 'draw') addDraftPoint(point)
+          else addCalibrationPoint(point)
           return
         }
         selectBuilding(null)
@@ -197,11 +201,17 @@ export function Scene() {
         selectedId={selectedId}
         clashing={clashing}
         mat={mat}
+        showFill={!(site.underlay && site.underlay.visible)}
       />
 
       <Ground radius={radius} colour={mat.groundColor} shadows={mat.shadows} />
+      <Underlay />
 
-      {plotMode === 'draw' ? <PlotDraft draft={plotDraft} /> : <PlotHandles plot={site.plot} />}
+      {plotMode === 'draw' ? (
+        <PlotDraft draft={plotDraft} />
+      ) : plotMode === 'idle' ? (
+        <PlotHandles plot={site.plot} />
+      ) : null}
 
       {mat.mode === 'white' && (
         <ContactShadows

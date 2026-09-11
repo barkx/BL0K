@@ -482,3 +482,37 @@ select:focus-visible { outline: none; border-color: var(--blueprint); background
   border-color: var(--blueprint);
   background: rgba(228, 236, 244, 0.92);
 }
+
+/* ---------- underlay drop ---------- */
+
+.dropzone {
+  position: absolute;
+  inset: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--blueprint);
+  border-radius: 4px;
+  background: rgba(228, 236, 244, 0.55);
+  color: var(--blueprint);
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.droperror {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  max-width: 80%;
+  appearance: none;
+  border: 1px solid #d8b4a8;
+  background: #fdf3f0;
+  color: #8d3722;
+  border-radius: 3px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}

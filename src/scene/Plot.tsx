@@ -41,12 +41,15 @@ export function Plot({
   selectedId,
   clashing,
   mat,
+  showFill = true,
 }: {
   plot: Poly
   placed: PlacedBuilding[]
   selectedId: string | null
   clashing: Set<string>
   mat: MaterialSet
+  /** Off while an underlay is showing — an opaque plot would hide it. */
+  showFill?: boolean
 }) {
   const fill = useMemo(() => fillGeometry(plot), [plot])
   const boundary = useMemo(() => loopGeometry(plot, 0.03), [plot])
@@ -75,7 +78,7 @@ export function Plot({
 
   return (
     <group>
-      {fill && (
+      {fill && showFill && (
         <mesh geometry={fill} position={[0, 0.012, 0]} receiveShadow={mat.shadows}>
           <meshStandardMaterial
             color={diagram ? '#dfe8f1' : '#e6e3de'}

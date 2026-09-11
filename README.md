@@ -142,7 +142,7 @@ which is ignored.
 | `metrics/` | Area and unit-count derivation |
 | `scene/` | R3F components, material sets per render mode, lighting |
 | `ui/` | Sidebar, sliders, metrics panel, per-elevation override panel |
-| `io/` | glTF export, config save/load with migration |
+| `io/` | glTF export, config save/load with migration, underlay image loading |
 | `lib/` | Clamping, seeded RNG, rectangle/span algebra, the mesh builder |
 
 ### Conventions
@@ -198,6 +198,13 @@ pipeline stays axis-aligned and untouched by the site layer.
 
 ## The site
 
+- **Underlay** — drop a map screenshot or site plan anywhere on the viewport,
+  or pick one under *Underlay image*. Then **Set scale from two points**: click
+  two points whose real distance you know — a street width, a building edge, a
+  scale bar — and type that distance. The image rescales about the midpoint of
+  the two, so what you measured stays put. Position it by dragging or by
+  number, rotate it, fade it, then **Lock** it so it stops taking clicks while
+  you trace. The plot fill hides itself whenever an underlay is showing.
 - **Plot** — **Draw new boundary**, then click corners on the ground. Close it
   by clicking the red first corner or pressing Enter; Backspace undoes a
   corner, Esc cancels. Afterwards, drag a corner to move it, click a small
@@ -309,7 +316,9 @@ keeps the value you asked for; the building uses the resolved one.
 ## Config
 
 - **Save site** — downloads `site-<timestamp>.json` as `{ version, app, site }`
-  with the plot and every building.
+  with the plot, every building and the underlay image. The image travels
+  inline as a data URL so the file is self-contained, which is why anything
+  over 2048 px is downscaled before it is stored.
 - **Load site** — reads one back. A v1 or v2 file described a single building
   with no site, so it becomes a one-building site on a default plot; missing
   settings take defaults, and a file from a newer build loads with unknown keys

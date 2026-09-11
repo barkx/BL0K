@@ -8,6 +8,7 @@ import {
   suggestName,
   type Placement,
   type Site,
+  type Underlay,
 } from '../site/types'
 import { rectanglePoly, type Poly, type Vec2 } from '../lib/poly'
 
@@ -22,10 +23,15 @@ interface State {
   fitRequest: number
   /** A view setting, not a property of any one building. */
   renderMode: RenderMode
-  /** Tracing a new boundary, or editing the existing one. */
-  plotMode: 'idle' | 'draw'
+  /**
+   * What a click on the ground means: nothing special, placing a boundary
+   * corner, or dropping one of the two calibration points.
+   */
+  plotMode: 'idle' | 'draw' | 'calibrate'
   /** Points collected so far while tracing. */
   plotDraft: Poly
+  /** The two points whose real-world distance sets the underlay scale. */
+  calibration: Poly
 
   selectBuilding: (id: string | null) => void
   selectElevation: (key: string | null) => void
@@ -50,6 +56,13 @@ interface State {
   movePlotVertex: (index: number, point: Vec2) => void
   insertPlotVertex: (index: number, point: Vec2) => void
   removePlotVertex: (index: number) => void
+
+  setUnderlay: (underlay: Underlay | null) => void
+  updateUnderlay: (patch: Partial<Underlay>) => void
+  startCalibration: () => void
+  addCalibrationPoint: (point: Vec2) => void
+  cancelCalibration: () => void
+  applyCalibration: (realDistance: number) => void
   setRenderMode: (mode: RenderMode) => void
 
   reset: () => void
@@ -110,6 +123,7 @@ export const useStore = create<State>((set, get) => {
     renderMode: 'white',
     plotMode: 'idle',
     plotDraft: [],
+    calibration: [],
 
     selectBuilding: (id) => set({ selectedId: id, selectedElevation: null }),
     selectElevation: (key) => set({ selectedElevation: key }),
@@ -180,7 +194,8 @@ export const useStore = create<State>((set, get) => {
     },
 
     // --- tracing a new boundary ---------------------------------------------
-    startPlotDraw: () => set({ plotMode: 'draw', plotDraft: [], selectedId: null, selectedElevation: null }),
+    startPlotDraw: () =>
+      set({ plotMode: 'draw', plotDraft: [], calibration: [], selectedId: null, selectedElevation: null }),
     addDraftPoint: (point) => set({ plotDraft: [...get().plotDraft, point] }),
     undoDraftPoint: () => set({ plotDraft: get().plotDraft.slice(0, -1) }),
     cancelPlotDraw: () => set({ plotMode: 'idle', plotDraft: [] }),
@@ -222,6 +237,58 @@ export const useStore = create<State>((set, get) => {
     },
 
     loadSite: (site) => rebuildNow(site, site.buildings[0]?.id ?? null),
+
+    // --- underlay -----------------------------------------------------------
+    setUnderlay: (underlay) => {
+      const site = get().site
+      set({ plotMode: 'idle', calibration: [] })
+      commit({ ...site, underlay })
+    },
+
+    updateUnderlay: (patch) => {
+      const site = get().site
+      if (!site.underlay) return
+      commit({ ...site, underlay: { ...site.underlay, ...patch } })
+    },
+
+    startCalibration: () => {
+      if (!get().site.underlay) return
+      set({ plotMode: 'calibrate', calibration: [], plotDraft: [] })
+    },
+
+    addCalibrationPoint: (point) => {
+      const points = get().calibration
+      if (points.length >= 2) return
+      set({ calibration: [...points, point] })
+    },
+
+    cancelCalibration: () => set({ plotMode: 'idle', calibration: [] }),
+
+    /**
+     * Rescale the underlay so the two marked points are `realDistance` apart.
+     * The scaling is about their midpoint, so whatever you measured stays put
+     * instead of sliding away as the image grows.
+     */
+    applyCalibration: (realDistance) => {
+      const { site, calibration } = get()
+      if (!site.underlay || calibration.length < 2 || !(realDistance > 0)) return
+      const [a, b] = calibration
+      const measured = Math.hypot(b.x - a.x, b.z - a.z)
+      if (measured < 1e-6) return
+
+      const factor = realDistance / measured
+      const mid = { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 }
+      const underlay: Underlay = {
+        ...site.underlay,
+        width: site.underlay.width * factor,
+        position: {
+          x: mid.x + (site.underlay.position.x - mid.x) * factor,
+          z: mid.z + (site.underlay.position.z - mid.z) * factor,
+        },
+      }
+      set({ plotMode: 'idle', calibration: [] })
+      commit({ ...site, underlay })
+    },
 
     setRenderMode: (renderMode) => set({ renderMode }),
 
