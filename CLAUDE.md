@@ -74,7 +74,8 @@
   milestones §8, roadmap §9, open questions §10.
 - [`README.md`](README.md) — the one doc. Chapter 1: running, coding,
   publishing. Chapter 2: the app, its features, design and performance.
-- GitHub: `https://github.com/barkx/BL0K` — branch `main`
+- GitHub: `https://github.com/barkx/BL0K` — branch `main`. The repo keeps its
+  old name on purpose; only the app was rebranded. Do not rename it.
 - Vercel: builds `main` on push **once linked**; config in `vercel.json`
 - Git scripts: `setup-git.bat` (already run — do not run again), `push.bat`
 - Container: `Dockerfile` (targets `dev`, `prod`), `docker-compose.yml`,
@@ -183,7 +184,10 @@ Refuse:
     the ground is the site surface and returns you to the site scale. Inside a panel,
   sections are flat `Block`s, not nested accordions. Roads and parking are
   intended for Placement. Horizontal rail in the bottom sheet under 900 px.
-- **Brand**: BL0K, "Parametric building design". One axonometric block, three
+- **Brand**: URBGEN — short for urban generator, though the tagline stays
+  "Parametric building design" precisely so nothing reads as generative AI.
+  Renamed from BL0K (and 3DBlock before it); the repo keeps the BL0K name.
+  One axonometric block, three
   flat faces, no strokes — `src/ui/Logo.tsx`, same shape as the favicon. The
   palette is unchanged drawing-office greys and blueprint ink. There is no AI
   in this app and the branding must not claim otherwise.

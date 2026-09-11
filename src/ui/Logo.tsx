@@ -1,5 +1,5 @@
 /**
- * The BL0K mark: one axonometric block, three flat faces, no strokes.
+ * The URBGEN mark: one axonometric block, three flat faces, no strokes.
  *
  * Deliberately the simplest thing that still reads as a block — three paths and
  * three tints of `currentColor`, so it survives being 16 px in a browser tab
@@ -29,7 +29,7 @@ export function Wordmark() {
       <span className="brand-mark">
         <Logo />
       </span>
-      <span className="brand-name">BL0K</span>
+      <span className="brand-name">URBGEN</span>
       <span className="brand-tag">Parametric building design</span>
     </span>
   )

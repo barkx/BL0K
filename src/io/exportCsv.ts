@@ -41,7 +41,7 @@ export function siteCsv(site: Site, build: SiteBuild, when = new Date()): string
   const k = build.metrics
   const lines: string[] = []
 
-  lines.push(row(['BL0K site metrics', when.toISOString()]))
+  lines.push(row(['URBGEN site metrics', when.toISOString()]))
   lines.push('')
 
   lines.push('Site')

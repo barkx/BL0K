@@ -1,4 +1,4 @@
-# BL0K
+# URBGEN
 
 **Parametric building design, in the browser.** Draw a plot, place buildings on it,
 and change a slider to rebuild any of them. Each building is parametric massing
@@ -454,7 +454,7 @@ keeps the value you asked for; the building uses the resolved one.
     their position in the stack, so a stepped block reads at a glance, and the
     core is darker than every mass tint. This is the mode for report screenshots.
 - **Save image (.png)** — the viewport at the current canvas resolution.
-- **Save site** — downloads `bl0k-site-<timestamp>.json` as `{ version, app, site }`
+- **Save site** — downloads `urbgen-site-<timestamp>.json` as `{ version, app, site }`
   with the plot, the site rules, every building and the underlay image. The image travels
   inline as a data URL so the file is self-contained, which is why anything
   over 2048 px is downscaled before it is stored.

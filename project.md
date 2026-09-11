@@ -1,4 +1,4 @@
-# BL0K
+# URBGEN
 
 A browser app for parametric building design. Draw a plot, place buildings on
 it, and change a slider to rebuild any of them. Each building is parametric massing plus
@@ -182,7 +182,7 @@ mode change.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  ◧ BL0K  Parametric building design  [white|pbr|diagram] ⤓│
+│  ◧ URBGEN  Parametric building design                    │
 ├────┬─────────────┬───────────────────────────────────────┤
 │ ◇  │  SITE       │                                       │
 │Site│             │           3D VIEWPORT                 │
@@ -375,11 +375,11 @@ unit mix, then a native Revit handoff) and **Spacio** (massing, environmental
 analysis, national code checks, IFC). Both are cloud products with teams behind
 them; Forma is roughly EUR 1 500 a year.
 
-**BL0K is not trying to match them, and should not.** Simulation breadth — wind
+**URBGEN is not trying to match them, and should not.** Simulation breadth — wind
 CFD, microclimate, embodied carbon — and generative AI are not winnable here.
 Being a worse Forma is not a position.
 
-### What BL0K actually has that they do not
+### What URBGEN actually has that they do not
 
 Defend these; they are the reason to use it.
 
@@ -399,7 +399,7 @@ Defend these; they are the reason to use it.
 
 **glTF is a visualisation format. Nobody continues a project from it.** Both
 rivals let you carry work into Revit or ArchiCAD, which is the entire point of a
-schematic tool. Until BL0K exports **IFC**, it is a study toy rather than a step
+schematic tool. Until URBGEN exports **IFC**, it is a study toy rather than a step
 in a real workflow.
 
 This is the one missing feature worth treating as a blocker rather than a

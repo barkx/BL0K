@@ -25,20 +25,20 @@ import {
  *     the default, the same bargain v3 files get over rules.
  *
  * The `app` field is informational only — the loader never reads it — so files
- * written before the BL0K rename still load unchanged.
+ * written under either earlier name, 3DBlock or BL0K, still load unchanged.
  */
 export const CONFIG_VERSION = 5
 
 export interface SavedConfig {
   version: number
-  app: 'bl0k'
+  app: 'urbgen'
   site: Site
 }
 
 export function serialize(site: Site): string {
   const payload: SavedConfig = {
     version: CONFIG_VERSION,
-    app: 'bl0k',
+    app: 'urbgen',
     site,
   }
   return JSON.stringify(payload, null, 2)

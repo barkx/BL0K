@@ -72,7 +72,7 @@ function saveImage() {
   const canvas = document.querySelector('.viewport canvas') as HTMLCanvasElement | null
   if (!canvas) return
   canvas.toBlob((blob) => {
-    if (blob) download(`bl0k-${stamp()}.png`, blob, 'image/png')
+    if (blob) download(`urbgen-${stamp()}.png`, blob, 'image/png')
   }, 'image/png')
 }
 
@@ -210,7 +210,7 @@ function SettingsPanel() {
             <button
               className="ghost"
               onClick={() =>
-                download(`bl0k-site-${stamp()}.json`, serialize(site), 'application/json')
+                download(`urbgen-site-${stamp()}.json`, serialize(site), 'application/json')
               }
             >
               Save
@@ -237,7 +237,7 @@ function SettingsPanel() {
                 // Pulls in a chunk of three-stdlib; nobody pays until they click.
                 const { exportSiteGltf } = await import('../io/exportGltf')
                 const glb = await exportSiteGltf(build)
-                download(`bl0k-site-${stamp()}.glb`, glb, 'model/gltf-binary')
+                download(`urbgen-site-${stamp()}.glb`, glb, 'model/gltf-binary')
               } catch {
                 setNote('glTF export failed.')
               } finally {
@@ -253,7 +253,7 @@ function SettingsPanel() {
             onClick={() =>
               // No lazy import here: unlike the glTF exporter this is a few
               // hundred lines of string building with no library behind it.
-              download(`bl0k-metrics-${stamp()}.csv`, siteCsv(site, build), 'text/csv')
+              download(`urbgen-metrics-${stamp()}.csv`, siteCsv(site, build), 'text/csv')
             }
           >
             Export metrics (.csv)

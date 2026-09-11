@@ -2,7 +2,7 @@
 cd /d "%~dp0"
 
 echo ============================================
-echo   BL0K - first-time Git setup
+echo   URBGEN - first-time Git setup
 echo   Folder: %CD%
 echo ============================================
 echo.
