@@ -218,7 +218,9 @@ p:last-child { margin-bottom: 0; }
   content: "";
   position: absolute;
   left: 0;
-  top: 26px;
+  /* Sits on the first line's centre whatever the font size, rather than at a
+     pixel that only happens to be right at 17px. */
+  top: calc(15px + 0.8em);
   width: 11px;
   border-top: 1px solid var(--blueprint);
 }

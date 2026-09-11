@@ -7,11 +7,13 @@
 <meta name="description" content="Draw a plot, place buildings on it, and study massing, facade and site metrics as you go. Free, in the browser, with no account and nothing uploaded.">
 <link rel="canonical" href="https://urbgen.com/">
 <meta name="theme-color" content="#f0eeea">
+<meta name="color-scheme" content="light">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="stylesheet" href="/styles.css">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="URBGEN">
+<meta property="og:locale" content="en_GB">
 <meta property="og:url" content="https://urbgen.com/">
 <meta property="og:title" content="URBGEN — Parametric building design in the browser">
 <meta property="og:description" content="Draw a plot, place buildings on it, and study massing, facade and site metrics as you go. Free, with no account and nothing uploaded.">
@@ -32,6 +34,65 @@
   "description": "Parametric building design in the browser. Draw a plot, place buildings on it, and study massing, facade and site metrics as you go.",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
   "isAccessibleForFree": true
+}
+</script>
+
+<!-- Mirrors the FAQ below, word for word. If an answer changes there it
+     changes here, or the markup is describing a page that no longer exists. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Do I need an account?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. There is no sign-up, no login and no trial. Open the page and it is there."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Where does my data go?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Nowhere. There is no backend to send it to. Everything is computed in your browser, and a scheme is saved by downloading a JSON file to your machine. The site you are reading sets no cookies and makes no third-party requests."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work offline?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Once the page has loaded, yes — the app keeps working with the network gone, because nothing it does needs a server."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What can I export?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "glTF for the geometry, including the whole site with its buildings named; CSV for the metrics table; JSON for the scheme itself, which reopens with everything as you left it. There is no IFC export yet."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is it really free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, and there is no pricing page to read. It is a static page with no running cost behind it beyond hosting."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there AI in it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. It is parametric: you set the numbers and the geometry follows from them, the same way every time. The name is short for urban generator, and that is as far as the word goes — nothing here learns, predicts or invents."
+      }
+    }
+  ]
 }
 </script>
 </head>
@@ -72,7 +133,7 @@
         <p class="note">Free. No account, and nothing is uploaded.</p>
       </div>
       <figure class="hero-fig">
-        <img src="/assets/hero.svg" width="1200" height="720" alt="An eight-storey courtyard block drawn in axonometric on a four-sided plot, its windows set out in an even rhythm across each elevation.">
+        <img src="/assets/hero.svg" width="1200" height="720" fetchpriority="high" decoding="async" alt="An eight-storey courtyard block drawn in axonometric on a four-sided plot, its windows set out in an even rhythm across each elevation.">
       </figure>
     </div>
   </section>
@@ -83,7 +144,7 @@
       <h2 id="does">What it does</h2>
 
       <div class="feature">
-        <figure><img src="/assets/massing.svg" width="900" height="460" alt="Three axonometric blocks side by side: an L-shaped plan, a U-shaped plan, and a courtyard ring around an open centre."></figure>
+        <figure><img src="/assets/massing.svg" width="900" height="460" loading="lazy" decoding="async" alt="Three axonometric blocks side by side: an L-shaped plan, a U-shaped plan, and a courtyard ring around an open centre."></figure>
         <div>
           <h3>Massing from presets you can then take apart</h3>
           <p>
@@ -98,7 +159,7 @@
       </div>
 
       <div class="feature">
-        <figure><img src="/assets/facade.svg" width="900" height="600" alt="An eight-storey elevation with windows set in an even module rhythm, two columns of recessed loggias, and a parapet above."></figure>
+        <figure><img src="/assets/facade.svg" width="900" height="600" loading="lazy" decoding="async" alt="An eight-storey elevation with windows set in an even module rhythm, two columns of recessed loggias, and a parapet above."></figure>
         <div>
           <h3>A facade driven by the apartment module</h3>
           <p>
@@ -113,7 +174,7 @@
       </div>
 
       <div class="feature">
-        <figure><img src="/assets/site.svg" width="900" height="560" alt="A site plan: an irregular five-sided plot with a dashed setback line inside it, three rotated blocks placed on it, and a dimension between two of them."></figure>
+        <figure><img src="/assets/site.svg" width="900" height="560" loading="lazy" decoding="async" alt="A site plan: an irregular five-sided plot with a dashed setback line inside it, three rotated blocks placed on it, and a dimension between two of them."></figure>
         <div>
           <h3>A site, not just one building</h3>
           <p>
@@ -134,7 +195,7 @@
     <div class="wrap">
       <h2 id="facade">The facade, in detail</h2>
       <div class="feature wide">
-        <figure><img src="/assets/facade-detail.svg" width="900" height="520" alt="A plan section through a wall: on the left a window opening with its reveal and jambs dimensioned, on the right a loggia recessed between two cheeks with a soffit over."></figure>
+        <figure><img src="/assets/facade-detail.svg" width="900" height="520" loading="lazy" decoding="async" alt="A plan section through a wall: on the left a window opening with its reveal and jambs dimensioned, on the right a loggia recessed between two cheeks with a soffit over."></figure>
         <div>
           <p>
             This is the part a massing tool usually skips, and it is the reason the
@@ -157,7 +218,7 @@
     <div class="wrap">
       <h2 id="metrics">Metrics that show their working</h2>
       <div class="feature wide">
-        <figure><img src="/assets/metrics.svg" width="900" height="520" alt="Two overlapping wings in plan with the shared corner hatched, beside a list of areas: wing A plus wing B, the overlap subtracted once, giving GFA, then core area off and an efficiency factor applied to give NIA."></figure>
+        <figure><img src="/assets/metrics.svg" width="900" height="520" loading="lazy" decoding="async" alt="Two overlapping wings in plan with the shared corner hatched, beside a list of areas: wing A plus wing B, the overlap subtracted once, giving GFA, then core area off and an efficiency factor applied to give NIA."></figure>
         <div>
           <p>
             GFA, NIA, facade area, footprint, coverage, plot ratio and a unit estimate,
@@ -185,7 +246,7 @@
   <section class="band alt" aria-labelledby="why">
     <div class="wrap">
       <h2 id="why">Why it is different</h2>
-      <ul class="claims">
+      <ul class="claims" role="list">
         <li>
           <h3>Facade depth</h3>
           <p>
@@ -229,7 +290,7 @@
         Worth knowing before you spend an afternoon in it. None of these are
         hidden in the app either.
       </p>
-      <ul class="nots">
+      <ul class="nots" role="list">
         <li>
           <strong>No IFC export.</strong> Geometry comes out as glTF, which is a
           visualisation format — you cannot pick a project up from it in Revit or
@@ -270,7 +331,7 @@
   <section class="band alt" aria-labelledby="how">
     <div class="wrap">
       <h2 id="how">How it works</h2>
-      <ol class="steps">
+      <ol class="steps" role="list">
         <li>
           <h3>Draw the plot</h3>
           <p>
