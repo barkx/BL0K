@@ -516,3 +516,35 @@ select:focus-visible { outline: none; border-color: var(--blueprint); background
   font-size: 11px;
   cursor: pointer;
 }
+
+/* ---------- brand ---------- */
+
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.brand-mark {
+  display: inline-flex;
+  align-self: center;
+  color: var(--blueprint);
+}
+.brand-name {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+.brand-tag {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .brand-tag { display: none; }
+  .toolbar h1 { display: inline-flex; }
+  .brand-name { font-size: 14px; }
+}

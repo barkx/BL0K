@@ -42,7 +42,7 @@
 ### Process
 - `npm run build` must pass before every commit. It typechecks first.
 - Never commit `node_modules/`, `dist/`, `.vite/`, `.vercel/`.
-- Do not edit `project.md`. It is the spec of record, not a working doc.
+- `project.md` is the single spec. Keep it current as the app changes.
 - Record any deviation from `project.md` in `README.md` § Deviations, with the reason.
 - Do not add a dependency without naming the reason in the commit message.
 - Keep GitHub to what Vercel needs to build, plus Docker files, scripts and docs.
@@ -50,10 +50,8 @@
 
 ## 2. Authority & Links
 
-- Spec of record for a building: [`project.md`](project.md) — locked decisions
-  §1, non-goals §1, open questions §9, milestones §8. Do not edit it.
-- v2 site/urbanism scope, data model and milestones: [`project-v2.md`](project-v2.md).
-  A working doc — edit this one freely.
+- Single spec: [`project.md`](project.md) — decisions §1, non-goals §1,
+  milestones §8, roadmap §9, open questions §10.
 - [`README.md`](README.md) — the one doc. Chapter 1: running, coding,
   publishing. Chapter 2: the app, its features, design and performance.
 - GitHub: `https://github.com/barkx/BL0K` — branch `main`
@@ -95,10 +93,11 @@ push.bat               :: commit + push to main -> Vercel deploys
 Ask before proceeding:
 
 - A change touches a locked decision in `project.md` §1.
-- A change implements a `project.md` §1 non-goal that `project-v2.md` has not
-  opened up (floorplans, cores, sun study, plinth, terrain, cost, compliance).
-- An open question in `project.md` §9 would be answered differently from
-  `README.md` § Open questions.
+- A change implements a `project.md` §1 non-goal (floorplans, cores, terrain,
+  neighbour volumes, plinth, cost, collaboration).
+- A change needs a backend. There is none, by decision.
+- An open question in `project.md` §10 would be answered differently from
+  `README.md`.
 - A new runtime dependency, or a three.js / R3F / drei major version bump.
 - The spec is ambiguous in a way that changes geometry or metrics.
 - Anything would be published outside a push to `main`.
@@ -113,17 +112,17 @@ Refuse:
 
 ## 6. Project State
 
-- **v1 complete**: M1–M7 of `project.md` §8. Six presets with per-floor junction
+- **M1–M10 complete**, see `project.md` §8. Six presets with per-floor junction
   detection, module-driven facade with real openings, projecting and loggia
   balconies, three render modes, metrics, glTF export, config I/O,
   per-elevation overrides, bottom sheet under 900 px.
-- **v2 M8 complete** (`project-v2.md`): site of many placed buildings, free
+- **M8**: site of many placed buildings, free
   rotation, drag on the ground, plot rectangle, site metrics with clash and
   off-plot detection, config v3 with migration, whole-site glTF.
-- **v2 M9 complete**: draw a plot boundary by clicking corners, close it, then
+- **M9**: draw a plot boundary by clicking corners, close it, then
   drag / insert / remove corners. Concave plots supported; a self-intersecting
   boundary is detected and flagged.
-- **v2 M10 complete**: drop a map or site plan on the ground, set its true
+- **M10**: drop a map or site plan on the ground, set its true
   scale from two points, position / rotate / fade / lock it, trace over it. The
   image rides in the config as a downscaled data URL.
 - **Next**: M11 DXF import.

@@ -1,12 +1,11 @@
-# Apartment Block Generator
+# BL0K
 
-Parametric urbanism builder in the browser. Draw a plot, place buildings on it,
-and change a slider to rebuild any of them. Each building is massing + facade;
-floorplans come later.
+**Early-stage urbanism, in the browser.** Draw a plot, place buildings on it,
+and change a slider to rebuild any of them. Each building is parametric massing
+plus a module-driven facade; floorplans come later.
 
-[`project.md`](project.md) is the spec of record for a building;
-[`project-v2.md`](project-v2.md) covers the site layer. Working rules for
-contributors are in [`CLAUDE.md`](CLAUDE.md).
+[`project.md`](project.md) is the spec — decisions, milestones, roadmap and
+open questions. Working rules for contributors are in [`CLAUDE.md`](CLAUDE.md).
 
 - **[Chapter 1 — Running, coding, publishing](#chapter-1--running-coding-publishing)**
 - **[Chapter 2 — The app](#chapter-2--the-app)**

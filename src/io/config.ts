@@ -14,19 +14,22 @@ import {
  * v2: `{ version, params }` — one building, no site.
  * v3: `{ version, site }` — a plot and many placed buildings, and from M10 an
  *     optional underlay image carried inline as a data URL.
+ *
+ * The `app` field is informational only — the loader never reads it — so files
+ * written before the BL0K rename still load unchanged.
  */
 export const CONFIG_VERSION = 3
 
 export interface SavedConfig {
   version: number
-  app: 'apartment-block-generator'
+  app: 'bl0k'
   site: Site
 }
 
 export function serialize(site: Site): string {
   const payload: SavedConfig = {
     version: CONFIG_VERSION,
-    app: 'apartment-block-generator',
+    app: 'bl0k',
     site,
   }
   return JSON.stringify(payload, null, 2)

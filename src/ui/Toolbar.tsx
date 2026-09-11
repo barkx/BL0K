@@ -1,4 +1,5 @@
 import { useStore } from '../store/store'
+import { Wordmark } from './Logo'
 import type { RenderMode } from '../store/params'
 import { download, stamp } from '../io/config'
 
@@ -12,7 +13,7 @@ function saveImage() {
   const canvas = document.querySelector('.viewport canvas') as HTMLCanvasElement | null
   if (!canvas) return
   canvas.toBlob((blob) => {
-    if (blob) download(`block-${stamp()}.png`, blob, 'image/png')
+    if (blob) download(`bl0k-${stamp()}.png`, blob, 'image/png')
   }, 'image/png')
 }
 
@@ -37,7 +38,7 @@ export function Toolbar({
       >
         ☰
       </button>
-      <h1>Urbanism builder</h1>
+      <h1><Wordmark /></h1>
       <span className="spacer" />
       <div className="segmented" role="group" aria-label="Render mode">
         {MODES.map((o) => (

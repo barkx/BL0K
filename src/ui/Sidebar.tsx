@@ -84,7 +84,7 @@ function ConfigButtons() {
         <div className="pair">
           <button
             className="ghost"
-            onClick={() => download(`site-${stamp()}.json`, serialize(site), 'application/json')}
+            onClick={() => download(`bl0k-site-${stamp()}.json`, serialize(site), 'application/json')}
           >
             Save site
           </button>
@@ -102,7 +102,7 @@ function ConfigButtons() {
               // Pulls in a chunk of three-stdlib; nobody pays until they click.
               const { exportSiteGltf } = await import('../io/exportGltf')
               const glb = await exportSiteGltf(build)
-              download(`site-${stamp()}.glb`, glb, 'model/gltf-binary')
+              download(`bl0k-site-${stamp()}.glb`, glb, 'model/gltf-binary')
             } catch {
               setNote('glTF export failed.')
             } finally {

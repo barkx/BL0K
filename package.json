@@ -1,5 +1,5 @@
 {
-  "name": "apartment-block-generator",
+  "name": "bl0k",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -35,5 +35,6 @@
   },
   "engines": {
     "node": ">=20"
-  }
+  },
+  "description": "Early-stage urbanism: plot, massing and facade studies in the browser"
 }

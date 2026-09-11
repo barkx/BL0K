@@ -1,8 +1,11 @@
-# Apartment Block Generator
+# BL0K
 
-A browser app that generates a parametric 3D apartment building. Change a slider,
-the building rebuilds. v1 is about **massing + facade**; real apartment
-floorplans come later.
+A browser app for early-stage urbanism. Draw a plot, place buildings on it, and
+change a slider to rebuild any of them. Each building is parametric massing plus
+a module-driven facade; real apartment floorplans come later.
+
+**This is the single spec of record.** It is a working document — keep it
+current as the app changes, and record any deviation in `README.md`.
 
 ---
 
@@ -12,30 +15,56 @@ floorplans come later.
 |---|---|
 | 3D stack | React Three Fiber (three.js) |
 | App shell | Vite + React 18 + TypeScript |
-| State | Zustand store, single flat params object |
+| State | Zustand store: a site holding many placed buildings |
 | Controls | Custom sidebar with sliders (no leva) |
+| Site | A plot polygon, drawn on the ground; many buildings placed on it |
+| Placement | Free rotation about Y, dragged or typed |
+| Underlay | A map or site plan image, scaled from two known points |
 | Footprints | L / U / T, courtyard, stacked & offset masses |
 | Facade fidelity | Windows + balconies |
 | Window rhythm | Driven by apartment module width |
 | Balconies | Projecting slabs, recessed loggias, and per-elevation config |
 | Render modes | Toggle: white model / PBR / diagram |
-| Metrics | Floor area, facade area, estimated unit count, footprint & site coverage |
-| Export | glTF + save/load config as JSON |
+| Metrics | GFA, facade area, unit estimate, footprint, coverage, plot ratio |
+| Export | glTF + save/load the whole site as JSON |
 | Units | Metric throughout (metres, m², internally always metres) |
+| Backend | None. A static site. Anything needing a server is a scope decision |
 
-### Explicit non-goals for v1
+### Explicit non-goals, for now
 - Apartment floorplans, cores, corridors, stairs, lifts.
-- Sun/shadow study.
+- Terrain, slope, cut and fill. The ground is flat.
+- Neighbouring building volumes as 3D context.
 - Differentiated ground-floor plinth (retail).
-- Site context, neighbouring buildings, terrain.
-- Cost estimation, code compliance checking.
+- Cost estimation.
+- Multi-user collaboration — it needs a backend, and this has none.
 
 These are deferred, not rejected. The data model should not make them painful
-to add — see §7.
+to add — see §7. Items that have since been taken on are in §9.
 
 ---
 
-## 2. Core concept: the building is a list of masses
+## 2. Core concept
+
+### A site is a plot and a list of placed buildings
+
+```
+Site
+ ├── plot: Vec2[]              // plan polygon, metres
+ ├── underlay: image | null    // a map or plan to trace over
+ └── buildings: Placement[]
+      ├── position { x, z }    // where the building's local origin sits
+      ├── rotation             // degrees about Y, free
+      └── params               // a full parameter set, per building
+```
+
+**The constraint that keeps this cheap.** `buildBuilding()` generates in the
+building's *own local frame*, and every geometry builder relies on masses being
+axis-aligned there. That holds inside a building, so placement lives one level
+up and the transform is applied at the scene level. Nothing in `geometry/` knows
+about rotation. **Keep it that way** — a feature that wants to rotate masses
+within a building needs its own answer, not a change to this contract.
+
+### A building is a list of masses
 
 A single box cannot express L/U/T, courtyards, or offset stacks. So the building
 is an array of **masses**. Each mass is an extruded rectangle with its own
@@ -147,7 +176,7 @@ mode change.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  Apartment Block Generator      [white|pbr|diagram]  ⤓   │
+│  ◧ BL0K  Early-stage urbanism   [white|pbr|diagram]  ⤓   │
 ├───────────────┬──────────────────────────────────────────┤
 │               │                                          │
 │   PARAMETERS  │            3D VIEWPORT                   │
@@ -175,6 +204,26 @@ decorative gradients. Sliders show live values; the number is the point.
 ---
 
 ## 5. Metrics
+
+### Site level
+
+Shown first, because a scheme is judged on these.
+
+- **GFA** — sum across buildings.
+- **Plot ratio (FAR)** — GFA over plot area.
+- **Coverage** — summed level-0 footprints over plot area.
+- **Units**, **tallest building**.
+- **Clash detection** — footprint quads tested pairwise with a separating-axis
+  test, exact for the rotated rectangles a placed building produces. An AABB
+  test would throw false clashes the moment a building is rotated.
+- **Off-plot detection** — any ground corner outside the boundary.
+- **Plot validity** — a self-intersecting boundary is flagged, because shoelace
+  area cancels its lobes and every ratio above would then be nonsense.
+
+Coverage and plot ratio assume no overlap and a simple boundary, which is why
+both are *detected and named* rather than quietly absorbed.
+
+### Per building
 
 Recomputed from geometry on every param change (memoised, must stay under
 ~5 ms).
@@ -242,46 +291,108 @@ Do these cheaply now so the deferred features are not rewrites:
   floor`). Keep that addressable so a plan can later attach to a module range.
 - **Plinth.** Let `floorHeight` become a per-level array rather than a scalar,
   even if v1 only ever fills it with one repeated value.
-- **Sun study.** Keep one directional light with a real `position`, not a
-  hardcoded offset, so a date/time control can drive it.
-- **Config versioning.** Every saved JSON carries `{ version, params }`. Write
-  the loader to migrate unknown-but-older versions rather than reject them.
+- **Sun study.** The directional light is positioned from
+  `sunPosition(azimuth, altitude, distance)`, not a hardcoded offset. A
+  date/time control drives two numbers. *Still to be claimed.*
+- **Config versioning.** Saved JSON is `{ version, app, site }`, currently
+  version 3. The loader migrates rather than rejects, three ways: a missing key
+  takes its default, an unknown key is dropped, a changed shape gets its own
+  branch. It detects the shape rather than switching on the number, so a file
+  with a missing version still loads. *Working.*
+- **Ground interaction.** Anything draggable in plan projects through
+  `useGroundProjector` and runs on window listeners, because a drag must
+  survive the cursor leaving the mesh it started on.
 
 ---
 
 ## 8. Milestones
 
-**M1 — Skeleton.** Vite + R3F + TS. Grey box, orbit controls, one working
-slider (`floors`) that rebuilds it. Proves the loop.
+### Done
 
-**M2 — Masses.** All six presets. Junction detection, abutting elevations
-blanked. Correct GFA with overlap resolution.
+| | |
+|---|---|
+| **M1 Skeleton** | Vite + R3F + TS, orbit controls, one slider that rebuilds |
+| **M2 Masses** | Six presets, per-floor junction detection, GFA with overlap resolution |
+| **M3 Facade** | Module fitting, real openings with reveal and sill, parapet and flat roof |
+| **M4 Balconies** | Projecting, loggia, mixed; patterns, seeded RNG, balustrade variants |
+| **M5 Modes & metrics** | White / PBR / diagram over one geometry; metrics panel |
+| **M6 I/O** | glTF export, config save/load with migration |
+| **M7 Polish** | Bottom sheet under 900 px, per-elevation overrides, reduced motion, 30-floor pass |
+| **M8 Site** | Many placed buildings, free rotation, drag on the ground, site metrics, clash and off-plot detection, config v3, whole-site glTF |
+| **M9 Plot** | Draw a boundary, drag / insert / remove corners, concave supported, self-intersection flagged |
+| **M10 Underlay** | Drop a map or plan, set true scale from two known points, position / rotate / fade / lock |
 
-**M3 — Facade.** Module fitting, windows with reveal and sill, instanced.
-Parapet and flat roof.
+### Next
 
-**M4 — Balconies.** Projecting, loggia, mixed. Patterns, seeded RNG,
-balustrade variants.
+**M11 — DXF import.** Plot boundary and context linework from CAD. Needs a DXF
+parser, which would be the first real new dependency, so it wants a decision on
+which one before any code.
 
-**M5 — Modes & metrics.** Three render modes. Full metrics panel.
-
-**M6 — I/O.** glTF export, config save/load, versioning.
-
-**M7 — Polish.** Mobile bottom sheet, per-elevation overrides, keyboard focus,
-reduced-motion respect, performance pass at 30 floors.
-
-Each milestone should end in something demoable. If a milestone stops being
-demoable, it is too big — split it.
+Each milestone should end in something demoable. If one stops being demoable,
+it is too big — split it.
 
 ---
 
-## 9. Open questions
+## 9. Roadmap
 
-1. **Roof** — flat + parapet only in v1, or do we want a setback top floor?
+Informed by what comparable tools in this category offer. Ordered by what the
+existing architecture makes cheap, not by what sounds impressive.
+
+### Phase A — cheap, because the groundwork is already there
+
+1. **Metrics export** to CSV/Excel. The data exists; it is a formatter.
+2. **NIA and efficiency ratio.** GFA times a per-building factor.
+3. **Unit mix to target ratios.** Modules are already addressable as
+   `(elevation, floor, index)` — that address was kept for exactly this.
+4. **Site rules: setback, height cap, FAR and coverage limits.** Identical in
+   shape to the clash and off-plot checks already running, so they land in the
+   same panel with the same warning style.
+5. **Sun and shadow study.** The hook in §7 is already in place; this claims it.
+
+### Phase B — real work, high value
+
+6. **DXF export**, then **plans, elevations and sections** — orthographic
+   cameras over geometry that already exists.
+7. **Geolocated context via OpenStreetMap.** Overpass needs no API key, which
+   keeps the no-credentials rule intact. Gives auto site outlines and
+   neighbouring footprints.
+8. **Daylight factor and sun hours.** Genuine compute, but tractable on a grid.
+
+### Phase C — decide before writing any code
+
+9. **IFC export.** Large. Either a dependency or a schema writer.
+10. **Multi-user collaboration.** This changes what the project *is*: BL0K is a
+    static site with no backend. Collaboration means servers, accounts, auth and
+    storage, and it collides with the privacy rules in `CLAUDE.md`.
+
+### Deliberately not chasing
+
+The module-driven facade — real openings, reveals, loggias, balconies,
+per-elevation overrides — is the thing BL0K does that massing-and-simulation
+tools do not. Do not trade it away for feature parity.
+
+---
+
+## 10. Open questions
+
+**Building**
+
+1. **Roof** — flat + parapet only, or a setback top floor?
 2. **Modules per unit** — is a 1-bed one module and a 3-bed two? Worth defining
-   the mapping before the unit-count metric gets trusted.
-3. **Corner condition** — at an L junction, do modules wrap the corner or does
-   one wing take priority? Affects both facade and unit counting.
+   before the unit count is trusted.
+3. **Corner condition** — at an L junction, do modules wrap the corner? Today
+   geometry decides: the abutted interval is blanked and the other wing runs
+   past it.
 4. **Depth** — uniform for all wings, or per-wing?
-5. **Site** — do we want a real site boundary shape for coverage, or is a plain
-   `siteArea` number enough?
+
+**Site**
+
+5. **Setbacks** — a minimum distance to the boundary and between buildings,
+   checked the way clashes are?
+6. **Snapping** — should dragging snap to a grid, the plot edge, or another
+   building's face? Everything drags freely today.
+7. **Plot subdivision** — one plot, or several with their own limits?
+8. **Shared parameters** — if ten buildings should share a facade spec, does
+   that want a template, or is duplicate-then-edit enough?
+9. **DXF layers** — which layer carries the boundary, and does the importer ask
+   or guess?
