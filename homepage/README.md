@@ -72,28 +72,84 @@ more. There is room.
 
 ## Chapter 2 — publishing it
 
-The homepage is its **own Vercel project**, in the same repo as the app. Two
-settings keep the two apart, and both are dashboard settings rather than
-anything in a file:
+### Where things stood before the split
 
-1. **Root directory** — `homepage/` for this project, the repo root for the app.
-2. **Ignored build step** — so a push that touched only the app does not
-   redeploy the homepage. This project's `vercel.json` carries
-   `ignoreCommand`, which skips the build when nothing under `homepage/`
-   changed. **The app's own `vercel.json` needs the mirror of it**
-   (`git diff --quiet HEAD^ HEAD -- . ':(exclude)homepage'`) or every copy
-   tweak here will rebuild the app. That change has not been made — it is a
-   change to the app's config, which belongs to the app.
+`urbgen.com` is already delegated to Vercel's own nameservers
+(`ns1.vercel-dns.com`, `ns2.vercel-dns.com`), so there is no registrar work to
+do — every record is managed inside Vercel. The **app** project was linked
+first and took all three hostnames with it:
 
-Then the domain: `urbgen.com` on this project, with `www.urbgen.com` added and
-set to redirect to the apex. Vercel does the redirect at the domain level, so
-it is not in `vercel.json` either.
+| | Before | After |
+|---|---|---|
+| `urbgen.com` | app, redirecting to `www` | **homepage** |
+| `www.urbgen.com` | app | **homepage**, redirecting to the apex |
+| `app.urbgen.com` | app | app, unchanged |
+
+Note the redirect ran the wrong way round: `project.md` §1 wants `www`
+redirecting *to* the apex, and it was the apex redirecting to `www`. Moving the
+domain is also the moment that gets fixed.
+
+### The two settings that keep the projects apart
+
+1. **Root directory** — `homepage/` for this project, the repo root for the
+   app. A dashboard setting; there is no file that can express it.
+2. **Ignored build step** — so a push that touched only one project does not
+   redeploy the other. Both `vercel.json` files now carry an `ignoreCommand`:
+
+   | Project | Command |
+   |---|---|
+   | homepage | `git diff --quiet HEAD^ HEAD -- .` |
+   | app | `git diff --quiet HEAD^ HEAD -- . ':(exclude)homepage'` |
+
+   The homepage's is relative because Vercel runs it from the root directory,
+   which for this project is `homepage/`. Exit 0 means *skip the build*, which
+   is what `git diff --quiet` returns when nothing changed. On a first
+   deployment `HEAD^` may not exist; git then errors, the exit code is
+   non-zero, and the build runs — which is the safe way round.
+
+### Moving the domains
+
+A domain belongs to exactly one Vercel project at a time, so the apex has to
+leave the app project before it can join this one. In order:
+
+1. Create the second project from the same repo (`barkx/BL0K`), root directory
+   `homepage/`, framework preset **Other**, build command empty.
+2. On the **app** project → Settings → Domains, remove `urbgen.com` and
+   `www.urbgen.com`. Leave `app.urbgen.com` alone.
+3. On the **homepage** project → Settings → Domains, add `urbgen.com`, then add
+   `www.urbgen.com` and set it to redirect to `urbgen.com` (307).
+4. Redeploy both once, since neither will have rebuilt under the new settings.
+
+### What is served
+
+There is no build, so the contents of `homepage/` are the site — which is why
+[`.vercelignore`](.vercelignore) exists. Without it `project.md`, this file and
+`CLAUDE.md` would all be readable at `urbgen.com/…`. It is worth confirming
+rather than assuming:
+
+```bash
+curl -sI https://urbgen.com/project.md | head -1   # expect 404
+curl -sI https://urbgen.com/ | head -1             # expect 200
+curl -sI https://www.urbgen.com/ | head -1         # expect 307 to the apex
+```
 
 `vercel.json` here also sets `cleanUrls`, a week of caching on `/assets/`, and
 three response headers that cost nothing (`nosniff`, `no-referrer`, a
 `Permissions-Policy` that turns off what the page never uses).
 
 Deploys happen on push to `main`, the same as the app.
+
+### Why not `urbgen.com/app`
+
+It was considered and it is the worse option. `app.urbgen.com` is what
+`project.md` §1 and §8 lock in, it already works, and a path would cost:
+
+- A `base: '/app/'` in the app's `vite.config.ts`, because its assets are
+  root-relative today.
+- A collision to manage — both projects serve `/assets/`.
+- A cross-project rewrite, so every app request would proxy through the
+  homepage project. That is a hop, and a way for a homepage deploy to break the
+  app — the exact coupling §8 exists to prevent.
 
 ---
 

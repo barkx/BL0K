@@ -1,0 +1,13 @@
+# This project has no build step: whatever sits in homepage/ is what gets
+# served. That is convenient until you remember the spec is in here — without
+# this file, urbgen.com/project.md would hand anyone the positioning, the open
+# questions and the competitor notes.
+#
+# Verify after the first deploy, because a silent failure here is invisible:
+#   curl -sI https://urbgen.com/project.md   -> expect 404
+#   curl -sI https://urbgen.com/             -> expect 200
+
+project.md
+README.md
+CLAUDE.md
+tools/
