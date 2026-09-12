@@ -44,6 +44,28 @@
     return d
   }
 
+  /*
+    Depth order. Centre-sorting is wrong once masses differ in extent: a
+    courtyard's short east wing outranks the long south wing that is nearer.
+    A is behind B when A ends before B begins on either axis, so repeatedly
+    take whichever mass has nothing left that must precede it.
+  */
+  function order(ms) {
+    var behind = function (a, b) { return a[2] <= b[0] || a[3] <= b[1] }
+    var out = [], left = ms.slice()
+    while (left.length) {
+      var i = 0
+      for (var k = 0; k < left.length; k++) {
+        var blocked = false
+        for (var j = 0; j < left.length; j++)
+          if (j !== k && behind(left[j], left[k])) { blocked = true; break }
+        if (!blocked) { i = k; break }
+      }
+      out.push(left.splice(i, 1)[0])
+    }
+    return out
+  }
+
   // A plot under the block, so it is not floating.
   function ground(ms) {
     var x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9, e = 6
@@ -73,9 +95,7 @@
     var h = floors * FH
     // Back to front. Emitted per mass, not grouped by face: grouping is
     // smaller but lets a far roof paint over a near wall.
-    var ms = plan(preset, depth).sort(function (a, b) {
-      return (a[0] + a[1] + a[2] + a[3]) - (b[0] + b[1] + b[2] + b[3])
-    })
+    var ms = order(plan(preset, depth))
     var c = centre(ms, h)
     svg.setAttribute('viewBox', n(c[0] - VW / 2) + ' ' + n(c[1] - VH / 2) + ' ' + VW + ' ' + VH)
     var out = ground(ms)

@@ -254,3 +254,26 @@ CDP, not a window-size trick: `Page.captureScreenshot`'s `clip` is in **page**
 coordinates, so a viewport-relative rect silently captures the top of the
 document instead. Fragment URLs (`/#facade`) render blank in headless and are
 not worth debugging — scroll, wait, then clip.
+
+## 10. Depth-sort fix, 12 September 2026
+
+The courtyard rendered wrong in both the hero and the massing drawing: a false
+step across the front, because the near south wing was being painted over.
+
+**Cause.** Both renderers sorted masses back-to-front by the *centre* of each
+footprint. That is only right when masses are similar in extent. A courtyard's
+east wing is short but sits at high `x`, so its centre outranks the long south
+wing that is genuinely nearer, and it painted over it.
+
+**Fix.** For axis-aligned boxes in this projection, A is behind B when A ends
+before B begins on either axis — `a.x1 <= b.x0 || a.z1 <= b.z0`. Repeatedly take
+whichever mass has nothing left that must precede it. Applied in `block.js` and
+in `tools/build-illustrations.mjs`, which had the same bug independently.
+
+**What made this safe to change.** Before touching either file, both orderings
+were run over all four presets: the result differs *only* for the courtyard.
+L, U and bar come out identical, so the fix could not regress the three that
+looked right. Worth doing that comparison first whenever a sort is replaced.
+
+`block.js` is 6.1 KB against the 6 KB target, so the comment was trimmed rather
+than the budget moved a second time.

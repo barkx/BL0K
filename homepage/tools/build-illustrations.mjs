@@ -74,11 +74,23 @@ function box(s, { x0, z0, x1, z1, y0 = 0, y1 = 24, windows = true }) {
   }
 }
 
-/** Sort masses back-to-front, then emit. */
+/*
+  Order masses back to front, then emit. Sorting by centre is wrong once masses
+  differ in extent — a courtyard's short east wing has a high centre and paints
+  over the long south wing that is actually nearer. For axis-aligned boxes in
+  this projection A is behind B when A ends before B begins on either axis, so
+  repeatedly take whichever mass has nothing left that must precede it.
+*/
 function masses(list) {
+  const behind = (a, b) => a.x1 <= b.x0 || a.z1 <= b.z0
+  const out = [], left = [...list]
+  while (left.length) {
+    let i = left.findIndex(m => !left.some(o => o !== m && behind(o, m)))
+    if (i < 0) i = 0
+    out.push(left.splice(i, 1)[0])
+  }
   const s = []
-  const sorted = [...list].sort((a, b) => (a.x0 + a.x1 + a.z0 + a.z1) - (b.x0 + b.x1 + b.z0 + b.z1))
-  sorted.forEach(m => box(s, m))
+  out.forEach(m => box(s, m))
   return s
 }
 
