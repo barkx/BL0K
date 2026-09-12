@@ -88,55 +88,60 @@ the tool does not do is the cheapest trust the page can buy.
 
 ## 4. Page structure
 
-One page, in this order. Each section carries exactly one claim.
+One page. **Each section carries exactly one claim** — and on 12 September 2026
+the page was measured against that rule and failed it: nine blocks, 1 494
+words, seven numbered chapters, with "facade" appearing in five sections,
+"plot" in six and "export" in four. It now runs to five chapters and about
+1 220 words.
 
-The sticky bar carries a **section menu** — seven links, one per numbered
-section. It is plain anchors and no script: on a narrow screen it drops to a
-second row and scrolls sideways within itself, never making the page scroll.
-`scroll-padding-top` keeps an anchored heading clear of the bar, and it differs
-between the one-row and two-row layouts.
+The sticky bar carries a **section menu**, one link per numbered chapter. Plain
+anchors, no script: on a narrow screen it drops to a second row and scrolls
+sideways within itself, never making the page scroll. `scroll-padding-top`
+keeps an anchored heading clear of the bar and differs between the one-row and
+two-row layouts.
 
-1. **Hero.** Mark, name, tagline, one sentence, one button: *Open the app*. A
-   still of the app behind or beside it, white mode, showing a courtyard block
-   on a drawn plot. The button goes to `app.urbgen.com` and is the only primary
-   action above the fold.
-2. **What it does.** Three or four blocks, each an image and two sentences:
-   massing presets; a module-driven facade with real openings; the site — plot,
-   many buildings, rules and metrics. Images do the work; prose stays short.
+1. **Hero.** Mark, name, tagline, one sentence, one button: *Open the app* —
+   the only primary action above the fold. Beside it, a block that rebuilds
+   itself through four schemes. Under the button, the one-line workflow (draw,
+   shape, export) and the two claims that no other section makes: free with no
+   account and offline once loaded, and identical inputs giving an identical
+   building.
+2. **What it does.** Two blocks, each a screenshot and two sentences: massing
+   presets, and the site — plot, many buildings. Images do the work; prose
+   stays short. The facade is deliberately *not* here, because it has its own
+   chapter and was previously described in both.
 3. **The facade, and what you can change.** The one capability worth its own
    section, because it is the thing rivals do not have. Presented as the
    *options* — module width, windows per module, window sizes, sill, reveal,
    balcony type and pattern, per-elevation overrides — with the range of each
-   and what it does, rather than as a construction detail. A reader deciding
-   whether the tool fits wants the controls, not a section drawing.
-4. **Metrics that show their working.** GFA corrected for the overlap where two
-   wings meet; NIA with the core measured off the geometry rather than guessed;
-   clash and off-plot detection; planning rules checked and reported with both
-   numbers. **Marked-up, not a screenshot** — a real scheme's figures in a
-   table, each row saying what the number is made of. A picture of numbers
+   and what it does. A reader deciding whether the tool fits wants the
+   controls, not a section drawing.
+4. **Metrics that show their working.** A real scheme's figures in a table,
+   each row saying what the number is made of, plus the planning limits checked
+   in the same pass. **Marked up, not a screenshot** — a picture of numbers
    cannot be read by a screen reader, selected, or checked.
-5. **Why it is different.** Four short claims, no comparison table naming
-   competitors: facade depth, determinism, no account and no cloud, metrics you
-   can audit. Naming rivals invites a fight the page cannot win and dates badly.
-6. **What is being built next.** In the order the work is pointed at: IFC
-   export, DXF import, roads and parking. No dates — §5 still forbids a roadmap
-   stated as a promise, so the section says what is being worked on and
-   explicitly says these are not commitments.
+5. **What is being built next.** In the order the work is pointed at: IFC
+   export, DXF import, roads and parking. No dates — §5 forbids a roadmap
+   stated as a promise, so the section says plainly that these are not
+   commitments.
+6. **FAQ.** Six, answering what the positioning provokes: account, data,
+   offline, export, price, AI.
+7. **Footer.** Link to the app, a contact address, the year. The repo link
+   waits on §10.4.
 
-   **Changed 12 September 2026**, from "What it does not do". The limitations
-   read as an apology rather than as candour, and the page carried more about
-   what was absent than about what was there. The honesty it was protecting is
-   kept where a reader actually needs it: the absence of IFC export is stated
-   in this section and again in the FAQ, and the unit count is labelled an
-   estimate in the metrics table where the figure appears.
-7. **How it works.** Three steps: draw or trace a plot, place and shape
-   buildings, export. One line each.
-8. **FAQ.** Six or so, answering the questions the positioning actually
-   provokes: Do I need an account? Where does my data go? Does it work offline?
-   What can I export? Is it really free? Is there AI in it?
-9. **Footer.** Link to the app, link to the repo, a contact address, the year.
+### What was cut, and where its content went
 
-Section 6 goes *before* the FAQ and after the strongest claim, deliberately.
+- **"How it works"** — 77 words, and every concept in it appeared elsewhere.
+  Its three steps became the single workflow line in the hero.
+- **"Why it is different"** — four claims, two of which restated the facade and
+  metrics chapters. The two that were genuinely its own, determinism and no
+  account or cloud, moved into the hero beside the button, which is where the
+  decision is actually being made.
+
+**Cutting chapters is not licence to cut claims.** Everything §5 requires still
+appears: free, no account, nothing uploaded; the unit count labelled an
+estimate on the row where it appears; runs in the browser and keeps working
+offline; and IFC export stated as absent, in both §4.5 and the FAQ.
 
 ---
 

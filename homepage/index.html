@@ -119,9 +119,7 @@
       <a href="#does">What it does</a>
       <a href="#facade">Facade</a>
       <a href="#metrics">Metrics</a>
-      <a href="#why">Why</a>
       <a href="#next">Next</a>
-      <a href="#how">How</a>
       <a href="#faq">Questions</a>
     </nav>
     <a class="bar-cta" href="https://app.urbgen.com">Open the app</a>
@@ -140,7 +138,11 @@
         working.
       </p>
       <p class="cta"><a class="btn" href="https://app.urbgen.com">Open the app</a></p>
-      <p class="note">Free. No account, and nothing is uploaded.</p>
+      <p class="note">Draw a plot, shape the buildings on it, export what you need.</p>
+      <ul class="creds" role="list">
+        <li><strong>Free, and no account.</strong> Nothing is uploaded, and it keeps working offline once loaded.</li>
+        <li><strong>The same inputs give the same building.</strong> Every choice that could be random runs through a seeded generator, so two options can be compared without wondering whether the tool moved something.</li>
+      </ul>
     </div>
 
     <div class="toy">
@@ -183,20 +185,6 @@
       <article class="row flip reveal">
         <figure class="fig fig--shot">
           <picture>
-          <source srcset="/assets/shot-facade.webp" type="image/webp">
-          <img src="/assets/shot-facade.png" width="1200" height="686" loading="lazy" decoding="async" alt="The Facade tab: sliders for module width, window width and height, sill height and reveal, with projecting balconies selected, beside the building they shape.">
-        </picture><figcaption>Module width, window dimensions, reveal depth, and projecting balconies.</figcaption>
-        </figure>
-        <div class="say">
-          <h3>A facade driven by the apartment module</h3>
-          <p>Window rhythm comes from the module width, so the bays always divide evenly across an elevation rather than leaving a remainder at one end.</p>
-          <p>Openings are real geometry, with reveals and sills, and balconies are either projecting slabs or recessed loggias.</p>
-        </div>
-      </article>
-
-      <article class="row reveal">
-        <figure class="fig fig--shot">
-          <picture>
           <source srcset="/assets/shot-site.webp" type="image/webp">
           <img src="/assets/shot-site.png" width="1200" height="686" loading="lazy" decoding="async" alt="The Site tab: plot area and corner count, a button to draw a new boundary, and five planning rules each set to zero, beside a plot drawn on the ground with draggable corners.">
         </picture><figcaption>The plot, its corner handles, and the five planning rules.</figcaption>
@@ -204,7 +192,7 @@
         <div class="say">
           <h3>A site, not just one building</h3>
           <p>Draw the plot boundary, or drop in a map or site plan, set its true scale from two known points, and trace over it.</p>
-          <p>Place as many buildings as you like, rotate and drag them, and watch clashes, off-plot corners and five planning rules as you go.</p>
+          <p>Place as many buildings as you like, and rotate and drag them on it.</p>
         </div>
       </article>
     </div>
@@ -216,9 +204,8 @@
     <div class="col">
       <h2 id="facade">The facade, and what you can change</h2>
       <p class="lead">
-        The facade is driven by one number — the width of an apartment module —
-        and everything else is set against it. Each elevation can then be
-        overridden on its own, so a street frontage need not match a courtyard one.
+        Driven by one number — the width of an apartment module — with everything
+        else set against it, and any elevation free to differ from the rest.
       </p>
 
       <dl class="specs reveal">
@@ -341,30 +328,13 @@
 
       <div class="prose">
         <p>
-          Five planning rules — setback, separation, height cap, floor area ratio
-          and coverage — are checked in the same pass and reported with both
-          numbers: the limit you set, and what the scheme actually does. A limit
-          left at zero is off, so no scheme inherits a constraint nobody asked for.
-        </p>
-        <p>
-          Clashes between buildings and corners falling outside the plot are found
-          in that same pass. The whole table exports as CSV.
+          In the same pass, five planning limits — setback, separation, height cap,
+          floor area ratio and coverage — are checked and reported with both
+          numbers: the limit you set, and what the scheme does. A limit left at
+          zero is off. Clashes between buildings and corners outside the plot are
+          found here too, and the whole table exports as CSV.
         </p>
       </div>
-    </div>
-  </section>
-
-  <!-- 04 Why different -------------------------------------------------- -->
-  <section class="sheet tint" aria-labelledby="why">
-    <p class="n" aria-hidden="true">04</p>
-    <div class="col">
-      <h2 id="why">Why it is different</h2>
-      <ul class="claims" role="list">
-        <li class="reveal"><h3>Facade depth</h3><p>Real openings with reveals and jambs, loggias with cheeks and soffits, and per-elevation overrides. Most tools at this stage give you a box with a texture on it.</p></li>
-        <li class="reveal"><h3>The same inputs give the same building</h3><p>Every choice that could be random runs through a seeded generator, so a scheme rebuilds byte for byte. When the job is comparing options, that is the difference between a comparison and a coincidence.</p></li>
-        <li class="reveal"><h3>No account, no cloud</h3><p>It is a static page. There is nothing to sign up for, nothing to upload, and once it has loaded it keeps working without a connection. Schemes are files on your own machine.</p></li>
-        <li class="reveal"><h3>Metrics you can audit</h3><p>Every figure comes from the geometry on screen, and the corrections — the junction overlap, the core area — are ones you can check by hand.</p></li>
-      </ul>
     </div>
   </section>
 
@@ -382,10 +352,10 @@
         <li class="reveal">
           <h3>IFC export</h3>
           <p>
-            Geometry comes out as glTF today, which is a visualisation format: you
-            can look at it, but you cannot pick a project up from it in Revit or
-            ArchiCAD. IFC is what turns a study into the first step of a real job,
-            and it is the next thing being built.
+            There is no IFC export today. Geometry comes out as glTF, which is a
+            visualisation format: you can look at it, but you cannot pick a project
+            up from it in Revit or ArchiCAD. IFC is what turns a study into the
+            first step of a real job, and it is the next thing being built.
           </p>
         </li>
         <li class="reveal">
@@ -408,19 +378,6 @@
     </div>
   </section>
 
-  <!-- 06 How it works --------------------------------------------------- -->
-  <section class="sheet tint" aria-labelledby="how">
-    <p class="n" aria-hidden="true">06</p>
-    <div class="col">
-      <h2 id="how">How it works</h2>
-      <ol class="steps" role="list">
-        <li class="reveal"><h3>Draw the plot</h3><p>Click out a boundary, or drop in a map or site plan, set its scale from two known points, and trace over it.</p></li>
-        <li class="reveal"><h3>Place and shape</h3><p>Add buildings, drag and rotate them, pick a footprint, then work the sliders — floors, depth, module, balconies, cores.</p></li>
-        <li class="reveal"><h3>Take it away</h3><p>Export the geometry as glTF, the metrics as CSV, and the whole scheme as a JSON file you can reopen later.</p></li>
-      </ol>
-    </div>
-  </section>
-
   <!-- 07 Questions ------------------------------------------------------ -->
   <section class="sheet" aria-labelledby="faq">
     <p class="n" aria-hidden="true">07</p>
@@ -429,7 +386,7 @@
       <details><summary>Do I need an account?</summary><p>No. There is no sign-up, no login and no trial. Open the page and it is there.</p></details>
       <details><summary>Where does my data go?</summary><p>Nowhere. There is no backend to send it to. Everything is computed in your browser, and a scheme is saved by downloading a JSON file to your machine. The site you are reading sets no cookies and makes no third-party requests.</p></details>
       <details><summary>Does it work offline?</summary><p>Once the page has loaded, yes — the app keeps working with the network gone, because nothing it does needs a server.</p></details>
-      <details><summary>What can I export?</summary><p>glTF for the geometry, including the whole site with its buildings named; CSV for the metrics table; JSON for the scheme itself, which reopens with everything as you left it. There is no IFC export yet.</p></details>
+      <details><summary>What can I export?</summary><p>glTF for the geometry, CSV for the metrics, and JSON for the scheme itself, which reopens with everything as you left it. There is no IFC export yet — it is the next thing being built.</p></details>
       <details><summary>Is it really free?</summary><p>Yes, and there is no pricing page to read. It is a static page with no running cost behind it beyond hosting.</p></details>
       <details><summary>Is there AI in it?</summary><p>No. It is parametric: you set the numbers and the geometry follows from them, the same way every time. The name is short for urban generator, and that is as far as the word goes — nothing here learns, predicts or invents.</p></details>
     </div>

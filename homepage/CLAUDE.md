@@ -145,3 +145,41 @@ Newest last. One line per part, naming the check that settled it.
 - **Watch the budget.** HTML and CSS are now 37.9 KB against §7's 40 KB. The
   next addition to either needs the budget revisited rather than quietly
   exceeded.
+
+---
+
+## 7. The content plan
+
+**Measured first, 12 September 2026.** Nine blocks, 1 494 words, seven numbered
+chapters. "facade" appears in five sections, "module" in five, "metrics" in
+five, "plot" in six, "export" in four. The page explains itself repeatedly.
+
+**Target: five chapters, about 1 000 words, and every section carrying exactly
+one claim** — which is what `project.md` §4 always asked for and the page
+stopped doing.
+
+| # | Part | Status |
+|---|---|---|
+| 1 | Delete **How it works** | **done** |
+| 2 | Its three steps became the hero workflow line | **done** |
+| 3 | **Why it is different** cut to its two non-duplicate claims | **done** |
+| 4 | Those two moved into the hero; chapter retired | **done** |
+| 5 | Facade de-duplicated — one chapter, not two | **done** |
+| 6 | Export told once; FAQ defers to the roadmap section | **done** |
+| 7 | Metrics prose halved; the table carries it | **done** |
+| 8 | One-claim audit: the site row stopped pre-empting metrics | **done** |
+| 9 | Nav trimmed to five live targets; §4 rewritten | **done** |
+| 10 | Re-measured and re-checked | **done** |
+
+### What must survive the cut
+
+Cutting chapters is not licence to cut claims `project.md` §5 requires. After
+this, the page must still say: free, no account, nothing uploaded; that the
+unit count is an estimate; that it runs in the browser and keeps working
+offline once loaded; and that IFC export does not exist. If a cut would take
+one of those with it, the claim moves — it does not disappear.
+
+**Result, 12 September 2026.** Seven chapters to five. 1 494 words to 1 224.
+HTML and CSS 37.9 KB to 35.2 KB, which buys back the headroom the section menu
+had eaten. Two dead nav links (`#why`, `#how`) were caught and removed in the
+same pass — deleting a section silently breaks the menu that points at it.

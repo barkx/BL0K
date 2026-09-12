@@ -188,6 +188,17 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
 .cta { margin: 28px 0 12px; }
 .note { font-size: 15px; color: var(--ink-soft); }
 
+/* The two claims that used to be a chapter of their own. They belong beside
+   the button, where the decision is actually being made. */
+.creds { list-style: none; margin: 26px 0 0; padding: 0; max-width: 46ch; }
+.creds li {
+  padding: 12px 0;
+  border-top: 1px solid var(--rule);
+  font-size: 14.5px;
+  color: var(--ink-soft);
+}
+.creds strong { color: var(--ink); font-weight: 600; }
+
 .btn {
   display: inline-block;
   background: var(--ink-deep);
