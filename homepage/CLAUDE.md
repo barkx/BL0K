@@ -183,3 +183,45 @@ one of those with it, the claim moves — it does not disappear.
 HTML and CSS 37.9 KB to 35.2 KB, which buys back the headroom the section menu
 had eaten. Two dead nav links (`#why`, `#how`) were caught and removed in the
 same pass — deleting a section silently breaks the menu that points at it.
+
+## 8. Design pass, 12 September 2026
+
+Ten improvements, proposed from measurement rather than impression and then
+applied. What moved:
+
+- **The hero block fills its frame.** Its viewBox was fixed for the tallest
+  scheme a reader never sees, so a short block floated in dead space — 48% of
+  the panel used. The box is still a constant size, so scale stays honest
+  between schemes, but it is now centred on what is drawn. Fill is 58–86%
+  depending on scheme; all four verified to fit 108×94 by solving the extents,
+  not by eye.
+- **The screenshots are legible.** A 1600 px app window shown at ~560 px put
+  the sidebar text at 3–4 px — texture, not information. Rows now stack, the
+  figure takes the full column and bleeds into the rail, and the capture is
+  cropped to rail, panel, model and metrics. That text now reads at about 11 px.
+- **The hero column reads as one argument.** The workflow line repeated the
+  lead's own opening clause and is gone; the two claims sit side by side under
+  the button instead of stacking beneath it.
+- Type scale: `h3` was 19.2 px against 16 px body, a ratio of 1.2 that barely
+  registered as a level. Now ~22 px with tighter tracking.
+- The sheet number sat ~90 px from its heading. Rail narrowed to 76 px and the
+  number carries a rule toward the heading, so it reads as a label.
+- Pace varies: the two table-heavy chapters keep the full measure, the roadmap
+  and FAQ tighten.
+- `Window width and height — 0.6 – 3.5 m · 1.2 – 2.8 m` never said which range
+  was which. Two rows now.
+- "None of it is cut out of a solid" was the section's best line, orphaned under
+  a long table. Promoted to a marked statement under the lead.
+- The hero panel's 14 px radius and gradient belonged to a different page than
+  the hairline rules used everywhere else. Flat panel, hairline frame.
+
+**Caught while checking:** the browser pane was serving a cached `block.js`, so
+the fitting looked broken when it was not — confirmed by fetching the file and
+re-running it, which moved the viewBox from `-49 -70 118 130` to
+`-47.9 -33.5 108 94`. Worth remembering before debugging something that is
+already fixed on disk.
+
+**And a note on the earlier mobile scare:** headless captures at 390–430 px
+show text clipped at the right edge. That is Windows enforcing a minimum window
+width, not page overflow. Verified directly at 320, 390 and 430:
+`scrollWidth === clientWidth` at all three.

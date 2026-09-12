@@ -188,6 +188,10 @@ for (const [tab, file] of [['Massing', 'shot-massing'], ['Facade', 'shot-facade'
   if (!ok) { console.log('! tab not found:', tab); continue }
   await sleep(1400)
   await shot(file)
+  // Cropped to rail, panel, model and metrics — everything the caption claims,
+  // and nothing else. Shown full column width on the page this reads at about
+  // 11 px; the uncropped 1600 px window rendered the same text at 3 px.
+  await shot(file + '-crop', { x: 0, y: 40, width: 1200, height: 856 }, 1200)
 }
 
 ws.close()

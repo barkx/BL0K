@@ -211,12 +211,21 @@ not finished until the shots that show it are retaken.
 |---|---|
 | Total page weight | Under 400 KB including images |
 | HTML + CSS | Under 40 KB uncompressed |
-| JavaScript | Under 5 KB, or none |
+| JavaScript | Under 6 KB, or none |
 | Requests | Under 15 |
 | Fonts loaded | Zero |
 
 Targets, not measurements. Nothing goes on the page claiming a number until it
 has been measured.
+
+**The JavaScript target moved from 5 KB to 6 KB on 12 September 2026.** Fitting
+the hero block's viewBox to each scheme — which recovered about 40% of the
+panel that a short building left empty — took `block.js` to 5.4 KB. The
+alternative was stripping the comments that explain why the rotation is
+deterministic and why it stops under `prefers-reduced-motion`, which is a worse
+trade for 300 bytes. §1's rule is unchanged and still holds: optional, tiny,
+and the page complete without it. Uncompressed 5.4 KB is under 2 KB over the
+wire.
 
 ### Non-negotiable
 

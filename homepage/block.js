@@ -1,13 +1,11 @@
 /*
-  The block in the hero, rotating through four schemes on its own. Same
-  isometric projection as the static drawings, same defaults as the app —
-  3 m floors, 0.65 m sill, 1.6 m openings. A miniature: no junction
+  The hero block, rotating through four schemes. Isometric, same defaults as
+  the app: 3 m floors, 0.65 m sill, 1.6 m openings. A miniature — no junction
   detection, no metrics, no balconies.
 
-  Fixed rotation order, not a random pick: determinism is a claim this page
-  makes further down. It does not rotate under prefers-reduced-motion, and
-  does not redraw while the document is hidden. With JavaScript off this
-  never runs and the static drawing in the markup stands.
+  Fixed rotation order, not random: determinism is a claim this page makes.
+  Does not rotate under prefers-reduced-motion, does not redraw while hidden,
+  and never runs at all with JavaScript off, where the static shot stands.
 */
 (function () {
   var svg = document.getElementById('toy')
@@ -15,6 +13,7 @@
 
   var K = Math.cos(Math.PI / 6)
   var FH = 3, SILL = 0.65, WH = 1.6
+  var VW = 108, VH = 94   // fits the widest and tallest scheme, centred
   var iso = function (x, y, z) { return [(x - z) * K, (x + z) / 2 - y] }
   var n = function (v) { return Math.round(v * 10) / 10 }
 
@@ -30,7 +29,7 @@
     return 'M' + quad.map(function (p) { return n(p[0]) + ' ' + n(p[1]) }).join('L') + 'Z'
   }
 
-  // Openings along one face, as one path. `map` turns (along, height) into a point.
+  // Openings along one face, as one path.
   function bays(len, map, mod, floors) {
     var count = Math.floor(len / mod)
     if (count < 1) return ''
@@ -45,7 +44,7 @@
     return d
   }
 
-  // A plot under the block, so it sits on something instead of floating.
+  // A plot under the block, so it is not floating.
   function ground(ms) {
     var x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9, e = 6
     ms.forEach(function (m) {
@@ -57,14 +56,28 @@
       + '" fill="#e7e4de" stroke="#2c5d8f" stroke-width=".4" stroke-dasharray="1.8 1.4"/>'
   }
 
+  // Centre, solved not sampled: in this projection the extremes are always the
+  // same corners — (x0,z1) left, (x1,z0) right, top of the nearest mass high,
+  // far ground corner low.
+  function centre(ms, h) {
+    var x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9, e = 6
+    ms.forEach(function (m) {
+      x0 = Math.min(x0, m[0]); z0 = Math.min(z0, m[1])
+      x1 = Math.max(x1, m[2]); z1 = Math.max(z1, m[3])
+    })
+    return [K * (x0 + x1 - z0 - z1) / 2,
+            ((x0 + z0) / 2 - h + (x1 + z1 + 2 * e) / 2) / 2]
+  }
+
   function build(preset, floors, mod, depth) {
     var h = floors * FH
-    // Back to front, so nearer masses paint over further ones. The paths are
-    // emitted per mass rather than grouped by face: grouping is smaller, but
-    // it lets a far mass's roof paint over a near mass's wall.
+    // Back to front. Emitted per mass, not grouped by face: grouping is
+    // smaller but lets a far roof paint over a near wall.
     var ms = plan(preset, depth).sort(function (a, b) {
       return (a[0] + a[1] + a[2] + a[3]) - (b[0] + b[1] + b[2] + b[3])
     })
+    var c = centre(ms, h)
+    svg.setAttribute('viewBox', n(c[0] - VW / 2) + ' ' + n(c[1] - VH / 2) + ' ' + VW + ' ' + VH)
     var out = ground(ms)
     ms.forEach(function (m) {
       var x0 = m[0], z0 = m[1], x1 = m[2], z1 = m[3]

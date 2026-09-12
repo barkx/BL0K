@@ -138,16 +138,15 @@
         working.
       </p>
       <p class="cta"><a class="btn" href="https://app.urbgen.com">Open the app</a></p>
-      <p class="note">Draw a plot, shape the buildings on it, export what you need.</p>
       <ul class="creds" role="list">
         <li><strong>Free, and no account.</strong> Nothing is uploaded, and it keeps working offline once loaded.</li>
-        <li><strong>The same inputs give the same building.</strong> Every choice that could be random runs through a seeded generator, so two options can be compared without wondering whether the tool moved something.</li>
+        <li><strong>The same inputs give the same building.</strong> Every random choice runs through a seeded generator, so two options differ only where you changed them.</li>
       </ul>
     </div>
 
     <div class="toy">
       <div class="toy-stage">
-        <svg id="toy" viewBox="-49 -70 118 130" role="img"
+        <svg id="toy" viewBox="-47.9 -33.5 108 94" role="img"
              aria-label="An axonometric block that rebuilds as the controls beside it change."></svg>
         <picture class="toy-fallback">
           <source srcset="/assets/shot-hero.webp" type="image/webp">
@@ -168,11 +167,11 @@
     <div class="col">
       <h2 id="does">What it does</h2>
 
-      <article class="row reveal">
+      <article class="row stack reveal">
         <figure class="fig fig--shot">
           <picture>
-          <source srcset="/assets/shot-massing.webp" type="image/webp">
-          <img src="/assets/shot-massing.png" width="1200" height="686" loading="lazy" decoding="async" alt="The app open on the Massing tab: a sidebar of parameters on the left, and an L-shaped eight-storey building standing on its plot in the viewport.">
+          <source srcset="/assets/shot-massing-crop.webp" type="image/webp">
+          <img src="/assets/shot-massing-crop.png" width="1200" height="856" loading="lazy" decoding="async" alt="The app open on the Massing tab: a sidebar of parameters on the left, and an L-shaped eight-storey building standing on its plot in the viewport.">
         </picture><figcaption>The Massing tab, open on an L-shaped building.</figcaption>
         </figure>
         <div class="say">
@@ -182,11 +181,11 @@
         </div>
       </article>
 
-      <article class="row flip reveal">
+      <article class="row stack reveal">
         <figure class="fig fig--shot">
           <picture>
-          <source srcset="/assets/shot-site.webp" type="image/webp">
-          <img src="/assets/shot-site.png" width="1200" height="686" loading="lazy" decoding="async" alt="The Site tab: plot area and corner count, a button to draw a new boundary, and five planning rules each set to zero, beside a plot drawn on the ground with draggable corners.">
+          <source srcset="/assets/shot-site-crop.webp" type="image/webp">
+          <img src="/assets/shot-site-crop.png" width="1200" height="856" loading="lazy" decoding="async" alt="The Site tab: plot area and corner count, a button to draw a new boundary, and five planning rules each set to zero, beside a plot drawn on the ground with draggable corners.">
         </picture><figcaption>The plot, its corner handles, and the five planning rules.</figcaption>
         </figure>
         <div class="say">
@@ -207,6 +206,11 @@
         Driven by one number — the width of an apartment module — with everything
         else set against it, and any elevation free to differ from the rest.
       </p>
+      <p class="stmt">
+        None of it is cut out of a solid. Every opening is built as panels around
+        the void, which is why the geometry stays clean enough to carry into
+        another application.
+      </p>
 
       <dl class="specs reveal">
         <div>
@@ -220,9 +224,14 @@
           <dd class="what">How the module is subdivided. Two reads as a typical dual-aspect flat; one gives a wider, calmer rhythm.</dd>
         </div>
         <div>
-          <dt>Window width and height</dt>
-          <dd class="num">0.6 – 3.5 m · 1.2 – 2.8 m</dd>
-          <dd class="what">Both clamped to what the module and the floor-to-floor height can actually take, so a value you type can never produce geometry that does not close.</dd>
+          <dt>Window width</dt>
+          <dd class="num">0.6 – 3.5 m</dd>
+          <dd class="what">Clamped to what the module can take, so a value you type can never produce geometry that does not close.</dd>
+        </div>
+        <div>
+          <dt>Window height</dt>
+          <dd class="num">1.2 – 2.8 m</dd>
+          <dd class="what">Clamped against the floor-to-floor height, less the sill and the head.</dd>
         </div>
         <div>
           <dt>Sill height</dt>
@@ -251,13 +260,6 @@
         </div>
       </dl>
 
-      <div class="prose">
-        <p>
-          None of this is cut out of a solid. Every opening is built as panels
-          around the void, which is why the geometry stays clean enough to carry
-          into another application.
-        </p>
-      </div>
     </div>
   </section>
 
@@ -339,7 +341,7 @@
   </section>
 
   <!-- 05 What comes next ------------------------------------------------ -->
-  <section class="sheet" aria-labelledby="next">
+  <section class="sheet dense" aria-labelledby="next">
     <p class="n" aria-hidden="true">05</p>
     <div class="col">
       <h2 id="next">What is being built next</h2>
@@ -379,7 +381,7 @@
   </section>
 
   <!-- 07 Questions ------------------------------------------------------ -->
-  <section class="sheet" aria-labelledby="faq">
+  <section class="sheet dense" aria-labelledby="faq">
     <p class="n" aria-hidden="true">07</p>
     <div class="col narrow">
       <h2 id="faq">Questions</h2>
