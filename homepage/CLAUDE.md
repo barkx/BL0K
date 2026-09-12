@@ -115,3 +115,22 @@ Newest last. One line per part, naming the check that settled it.
   and wired up with `og:image`, its dimensions, alt text, and
   `twitter:card: summary_large_image`. Verified the PNG header really is
   1200×630.
+- **Copy pass, 12 September 2026.** Three sections rewritten against what the
+  app actually does. The facade section now lists the *options* with their real
+  ranges, taken from `project.md` §3 rather than from the screenshot, because
+  the screenshot shows one set of values and the ranges are the point. Metrics
+  are marked-up rows instead of a picture of rows — the figures are one real
+  scheme, checked to be internally consistent (1 040 × 8 = 8 320;
+  8 320 ÷ 9 900 = 0.84; (8 320 − 338) × 0.90 = 7 184). "What it does not do"
+  became "What is being built next"; see `project.md` §4.6 for why, and note
+  that §5's ban on roadmap-as-promise still holds — the section carries no
+  dates and says so.
+- Checked after: no heading-level jumps, the metrics table has a caption and
+  real row headers, no overflow at 320 px or 1280 px, and every `<picture>`
+  paired with the right heading and caption. The reveal animation's range now
+  ends at `entry 100%` so content fully on screen is never left half-faded on a
+  tall display.
+- **Known redundancy:** `shot-hero` and `shot-site` are byte-identical, because
+  the app opens on the Site tab and the hero shot is taken before any tab is
+  clicked. Harmless — a visitor fetches one or the other, never both — but the
+  capture script could skip one.

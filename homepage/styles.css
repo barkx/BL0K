@@ -287,25 +287,94 @@ p:last-child { margin-bottom: 0; }
   .claims { grid-template-columns: 1fr 1fr; column-gap: clamp(24px, 4vw, 64px); }
 }
 
-/* ---------- limits ---------- */
+/* ---------- spec list ---------- */
 
-.nots { list-style: none; margin: 0; padding: 0; }
-.nots li {
-  position: relative;
-  padding: 15px 0 15px 26px;
+.specs { margin: 0 0 clamp(24px, 3vw, 40px); padding: 0; }
+.specs > div {
+  display: grid;
+  gap: 4px 24px;
+  padding: 16px 0;
   border-top: 1px solid var(--rule);
+  align-items: baseline;
+}
+.specs dt { font-weight: 600; }
+.specs dd { margin: 0; color: var(--ink-soft); }
+.specs .num { color: var(--blueprint); font-variant-numeric: tabular-nums; }
+.specs .what { max-width: 58ch; }
+
+@media (min-width: 820px) {
+  .specs > div { grid-template-columns: 13rem 15rem minmax(0, 1fr); }
+  .specs .what { grid-column: 3; grid-row: 1; }
+}
+
+/* ---------- metrics table ---------- */
+
+.metrics {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 clamp(24px, 3vw, 40px);
+  font-size: 15.5px;
+}
+.metrics caption {
+  text-align: left;
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
   color: var(--ink-soft);
-  max-width: var(--measure);
+  padding-bottom: 10px;
 }
-.nots li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: calc(15px + 0.79em);
-  width: 13px;
-  border-top: 1px solid var(--blueprint);
+.metrics th, .metrics td {
+  text-align: left;
+  vertical-align: baseline;
+  padding: 13px 16px 13px 0;
+  border-top: 1px solid var(--rule);
 }
-.nots strong { color: var(--ink); font-weight: 600; }
+.metrics thead th {
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-soft);
+  font-weight: 600;
+  border-top: 0;
+  padding-top: 0;
+}
+.metrics tbody th { font-weight: 600; white-space: nowrap; }
+.metrics td:last-child { color: var(--ink-soft); padding-right: 0; }
+.metrics .num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--ink);
+  font-weight: 550;
+}
+.metrics .est { color: var(--ink-soft); font-weight: 400; font-size: 13px; }
+
+@media (max-width: 700px) {
+  /* Three columns will not fit; stack each row into a block instead. */
+  .metrics, .metrics tbody, .metrics tr, .metrics th, .metrics td { display: block; }
+  .metrics thead { display: none; }
+  .metrics tr { border-top: 1px solid var(--rule); padding: 14px 0; }
+  .metrics th, .metrics td { border: 0; padding: 0 0 4px; }
+}
+
+/* ---------- what comes next ---------- */
+
+.queue { list-style: none; counter-reset: q; margin: 0; padding: 0; }
+.queue li {
+  counter-increment: q;
+  padding: clamp(18px, 2.4vw, 28px) 0;
+  border-top: 1px solid var(--rule);
+}
+.queue li::before {
+  content: counter(q, decimal-leading-zero);
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--blueprint);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 8px;
+}
+.queue p { color: var(--ink-soft); }
 
 /* ---------- steps ---------- */
 
@@ -379,7 +448,10 @@ details p { margin: 0 0 18px 26px; color: var(--ink-soft); }
     .reveal {
       animation: rise linear both;
       animation-timeline: view();
-      animation-range: entry 8% cover 32%;
+      /* Ends at entry 100%: anything fully inside the viewport is fully
+         opaque. With a 'cover' range, content already on screen at load on a
+         very tall display can sit half-faded until the reader scrolls. */
+      animation-range: entry 0% entry 100%;
     }
     @keyframes rise {
       from { opacity: 0; transform: translateY(20px); }

@@ -205,14 +205,62 @@
   <section class="sheet tint" aria-labelledby="facade">
     <p class="n" aria-hidden="true">02</p>
     <div class="col">
-      <h2 id="facade">The facade, in detail</h2>
-      <figure class="fig bleed reveal">
-        <img src="/assets/facade-detail.svg" width="900" height="520" loading="lazy" decoding="async" alt="A plan section through a wall: on the left a window opening with its reveal and jambs dimensioned, on the right a loggia recessed between two cheeks with a soffit over.">
-        <figcaption>Window reveal with jambs, left. Loggia between its cheeks, right.</figcaption>
-      </figure>
+      <h2 id="facade">The facade, and what you can change</h2>
+      <p class="lead">
+        The facade is driven by one number — the width of an apartment module —
+        and everything else is set against it. Each elevation can then be
+        overridden on its own, so a street frontage need not match a courtyard one.
+      </p>
+
+      <dl class="specs reveal">
+        <div>
+          <dt>Module width</dt>
+          <dd class="num">3.0 – 9.0 m</dd>
+          <dd class="what">One apartment. The app re-fits it to the elevation so modules divide evenly — you are told the requested width and the actual one, and there is never a ragged bay left at one end.</dd>
+        </div>
+        <div>
+          <dt>Windows per module</dt>
+          <dd class="num">1 – 3</dd>
+          <dd class="what">How the module is subdivided. Two reads as a typical dual-aspect flat; one gives a wider, calmer rhythm.</dd>
+        </div>
+        <div>
+          <dt>Window width and height</dt>
+          <dd class="num">0.6 – 3.5 m · 1.2 – 2.8 m</dd>
+          <dd class="what">Both clamped to what the module and the floor-to-floor height can actually take, so a value you type can never produce geometry that does not close.</dd>
+        </div>
+        <div>
+          <dt>Sill height</dt>
+          <dd class="num">0 – 1.2 m</dd>
+          <dd class="what">Zero is floor-to-ceiling glazing. Anything above it gives you a spandrel below the opening.</dd>
+        </div>
+        <div>
+          <dt>Reveal</dt>
+          <dd class="num">0 – 0.4 m</dd>
+          <dd class="what">How far the window sits back from the wall face. This is the parameter that decides whether a facade reads as flat or as built, because it is what casts the shadow.</dd>
+        </div>
+        <div>
+          <dt>Balconies</dt>
+          <dd class="num">none · projecting · loggia · mixed</dd>
+          <dd class="what">Projecting slabs stand proud of the wall; loggias are cut into it, with cheeks either side and a soffit over. Mixed picks per module.</dd>
+        </div>
+        <div>
+          <dt>Balcony pattern</dt>
+          <dd class="num">every module · alternate · checkerboard · seeded mix</dd>
+          <dd class="what">Where they land across the elevation. The seeded mix is repeatable: the same seed gives the same arrangement every time.</dd>
+        </div>
+        <div>
+          <dt>Per elevation</dt>
+          <dd class="num">override any face</dd>
+          <dd class="what">Balcony type, pattern and windows per module can be set for one elevation alone. Click a face in the viewport and it is that face you are editing.</dd>
+        </div>
+      </dl>
+
       <div class="prose">
-        <p>This is the part a massing tool usually skips, and it is the reason the output is worth looking at. Reveals have jambs. Loggias have cheeks and a soffit. Every elevation can be overridden on its own, so the street face need not match the courtyard face.</p>
-        <p>None of it is cut out of a solid. Openings are built as panels around the void, which keeps the geometry clean enough to carry into another application.</p>
+        <p>
+          None of this is cut out of a solid. Every opening is built as panels
+          around the void, which is why the geometry stays clean enough to carry
+          into another application.
+        </p>
       </div>
     </div>
   </section>
@@ -222,16 +270,77 @@
     <p class="n" aria-hidden="true">03</p>
     <div class="col">
       <h2 id="metrics">Metrics that show their working</h2>
-      <figure class="fig fig--shot bleed reveal">
-        <picture>
-          <source srcset="/assets/shot-metrics.webp" type="image/webp">
-          <img src="/assets/shot-metrics.png" width="260" height="277" loading="lazy" decoding="async" alt="The metrics panel: GFA, plot ratio, coverage, NIA with its percentage, core area as a share of GFA, an estimated unit count and the tallest height, then the same broken down for one building.">
-        </picture><figcaption>GFA, plot ratio, coverage, NIA with the core taken off, and a unit estimate.</figcaption>
-      </figure>
+      <p class="lead">
+        Every figure is computed from the geometry on screen and recomputed as you
+        change anything. These are the real numbers from one scheme — an L-plan
+        block of eight floors on a 9 900 m² plot — with what each one is made of.
+      </p>
+
+      <table class="metrics reveal">
+        <caption>One building, 9 900 m² plot</caption>
+        <thead>
+          <tr><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">How it is arrived at</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Footprint</th>
+            <td class="num">1 040 m²</td>
+            <td>The area the building covers at ground level.</td>
+          </tr>
+          <tr>
+            <th scope="row">GFA</th>
+            <td class="num">8 320 m²</td>
+            <td>Footprint across eight floors. Where two wings meet, the shared corner is counted <em>once</em> — a naive sum would report it twice.</td>
+          </tr>
+          <tr>
+            <th scope="row">Plot ratio</th>
+            <td class="num">0.84</td>
+            <td>GFA ÷ plot area. 8 320 ÷ 9 900.</td>
+          </tr>
+          <tr>
+            <th scope="row">Coverage</th>
+            <td class="num">10.5%</td>
+            <td>Footprint ÷ plot area. 1 040 ÷ 9 900.</td>
+          </tr>
+          <tr>
+            <th scope="row">Core</th>
+            <td class="num">338 m²</td>
+            <td>Measured off the shaft that is actually in the model, not assumed as a percentage. 4.1% of GFA here.</td>
+          </tr>
+          <tr>
+            <th scope="row">NIA</th>
+            <td class="num">7 184 m²</td>
+            <td>(GFA − core) × an efficiency factor you set. (8 320 − 338) × 0.90. That is 86.3% of GFA.</td>
+          </tr>
+          <tr>
+            <th scope="row">Facade area</th>
+            <td class="num">4 464 m²</td>
+            <td>Total external wall, of which 33.7% is glazed on this scheme.</td>
+          </tr>
+          <tr>
+            <th scope="row">Units</th>
+            <td class="num">224 <span class="est">est.</span></td>
+            <td>An <strong>estimate</strong>, from the module width and the floor area. It is not a laid-out plan, and the app labels it as an estimate wherever it appears.</td>
+          </tr>
+          <tr>
+            <th scope="row">Tallest</th>
+            <td class="num">24.9 m</td>
+            <td>Height of the tallest mass, which is what a height cap is checked against.</td>
+          </tr>
+        </tbody>
+      </table>
+
       <div class="prose">
-        <p>GFA, NIA, facade area, footprint, coverage, plot ratio and a unit estimate, all recomputed as you change anything. Where two wings overlap at a junction, the shared area is counted once rather than twice.</p>
-        <p>NIA takes the core off the geometry that is actually there, then applies an efficiency factor you set — it is not a percentage guessed at the end. The unit count is an estimate from the module width, and the app says so where it shows it.</p>
-        <p>Setback, separation, height cap, floor area ratio and coverage are checked in the same pass and reported with both numbers: the limit, and what the scheme does. A limit set to zero is off, so nothing inherits a rule nobody asked for. The whole table exports as CSV.</p>
+        <p>
+          Five planning rules — setback, separation, height cap, floor area ratio
+          and coverage — are checked in the same pass and reported with both
+          numbers: the limit you set, and what the scheme actually does. A limit
+          left at zero is off, so no scheme inherits a constraint nobody asked for.
+        </p>
+        <p>
+          Clashes between buildings and corners falling outside the plot are found
+          in that same pass. The whole table exports as CSV.
+        </p>
       </div>
     </div>
   </section>
@@ -250,22 +359,43 @@
     </div>
   </section>
 
-  <!-- 05 Limits --------------------------------------------------------- -->
-  <section class="sheet" aria-labelledby="limits">
+  <!-- 05 What comes next ------------------------------------------------ -->
+  <section class="sheet" aria-labelledby="next">
     <p class="n" aria-hidden="true">05</p>
-    <div class="col narrow">
-      <h2 id="limits">What it does not do</h2>
-      <p class="lead">Worth knowing before you spend an afternoon in it. None of these are hidden in the app either.</p>
-      <ul class="nots" role="list">
-        <li><strong>No IFC export.</strong> Geometry comes out as glTF, which is a visualisation format — you cannot pick a project up from it in Revit or ArchiCAD. This is the known gap, and the largest one.</li>
-        <li><strong>No floorplans, corridors, stairs or lifts.</strong> A core is modelled as a shaft, because it takes volume and comes off the net area. What happens inside it is not drawn.</li>
-        <li><strong>No environmental simulation.</strong> No daylight, shadow, wind or energy analysis of any kind.</li>
-        <li><strong>Flat ground only.</strong> No terrain, no slope, no cut and fill.</li>
-        <li><strong>No neighbouring buildings as context.</strong> The site holds what you place on it and nothing else.</li>
-        <li><strong>No collaboration.</strong> One person, one browser. Schemes are shared by sending the file.</li>
-        <li><strong>The unit count is an estimate.</strong> It comes from the module width and the floor area, not from a laid-out plan.</li>
-        <li><strong>No cost estimation.</strong></li>
-      </ul>
+    <div class="col">
+      <h2 id="next">What is being built next</h2>
+      <p class="lead">
+        In the order they are being worked on. No dates — these are what the work
+        is pointed at, not commitments.
+      </p>
+
+      <ol class="queue" role="list">
+        <li class="reveal">
+          <h3>IFC export</h3>
+          <p>
+            Geometry comes out as glTF today, which is a visualisation format: you
+            can look at it, but you cannot pick a project up from it in Revit or
+            ArchiCAD. IFC is what turns a study into the first step of a real job,
+            and it is the next thing being built.
+          </p>
+        </li>
+        <li class="reveal">
+          <h3>DXF import</h3>
+          <p>
+            Bring a surveyed boundary straight in, instead of tracing it over a
+            scaled image. The tracing workflow stays — it is faster when all you
+            have is a screenshot of a map.
+          </p>
+        </li>
+        <li class="reveal">
+          <h3>Roads and parking</h3>
+          <p>
+            Placement currently handles buildings on a plot. Roads and parking
+            belong in the same tab, so that coverage and the space between blocks
+            start to mean something at the site scale.
+          </p>
+        </li>
+      </ol>
     </div>
   </section>
 

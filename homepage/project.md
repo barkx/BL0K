@@ -97,21 +97,32 @@ One page, in this order. Each section carries exactly one claim.
 2. **What it does.** Three or four blocks, each an image and two sentences:
    massing presets; a module-driven facade with real openings; the site — plot,
    many buildings, rules and metrics. Images do the work; prose stays short.
-3. **The facade, in detail.** The one capability worth its own section, because
-   it is the thing rivals do not have. Reveals, jambs, loggia cheeks and
-   soffits, per-elevation overrides, a module rhythm that always divides evenly.
-   A close-up render earns its place here.
+3. **The facade, and what you can change.** The one capability worth its own
+   section, because it is the thing rivals do not have. Presented as the
+   *options* — module width, windows per module, window sizes, sill, reveal,
+   balcony type and pattern, per-elevation overrides — with the range of each
+   and what it does, rather than as a construction detail. A reader deciding
+   whether the tool fits wants the controls, not a section drawing.
 4. **Metrics that show their working.** GFA corrected for the overlap where two
    wings meet; NIA with the core measured off the geometry rather than guessed;
    clash and off-plot detection; planning rules checked and reported with both
-   numbers. Screenshot of the metrics panel.
+   numbers. **Marked-up, not a screenshot** — a real scheme's figures in a
+   table, each row saying what the number is made of. A picture of numbers
+   cannot be read by a screen reader, selected, or checked.
 5. **Why it is different.** Four short claims, no comparison table naming
    competitors: facade depth, determinism, no account and no cloud, metrics you
    can audit. Naming rivals invites a fight the page cannot win and dates badly.
-6. **What it does not do.** Plainly, as a list. No IFC export yet. No floorplans
-   or circulation. No environmental simulation. Flat ground only. No
-   collaboration. The unit figure is an estimate. This section is not an
-   apology — it is the reason the rest is believable.
+6. **What is being built next.** In the order the work is pointed at: IFC
+   export, DXF import, roads and parking. No dates — §5 still forbids a roadmap
+   stated as a promise, so the section says what is being worked on and
+   explicitly says these are not commitments.
+
+   **Changed 12 September 2026**, from "What it does not do". The limitations
+   read as an apology rather than as candour, and the page carried more about
+   what was absent than about what was there. The honesty it was protecting is
+   kept where a reader actually needs it: the absence of IFC export is stated
+   in this section and again in the FAQ, and the unit count is labelled an
+   estimate in the metrics table where the figure appears.
 7. **How it works.** Three steps: draw or trace a plot, place and shape
    buildings, export. One line each.
 8. **FAQ.** Six or so, answering the questions the positioning actually
@@ -119,8 +130,7 @@ One page, in this order. Each section carries exactly one claim.
    What can I export? Is it really free? Is there AI in it?
 9. **Footer.** Link to the app, link to the repo, a contact address, the year.
 
-Section 6 goes *before* the FAQ and after the strongest claim, deliberately. It
-is the pivot the whole page turns on.
+Section 6 goes *before* the FAQ and after the strongest claim, deliberately.
 
 ---
 
