@@ -203,11 +203,15 @@ Open question §10.4 — whether the app's source is public, and under what
 licence — is unsettled, and the repo is private in effect, so the link would
 404 for everyone who clicked it.
 
-**The footer is shared with archviz.one.** Adapted from the author's own site
-so the two carry one identity. Contact goes to `archviz.one/contact/`, which
-answers §10.5 and retires the `hello@urbgen.com` alias before it needed to
-exist. Attribution reverses §10.6, which had been answered "unattributed"
-earlier the same day.
+**The footer is portrait, name and social links, and nothing else.** Adapted
+from the author's own site, archviz.one, so the two carry one identity, then
+cut back to those three elements. Attribution reverses §10.6, which had been
+answered "unattributed" earlier the same day.
+
+**There is no contact address on the page.** §10.5 was answered with
+`archviz.one/contact/` and then reopened when the link columns came out.
+LinkedIn is the only route to a person now. Worth revisiting before anyone
+relies on the page to start a conversation.
 
 **The AI clause was dropped from the borrowed tagline.** The original reads
 "Architect | BIM Specialist | AI-Driven Design & Automation". §5 forbids the
@@ -215,9 +219,6 @@ page implying AI, and a visitor will not stop to work out that the phrase
 describes a person rather than this tool. It ships as "Architect | BIM
 Specialist" here; archviz.one is untouched.
 
-**Only links that resolve are shipped.** Blog, Highlights, Articles, Knowledge
-Base, Privacy Policy and TOS were in the borrowed footer and all six return 404
-on archviz.one. Cut rather than guessed.
 **The hero is not a still.** §4.1 asks for a still of the app beside the
 headline. It is instead a drawn block that rebuilds itself every few seconds
 through four schemes — courtyard, L, U and bar — captioning the parameters it
