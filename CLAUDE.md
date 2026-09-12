@@ -1,5 +1,49 @@
 # CLAUDE.md
 
+**This file is for the app.** `homepage/` is a different project with a
+different agent — see §0 before touching anything inside it.
+
+## 0. Scope: this repo holds two projects
+
+| | This project | `homepage/` |
+|---|---|---|
+| What | the URBGEN app | the marketing site |
+| Domain | `app.urbgen.com` | `urbgen.com` |
+| Spec | [`project.md`](project.md) | [`homepage/project.md`](homepage/project.md) |
+| Agent instructions | this file | [`homepage/CLAUDE.md`](homepage/CLAUDE.md) |
+| Vercel project | its own, root directory = repo root | its own, root directory = `homepage/` |
+| Stack | Vite + React + R3F | hand-written HTML and CSS, no build step |
+
+**Do not edit anything inside `homepage/` from here.** If a change is needed
+there, say so and stop — it is work for an agent started in that folder, under
+that folder's rules. The boundary is a convention, not a sandbox: sharing one
+repo means crossing it is merely disallowed, not impossible.
+
+### Three couplings run outward from this repo
+
+They are invisible from inside `src/`, and each one goes stale silently.
+
+1. **The mark and the palette are copied, not imported.** `homepage/` holds its
+   own copy of the shape in `src/ui/Logo.tsx` and the colour variables in
+   `src/ui/styles.css`. Change either and the homepage keeps the old brand
+   until someone updates it. Say so when you change them.
+2. **The homepage carries screenshots of this app**, captured by
+   `homepage/tools/capture-screenshots.mjs`. A UI change here is not finished
+   until those are retaken — which is homepage work, so flag it rather than do
+   it.
+3. **The homepage quotes facts and figures from this app** — parameter ranges,
+   and a real scheme's metrics written into its markup. Changing a default or a
+   clamp can make the homepage state something untrue. Flag it.
+
+### Do not tidy these away
+
+- The `ignoreCommand` in [`vercel.json`](vercel.json) excludes `homepage/` so a
+  homepage-only push does not rebuild and redeploy the app. It looks like noise
+  and is not.
+- `homepage/.vercelignore`, `homepage/vercel.json` and the `homepage/tools/`
+  scripts belong to that project. §1's "keep GitHub to what Vercel needs to
+  build" is about *this* project's files, and does not make `homepage/` cruft.
+
 ## 1. Hard Rules
 
 ### Code
@@ -62,7 +106,8 @@
 ### Process
 - `npm run build` must pass before every commit. It typechecks first.
 - Never commit `node_modules/`, `dist/`, `.vite/`, `.vercel/`.
-- `project.md` is the single spec. Keep it current as the app changes.
+- `project.md` is the single spec for this project. Keep it current as the app
+  changes. It does not govern `homepage/`, which has its own — see §0.
 - Record any deviation from `project.md` in `README.md` § Deviations, with the reason.
 - Do not add a dependency without naming the reason in the commit message.
 - Keep GitHub to what Vercel needs to build, plus Docker files, scripts and docs.
@@ -70,13 +115,17 @@
 
 ## 2. Authority & Links
 
-- Single spec: [`project.md`](project.md) — decisions §1, non-goals §1,
-  milestones §8, roadmap §9, open questions §10.
+- Single spec **for the app**: [`project.md`](project.md) — decisions §1,
+  non-goals §1, milestones §8, roadmap §9, open questions §10. The homepage has
+  its own, [`homepage/project.md`](homepage/project.md); neither governs the
+  other.
 - [`README.md`](README.md) — the one doc. Chapter 1: running, coding,
   publishing. Chapter 2: the app, its features, design and performance.
 - GitHub: `https://github.com/barkx/BL0K` — branch `main`. The repo keeps its
   old name on purpose; only the app was rebranded. Do not rename it.
-- Vercel: builds `main` on push **once linked**; config in `vercel.json`
+- Vercel: linked, and builds `main` on push; config in `vercel.json`. A second
+  Vercel project builds `homepage/` from the same branch, which is why both
+  `vercel.json` files carry an `ignoreCommand`.
 - Git scripts: `setup-git.bat` (already run — do not run again), `push.bat`
 - Container: `Dockerfile` (targets `dev`, `prod`), `docker-compose.yml`,
   `scripts/docker.mjs` (locator), `run.bat` (Windows double-click wrapper)
@@ -124,6 +173,11 @@ Ask before proceeding:
 - The spec is ambiguous in a way that changes geometry or metrics.
 - Anything would be published outside a push to `main`.
 - A command would install to, or modify, global/user config outside this repo.
+- **A change would touch `homepage/`.** That is a different project with a
+  different agent — say what is needed and stop. See §0.
+- A change to the mark, the palette, the UI, or a parameter default or clamp —
+  all three are copied or quoted by the homepage (§0), so say so, even when the
+  change itself is entirely within this project.
 
 Refuse:
 

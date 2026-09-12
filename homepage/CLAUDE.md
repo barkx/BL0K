@@ -6,6 +6,9 @@ than assumed.
 
 ## 1. The boundary
 
+- The reciprocal rule now exists: the app's own `CLAUDE.md` §0 tells an agent
+  working there to leave this folder alone, and lists the couplings that run
+  the other way. Both halves of the boundary are written down.
 - Work started in `homepage/` **stays in `homepage/`**. Do not edit anything in
   the parent repo from here — not `src/`, not the root `project.md`, not the
   root `vercel.json`, not `README.md` at the root. If a change up there is
