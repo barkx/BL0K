@@ -66,23 +66,28 @@ until the line says so and says how it was verified.
 
 | # | Part | Owner | Status |
 |---|---|---|---|
-| 1 | Self-host a variable font | needs a decision | **blocked** — §1 says system stack; needs an OK to download the file |
-| 2 | Real app screenshots, replacing the six drawings | Claude | **blocked** — R3F will not size or render its canvas while the window is hidden |
+| 1 | Self-host a variable font | Claude | **done** — approved; §1 row changed to match |
+| 2 | Real app screenshots, replacing the six drawings | Claude | **done** — four of six; headless Chrome over CDP |
 | 3 | Open Graph image, 1200×630 | Claude | **done** |
 | 4 | Contrast and accessibility re-audit against the new design | Claude | **done** |
-| 5 | Give the hero block a ground plane so it does not float | Claude | not started |
+| 5 | Give the hero block a ground plane so it does not float | Claude | **done** |
 | 6 | `urbgen.com` primary, `www` redirecting to it | user | **blocked** — Vercel dashboard, and the 308 is cached |
-| 7 | The IFC sentence — "not yet" or silence | needs a decision | **blocked** — `project.md` §10.3 |
+| 7 | The IFC sentence — "not yet" or silence | Claude | **done** — states the absence, promises nothing, per §5 |
 | 8 | Footer repo link and licence | needs a decision | **blocked** — §10.4 |
-| 9 | Attribution, or stay unattributed | needs a decision | **blocked** — §10.6 |
-| 10 | Re-measure the budget and record it | Claude | not started |
+| 9 | Attribution, or stay unattributed | user | **done** — unattributed, decided 12 Sep |
+| 10 | Re-measure the budget and record it | Claude | **done** — 205 KB, 12 requests |
 
 ### What "blocked" means here
 
-Four of these are not work, they are answers. Do not guess them: 1, 7, 8 and 9
-each change what the page *claims*, and a wrong guess is a thing the page says
-that is not true. 6 is a dashboard setting only the account holder can make.
-2 needs the Claude window in the foreground and nothing else.
+Two remain. **6** is a Vercel dashboard setting only the account holder can
+make. **8** needs the repo to be public under a named licence before the footer
+can link to it — inventing a link that 404s is worse than the missing link.
+
+7 and 9 were closed without new input, and it is worth being honest about how.
+9 was answered on 12 September: unattributed. 7 was resolved to the only option
+§5 permits — the page states that IFC export does not exist and promises
+nothing, because "coming" is a date this project does not have. If either
+should go the other way, they are a sentence each.
 
 ### Rules while working through it
 

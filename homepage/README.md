@@ -29,9 +29,26 @@ file and refresh.
 
 ### Illustrations
 
-The six drawings in `assets/` are **placeholders**, generated rather than
-captured, and M2 replaces them with screenshots of the real app. Redraw them
-with:
+Four of the six figures are now **screenshots of the running app**, captured by
+a script rather than by hand:
+
+```bash
+npm run dev                                   # in the app
+node homepage/tools/capture-screenshots.mjs   # then this
+```
+
+It drives Chrome over the DevTools Protocol with no dependencies, opens each
+tab in turn, and writes both a PNG and a downscaled WebP. Headless is not a
+workaround: R3F will not size or render its canvas while the document is
+hidden, so a backgrounded window captures nothing. The script *is* the record
+§6 asks for — re-running it after a UI change is the whole of the retake.
+
+Two figures stay drawings, deliberately. The facade plan-section shows a reveal
+and a loggia in section, which no screenshot of the app can show. The hero
+fallback stays a drawing so its caption, which names a courtyard at eight
+floors, keeps describing what is actually pictured.
+
+The drawings are still rebuilt with:
 
 ```bash
 node homepage/tools/build-illustrations.mjs
@@ -72,17 +89,19 @@ these in the page itself.
 
 | | Target | Measured |
 |---|---|---|
-| Total page weight | under 400 KB | 93 KB |
-| HTML + CSS | under 40 KB | 28 KB |
-| JavaScript | under 5 KB | 4.7 KB |
-| Requests | under 15 | 10, all same-origin |
-| Fonts loaded | zero | zero |
+| Total page weight | under 400 KB | 205 KB |
+| HTML + CSS | under 40 KB | 29 KB |
+| JavaScript | under 5 KB | 4.9 KB |
+| Requests | under 15 | 12, all same-origin |
+| Fonts loaded | zero | one, self-hosted, 48 KB |
 
-The hero drawing is 25 KB of that and the facade elevation 19 KB — both are
-SVG, and both get replaced at M2 by images that will almost certainly weigh
-more. There is room, though `block.js` leaves only 400 bytes of the JavaScript
-budget: anything more than a tweak there needs the budget revisited rather than
-quietly exceeded.
+The font is 48 KB of that and the four screenshots 90 KB. The PNG fallbacks are
+not counted because no browser in use fetches them. `block.js` leaves about
+200 bytes of the JavaScript budget, so anything more than a tweak there needs
+the budget revisited rather than quietly exceeded.
+
+"Fonts loaded: zero" was the old target. §1 now allows one self-hosted face,
+and one is what loads.
 
 ---
 
@@ -174,12 +193,10 @@ It was considered and it is the worse option. `app.urbgen.com` is what
 Departures from [`project.md`](project.md), with the reason. Spec §6 requires
 them to be written down here.
 
-**Illustrations are SVG drawings, not `.webp` screenshots.** §1 says images are
-self-hosted `.webp` with a raster fallback. At M1 there are no screenshots yet,
-and a grey box saying "screenshot pending" is worse than a drawing that
-explains the same idea. They are SVG because six drawings come to about 60 KB
-that way and stay sharp at any width. M2 replaces them with `.webp` captures
-and this deviation goes away.
+**Two figures are drawings, not screenshots.** §1 asks for self-hosted `.webp`.
+Four now are, with a PNG fallback in a `<picture>` so no modern browser fetches
+the PNG. The two that remain SVG are the facade plan-section — a section
+drawing has no screenshot equivalent — and the hero's no-JavaScript fallback.
 
 **The footer does not link to the repo.** §4 lists a repo link in the footer.
 Open question §10.4 — whether the app's source is public, and under what
@@ -206,12 +223,6 @@ and §7 caps it at 5 KB, so this is within the budget rather than against it —
 but it was previously none, which is worth recording. The page stays complete
 without it: the controls-free markup ships a static drawing, and the script
 replaces it only once it runs.
-
-**The font question is still open.** The typography is the largest remaining
-cause of the page looking generic, and the fix — a self-hosted variable font —
-conflicts with §1's "system font stack" while not breaking the privacy claim,
-since self-hosting makes no third-party request. Nothing has been decided, so
-the page still uses the system stack and loads no font at all.
 
 **There is a tenth section.** §4 lists nine, hero through footer. A short
 closing block repeats the *Open the app* button after the FAQ, because by then

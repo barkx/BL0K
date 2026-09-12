@@ -1,19 +1,13 @@
 /*
-  The block in the hero, rotating through schemes on its own. Same isometric
-  projection the static drawings use, and the same defaults the app ships with
-  — 3 m floors, a 0.65 m sill, openings 1.6 m tall.
+  The block in the hero, rotating through four schemes on its own. Same
+  isometric projection as the static drawings, same defaults as the app —
+  3 m floors, 0.65 m sill, 1.6 m openings. A miniature: no junction
+  detection, no metrics, no balconies.
 
-  It is a miniature, not the app: no junction detection, no metrics, no
-  balconies. It exists so the page shows what "change a parameter and it
-  rebuilds" means instead of only asserting it.
-
-  The rotation is a fixed order rather than a random pick, because determinism
-  is a claim this page makes three sections further down and it would be odd to
-  contradict it in the hero. A visitor sees the same thing either way.
-
-  Nothing here is interactive. Under prefers-reduced-motion it does not rotate
-  at all, and with JavaScript off this file never runs, the static drawing in
-  the markup stands, and the page is complete without it.
+  Fixed rotation order, not a random pick: determinism is a claim this page
+  makes further down. It does not rotate under prefers-reduced-motion, and
+  does not redraw while the document is hidden. With JavaScript off this
+  never runs and the static drawing in the markup stands.
 */
 (function () {
   var svg = document.getElementById('toy')
@@ -51,6 +45,18 @@
     return d
   }
 
+  // A plot under the block, so it sits on something instead of floating.
+  function ground(ms) {
+    var x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9, e = 6
+    ms.forEach(function (m) {
+      x0 = Math.min(x0, m[0]); z0 = Math.min(z0, m[1])
+      x1 = Math.max(x1, m[2]); z1 = Math.max(z1, m[3])
+    })
+    return '<path d="' + path([iso(x0 - e, 0, z0 - e), iso(x1 + e, 0, z0 - e),
+      iso(x1 + e, 0, z1 + e), iso(x0 - e, 0, z1 + e)])
+      + '" fill="#e7e4de" stroke="#2c5d8f" stroke-width=".4" stroke-dasharray="1.8 1.4"/>'
+  }
+
   function build(preset, floors, mod, depth) {
     var h = floors * FH
     // Back to front, so nearer masses paint over further ones. The paths are
@@ -59,7 +65,7 @@
     var ms = plan(preset, depth).sort(function (a, b) {
       return (a[0] + a[1] + a[2] + a[3]) - (b[0] + b[1] + b[2] + b[3])
     })
-    var out = ''
+    var out = ground(ms)
     ms.forEach(function (m) {
       var x0 = m[0], z0 = m[1], x1 = m[2], z1 = m[3]
       var p = function (x, y, z) { return iso(x, y, z) }

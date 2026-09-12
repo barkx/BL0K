@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#f0eeea">
 <meta name="color-scheme" content="light">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preload" href="/assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles.css">
 
 <meta property="og:type" content="website">
@@ -135,10 +136,12 @@
 
     <div class="toy">
       <div class="toy-stage">
-        <svg id="toy" viewBox="-38 -64 96 120" role="img"
+        <svg id="toy" viewBox="-49 -70 118 130" role="img"
              aria-label="An axonometric block that rebuilds as the controls beside it change."></svg>
-        <img class="toy-fallback" src="/assets/hero.svg" width="1200" height="720"
-             alt="An eight-storey courtyard block drawn in axonometric on a four-sided plot, its windows set out in an even rhythm across each elevation.">
+        <picture class="toy-fallback">
+          <source srcset="/assets/shot-hero.webp" type="image/webp">
+          <img src="/assets/shot-hero.png" width="1200" height="686" alt="The app in use: a sidebar of parameters on the left, and an L-shaped eight-storey building with balconies standing on its drawn plot, a metrics panel below it.">
+        </picture>
       </div>
 
       <p class="toy-meta">
@@ -155,9 +158,11 @@
       <h2 id="does">What it does</h2>
 
       <article class="row reveal">
-        <figure class="fig">
-          <img src="/assets/massing.svg" width="900" height="460" loading="lazy" decoding="async" alt="Three axonometric blocks side by side: an L-shaped plan, a U-shaped plan, and a courtyard ring around an open centre.">
-          <figcaption>Three of the six presets: L, U and courtyard.</figcaption>
+        <figure class="fig fig--shot">
+          <picture>
+          <source srcset="/assets/shot-massing.webp" type="image/webp">
+          <img src="/assets/shot-massing.png" width="1200" height="686" loading="lazy" decoding="async" alt="The app open on the Massing tab: a sidebar of parameters on the left, and an L-shaped eight-storey building standing on its plot in the viewport.">
+        </picture><figcaption>The Massing tab, open on an L-shaped building.</figcaption>
         </figure>
         <div class="say">
           <h3>Massing from presets you can then take apart</h3>
@@ -167,9 +172,11 @@
       </article>
 
       <article class="row flip reveal">
-        <figure class="fig">
-          <img src="/assets/facade.svg" width="900" height="600" loading="lazy" decoding="async" alt="An eight-storey elevation with windows set in an even module rhythm, two columns of recessed loggias, and a parapet above.">
-          <figcaption>Twelve bays at a 3.2&thinsp;m module, eight floors, loggias recessed on two.</figcaption>
+        <figure class="fig fig--shot">
+          <picture>
+          <source srcset="/assets/shot-facade.webp" type="image/webp">
+          <img src="/assets/shot-facade.png" width="1200" height="686" loading="lazy" decoding="async" alt="The Facade tab: sliders for module width, window width and height, sill height and reveal, with projecting balconies selected, beside the building they shape.">
+        </picture><figcaption>Module width, window dimensions, reveal depth, and projecting balconies.</figcaption>
         </figure>
         <div class="say">
           <h3>A facade driven by the apartment module</h3>
@@ -179,9 +186,11 @@
       </article>
 
       <article class="row reveal">
-        <figure class="fig">
-          <img src="/assets/site.svg" width="900" height="560" loading="lazy" decoding="async" alt="A site plan: an irregular five-sided plot with a dashed setback line inside it, three rotated blocks placed on it, and a dimension between two of them.">
-          <figcaption>A five-sided plot with its setback line, three buildings placed and rotated.</figcaption>
+        <figure class="fig fig--shot">
+          <picture>
+          <source srcset="/assets/shot-site.webp" type="image/webp">
+          <img src="/assets/shot-site.png" width="1200" height="686" loading="lazy" decoding="async" alt="The Site tab: plot area and corner count, a button to draw a new boundary, and five planning rules each set to zero, beside a plot drawn on the ground with draggable corners.">
+        </picture><figcaption>The plot, its corner handles, and the five planning rules.</figcaption>
         </figure>
         <div class="say">
           <h3>A site, not just one building</h3>
@@ -213,9 +222,11 @@
     <p class="n" aria-hidden="true">03</p>
     <div class="col">
       <h2 id="metrics">Metrics that show their working</h2>
-      <figure class="fig bleed reveal">
-        <img src="/assets/metrics.svg" width="900" height="520" loading="lazy" decoding="async" alt="Two overlapping wings in plan with the shared corner hatched, beside a list of areas: wing A plus wing B, the overlap subtracted once, giving GFA, then core area off and an efficiency factor applied to give NIA.">
-        <figcaption>The overlap where two wings meet, counted once.</figcaption>
+      <figure class="fig fig--shot bleed reveal">
+        <picture>
+          <source srcset="/assets/shot-metrics.webp" type="image/webp">
+          <img src="/assets/shot-metrics.png" width="260" height="277" loading="lazy" decoding="async" alt="The metrics panel: GFA, plot ratio, coverage, NIA with its percentage, core area as a share of GFA, an estimated unit count and the tallest height, then the same broken down for one building.">
+        </picture><figcaption>GFA, plot ratio, coverage, NIA with the core taken off, and a unit estimate.</figcaption>
       </figure>
       <div class="prose">
         <p>GFA, NIA, facade area, footprint, coverage, plot ratio and a unit estimate, all recomputed as you change anything. Where two wings overlap at a junction, the shared area is counted once rather than twice.</p>

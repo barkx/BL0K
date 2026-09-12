@@ -31,6 +31,27 @@
   color-scheme: light;
 }
 
+/*
+  Inter, self-hosted. project.md §1 used to say system font stack; the reason
+  behind that rule was "no third-party font requests", and self-hosting keeps
+  that true — the file comes from this origin and Google never sees a visitor.
+  The spec row was changed rather than quietly broken.
+
+  Latin subset only, 48 KB, which is the range this page actually uses: the
+  em-dash, the thin space, the middle dot in the hero caption and the U+2212
+  minus the FAQ toggle draws when open. Licence sits beside the file.
+
+  Named "Inter var" so a locally installed static Inter cannot shadow it.
+*/
+@font-face {
+  font-family: "Inter var";
+  src: url("/assets/fonts/inter-latin-var.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 * { box-sizing: border-box; }
 
 html {
@@ -42,7 +63,7 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+  font-family: "Inter var", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: clamp(16px, 1.05vw, 18px);
   line-height: 1.58;
@@ -164,10 +185,10 @@ p:last-child { margin-bottom: 0; }
 #toy { display: none; width: 100%; max-height: 56vh; overflow: visible; }
 .js #toy { display: block; }
 .js .toy-fallback { display: none; }
-.toy-fallback { border-radius: 8px; }
+.toy-fallback img { border-radius: 8px; border: 1px solid var(--rule); }
 
 .toy-meta {
-  display: flex;
+  display: none;
   flex-wrap: wrap;
   gap: 6px 16px;
   justify-content: space-between;
@@ -179,6 +200,7 @@ p:last-child { margin-bottom: 0; }
   margin: 0;
   max-width: none;
 }
+.js .toy-meta { display: flex; }
 .toy-h { color: var(--ink); }
 
 /* The block fades between schemes rather than snapping. Under reduced motion
@@ -234,7 +256,16 @@ p:last-child { margin-bottom: 0; }
 /* Figures carry no frame. The drawings already sit on paper; boxing them made
    them read as clip-art rather than as the page's own content. */
 .fig { margin: 0; }
+/* The drawings are ink on paper and sit better multiplied onto the page.
+   Screenshots are not — they carry their own white, so they get an edge
+   instead of a blend. */
 .fig img { width: 100%; mix-blend-mode: multiply; }
+.fig--shot img {
+  mix-blend-mode: normal;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: #fff;
+}
 .fig figcaption {
   font-size: 13.5px;
   color: var(--ink-soft);

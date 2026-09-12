@@ -23,7 +23,7 @@ nothing here builds, imports or deploys it, and nothing there reaches in here.
 | Stack | Hand-written static HTML + CSS. No framework, no build step |
 | JavaScript | Optional and tiny. The page must be complete with JS disabled |
 | Backend | None. Same rule as the app |
-| Fonts | System font stack. No third-party font requests |
+| Fonts | One self-hosted variable font, latin subset. No third-party font requests |
 | Analytics | None at launch. If added, cookieless and first-party only |
 | Cookies | None. The site must never need a consent banner |
 | Images | Self-hosted, `.webp` with a raster fallback, explicit width/height |
@@ -277,15 +277,17 @@ is too big — split it.
 2. **Analytics at all?** Nothing at launch. If the question becomes "is anyone
    using this", a cookieless first-party counter is the only acceptable answer,
    and the privacy claim in §5 has to be re-read before it goes in.
-3. **Does the roadmap appear publicly?** IFC export is the app's known gap and
-   the thing an evaluating architect will ask about. Saying "not yet" in §6 of
-   the page is honest. Saying "coming" is a promise. Which?
+3. ~~**Does the roadmap appear publicly?**~~ **Answered, 12 September 2026:**
+   the page states that IFC export does not exist and promises nothing. §5
+   forbids a roadmap stated as a promise, and "coming" commits a date this
+   project does not have. Revisit only if a date becomes real.
 4. **A licence, and is the app's source public?** The repo is currently private
    in effect; the footer cannot link to it until that is settled.
 5. **A contact address.** A person, a role alias, or a form? A form needs a
    backend, which §1 rules out — so an address, and which one.
-6. **Does the page mention it is by a practice, or stay unattributed?**
-   Attribution builds trust with architects and costs nothing, if it is wanted.
+6. ~~**Does the page mention it is by a practice?**~~ **Answered, 12 September
+   2026:** unattributed for now. Nothing in the copy has to be retracted to add
+   it later.
 7. **A gallery of schemes?** Persuasive, and the app can produce them — but
    every image is a maintenance cost, and any scheme shown must be one there is
    a right to show.
