@@ -106,18 +106,21 @@ two-row layouts.
    shape, export) and the two claims that no other section makes: free with no
    account and offline once loaded, and identical inputs giving an identical
    building.
-2. **What it does.** Two blocks, each a **drawing** and two sentences: massing
-   presets, and the site — plot, many buildings. Images do the work; prose
-   stays short. The facade is deliberately *not* here, because it has its own
-   chapter and was previously described in both.
+2. **What it does.** Two short blocks of prose, side by side: massing presets,
+   and the site. No figure for now.
 
-   **The page is drawn, not screenshotted.** Decided 12 September 2026, after a
-   spell where four figures were app captures. Drawings hold the brand, scale
-   to any width, weigh a fraction, and never go stale when the UI moves —
-   which is the maintenance hazard §6 names. **Exactly one screenshot remains**,
-   at the end of this section, captioned so it is unmistakable: the drawings
-   are drawings, and this is the app. A reader still needs to see the real
-   interface once; they do not need to see it four times.
+   **Chapters 2, 3 and 4 carry no images, as of 12 September 2026.** The
+   drawings that were there did not match what the app actually produces, and a
+   drawing that misrepresents the thing it illustrates is worse than no drawing
+   — it is a claim, and a wrong one. They come out until they can be redrawn
+   against the real output. The prose was rewritten to stand on its own rather
+   than to caption something that is no longer there.
+
+   The intent is unchanged: **the page is drawn, not screenshotted.** Drawings
+   hold the brand, read at any width where a 1600 px desktop UI does not, weigh
+   a fraction, and do not rot when the app's UI moves. When the figures return
+   they return as drawings, and the files are still in `assets/`.
+
 3. **The facade, and what you can change.** The one capability worth its own
    section, because it is the thing rivals do not have. Presented as the
    *options* — module width, windows per module, window sizes, sill, reveal,
@@ -134,9 +137,9 @@ two-row layouts.
    commitments.
 6. **FAQ.** Six, answering what the positioning provokes: account, data,
    offline, export, price, AI.
-7. **Footer.** Portrait, name, and three social links — LinkedIn, YouTube,
-   Facebook — then a fine-print line holding the URBGEN mark, the privacy
-   statement and the year. Nothing else.
+7. **Footer.** Portrait, name, role — *Architect | BIM Specialist* — and three
+   social links: LinkedIn, YouTube, Facebook. Then a fine-print line holding the
+   URBGEN mark, the privacy statement and the year. Nothing else.
 
    Adapted 12 September 2026 from the author's own site, archviz.one, then cut
    back the same day to those three elements. The borrowed version carried four

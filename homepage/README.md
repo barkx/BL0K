@@ -193,10 +193,14 @@ It was considered and it is the worse option. `app.urbgen.com` is what
 Departures from [`project.md`](project.md), with the reason. Spec §6 requires
 them to be written down here.
 
-**Two figures are drawings, not screenshots.** §1 asks for self-hosted `.webp`.
-Four now are, with a PNG fallback in a `<picture>` so no modern browser fetches
-the PNG. The two that remain SVG are the facade plan-section — a section
-drawing has no screenshot equivalent — and the hero's no-JavaScript fallback.
+**Chapters 1, 2 and 3 have no figures.** The drawings in them did not match
+what the app actually produces, so they were removed on 12 September 2026 until
+they can be redrawn against real output — a drawing that misrepresents what it
+illustrates is a claim, and a wrong one. The prose was rewritten to stand
+alone. The files are still in `assets/` and the generator still builds them;
+only the page stopped pointing at them. §1's `.webp` rule is therefore dormant
+rather than broken: the only raster left on the page is the footer portrait,
+which is WebP with a JPEG fallback.
 
 **The footer does not link to the repo.** §4 lists a repo link in the footer.
 Open question §10.4 — whether the app's source is public, and under what
