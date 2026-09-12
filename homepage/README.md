@@ -153,6 +153,42 @@ It was considered and it is the worse option. `app.urbgen.com` is what
 
 ---
 
+## The redesign prototype
+
+`prototype.html` is a proposed replacement for `index.html`, kept deliberately
+out of the deploy by [`.vercelignore`](.vercelignore) until it is chosen. Serve
+the folder and open `/prototype.html` to compare the two side by side.
+
+Same copy, same palette, same constraints — no build step, no framework, no
+third-party request. What differs:
+
+- **Sheets, not bands.** Sections sit on a drawing-office grid with the sheet
+  number in the margin, sticky as you read, instead of alternating full-width
+  stripes.
+- **A bigger type scale** with `text-wrap: balance`, and headings that wrap at
+  spaces only — `overflow-wrap: break-word` on the body was splitting "design"
+  across two lines at hero size.
+- **Unframed figures.** The 1px box around each drawing made them read as
+  clip-art rather than as the page's content.
+- **Scroll-driven reveals in pure CSS** via `animation-timeline: view()`, inside
+  both `@supports` and `prefers-reduced-motion: no-preference`. No library, no
+  script, and nothing lost when either condition fails.
+- **An interactive block in the hero** — `prototype.js`, 4.1 KB of vanilla
+  JavaScript against the 5 KB budget. Footprint, floors, module and depth
+  rebuild an isometric block live. With JavaScript off the controls never
+  appear and the static drawing stands in its place, so the page stays
+  complete.
+
+Two things in it are **not yet decided**, and both are noted where they sit:
+
+- The `@font-face` block points at a self-hosted variable font that is not in
+  the repo. `project.md` §1 says system font stack; self-hosting still makes no
+  third-party request, so the privacy claim survives, but it is a spec decision.
+  Until the file exists the page falls through to the system stack.
+- Whether any of this replaces `index.html` at all.
+
+---
+
 ## Deviations
 
 Departures from [`project.md`](project.md), with the reason. Spec §6 requires
