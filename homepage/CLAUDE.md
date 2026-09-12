@@ -228,3 +228,29 @@ already fixed on disk.
 show text clipped at the right edge. That is Windows enforcing a minimum window
 width, not page overflow. Verified directly at 320, 390 and 430:
 `scrollWidth === clientWidth` at all three.
+
+## 9. Graphics pass, 12 September 2026
+
+**Back to drawn.** Four figures were app screenshots; now one is, and it is
+captioned as such. The rest are drawings. Reasons, in order: the drawings carry
+the brand, they read at any width where a 1600 px desktop UI does not, they cost
+a fraction of the bytes, and they do not rot when the app's UI moves — which is
+the hazard `project.md` §6 names.
+
+- Three chapters had no image at all. The facade chapter now opens with a
+  dimensioned elevation — one module and one floor ticked off, the reveal drawn
+  as the shadow line, loggias labelled with a leader. The metrics chapter shows
+  the overlap correction its table describes.
+- **Drawings paint no background.** They multiply onto the page, so a paper
+  rect just darkened whatever section they sat in — which showed as a grey box
+  on the tinted facade chapter. `render()` now defaults to a transparent
+  ground; only `og.svg` keeps its paper, because it is rasterised on its own.
+- The footer is a title block: four labelled fields on a ruled grid, in the
+  same micro-type the metrics caption and the spec legend already use.
+- A faint sheet grid sits behind the hero block. Drawing paper, not a card.
+
+**A tool worth keeping in mind.** Capturing one element of a long page needs
+CDP, not a window-size trick: `Page.captureScreenshot`'s `clip` is in **page**
+coordinates, so a viewport-relative rect silently captures the top of the
+document instead. Fragment URLs (`/#facade`) render blank in headless and are
+not worth debugging — scroll, wait, then clip.

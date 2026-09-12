@@ -89,7 +89,7 @@ const courtyard = (ox = 0, oz = 0, L = 60, D = 40, w = 12, fl = 8) => [
   { x0: ox + L - w, z0: oz + w, x1: ox + L, z1: oz + D - w, y1: fl * 3 },
 ]
 
-function render(shapes, W, H, pad = 18, bg = C.paper) {
+function render(shapes, W, H, pad = 18, bg = 'none') {
   const xs = [], ys = []
   const every = o => o.pts ? [o.pts] : o.quads
   shapes.forEach(o => every(o).forEach(q => q.forEach(([x, y]) => { xs.push(x); ys.push(y) })))
@@ -153,8 +153,7 @@ const write = (name, str) => { writeFileSync(`${OUT}/${name}`, str); console.log
       `<line x1="${-w / 2}" y1="${-h / 2 + 26 * (i + 1)}" x2="${w / 2}" y2="${-h / 2 + 26 * (i + 1)}" stroke="${C.ruleSoft}" stroke-width="1"/>`).join('') +
     `</g>`
   const corner = (x, y) => `<circle cx="${x}" cy="${y}" r="5" fill="${C.panel}" stroke="${C.blue}" stroke-width="2"/>`
-  write('site.svg', svg(W, H, `<rect width="${W}" height="${H}" fill="${C.paper}"/>
-<polygon points="${pp(plot)}" fill="#e7e4de" stroke="${C.blue}" stroke-width="2"/>
+  write('site.svg', svg(W, H, `<polygon points="${pp(plot)}" fill="#e7e4de" stroke="${C.blue}" stroke-width="2"/>
 <polygon points="${pp(inset)}" fill="none" stroke="${C.blue}" stroke-width="1.2" stroke-dasharray="6 5" opacity="0.7"/>
 ${blk(250, 210, 92, 210, -8)}
 ${blk(470, 250, 92, 230, -8)}
@@ -166,40 +165,60 @@ ${blk(640, 330, 210, 84, 16)}
 ${plot.map(p => corner(p[0], p[1])).join('\n')}`))
 }
 
-// ---------- 4. facade elevation ----------
+// ---------- 4. facade elevation, dimensioned ----------
+// The drawing that shows what the parameters in the facade section produce:
+// module rhythm, the reveal that casts the shadow, and recessed loggias.
 {
   const W = 900, H = 600
-  const x0 = 70, y1 = 540, MOD = 62, N = 12, FH = 54, FLOORS = 8
+  const x0 = 96, y1 = 516, MOD = 58, N = 12, FH = 50, FLOORS = 8
   const wallW = MOD * N, wallH = FH * FLOORS
   const yTop = y1 - wallH
+  const t = (x, y, str, size = 15, col = C.soft, anchor = 'middle') =>
+    `<text x="${x}" y="${y}" font-family="Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif" ` +
+    `font-size="${size}" fill="${col}" text-anchor="${anchor}">${str}</text>`
   let g = ''
   for (let f = 0; f < FLOORS; f++) {
     for (let i = 0; i < N; i++) {
       const cx = x0 + i * MOD, by = y1 - f * FH
       const loggia = f >= 2 && f <= 5 && (i === 3 || i === 8)
       if (loggia) {
-        g += `<rect x="${cx + 4}" y="${by - FH + 4}" width="${MOD - 8}" height="${FH - 8}" fill="#c9c5be" stroke="${C.edge}" stroke-width="0.8"/>`
-        g += `<rect x="${cx + 9}" y="${by - FH + 9}" width="${MOD - 18}" height="${FH - 17}" fill="#b9b5ad"/>`
-        g += `<line x1="${cx + 4}" y1="${by - 16}" x2="${cx + MOD - 4}" y2="${by - 16}" stroke="${C.soft}" stroke-width="1.4"/>`
+        g += `<rect x="${cx + 4}" y="${by - FH + 4}" width="${MOD - 8}" height="${FH - 8}" fill="#cfcbc4" stroke="${C.edge}" stroke-width="0.7"/>`
+        g += `<rect x="${cx + 9}" y="${by - FH + 9}" width="${MOD - 18}" height="${FH - 16}" fill="#bcb8b0"/>`
+        g += `<line x1="${cx + 4}" y1="${by - 14}" x2="${cx + MOD - 4}" y2="${by - 14}" stroke="${C.soft}" stroke-width="1.6"/>`
       } else {
-        g += `<rect x="${cx + 13}" y="${by - FH + 13}" width="${MOD - 26}" height="${FH - 26}" fill="${C.glass}" stroke="${C.glassEdge}" stroke-width="1"/>`
-        g += `<line x1="${cx + 13}" y1="${by - FH + 13}" x2="${cx + MOD - 13}" y2="${by - FH + 13}" stroke="${C.glassEdge}" stroke-width="2"/>`
+        const wx = cx + 12, wy = by - FH + 13, ww = MOD - 24, wh = FH - 25
+        // The reveal, drawn: a soft return on the head and one jamb.
+        g += `<rect x="${wx - 2}" y="${wy - 2}" width="${ww + 4}" height="${wh + 4}" fill="#d6d2cb"/>`
+        g += `<rect x="${wx}" y="${wy}" width="${ww}" height="${wh}" fill="#b9cde0" stroke="#8fa9c2" stroke-width="0.6"/>`
+        g += `<line x1="${wx}" y1="${wy}" x2="${wx + ww}" y2="${wy}" stroke="#7f99b3" stroke-width="1.6"/>`
       }
     }
   }
-  let mods = ''
+  let ticks = ''
   for (let i = 0; i <= N; i++)
-    mods += `<line x1="${x0 + i * MOD}" y1="${yTop - 26}" x2="${x0 + i * MOD}" y2="${yTop - 18}" stroke="${C.blue}" stroke-width="1"/>`
-  write('facade.svg', svg(W, H, `<rect width="${W}" height="${H}" fill="${C.paper}"/>
-<rect x="${x0}" y="${yTop - 12}" width="${wallW}" height="${wallH + 12}" fill="#f7f5f2" stroke="${C.edge}" stroke-width="1.2"/>
-<rect x="${x0 - 7}" y="${yTop - 21}" width="${wallW + 14}" height="9" fill="#ffffff" stroke="${C.edge}" stroke-width="1.2"/>
+    ticks += `<line x1="${x0 + i * MOD}" y1="${yTop - 34}" x2="${x0 + i * MOD}" y2="${yTop - 26}" stroke="${C.blue}" stroke-width="1"/>`
+  const dim = (x1d, x2d, y, label) =>
+    `<line x1="${x1d}" y1="${y}" x2="${x2d}" y2="${y}" stroke="${C.blue}" stroke-width="1"/>` +
+    `<line x1="${x1d}" y1="${y - 5}" x2="${x1d}" y2="${y + 5}" stroke="${C.blue}" stroke-width="1"/>` +
+    `<line x1="${x2d}" y1="${y - 5}" x2="${x2d}" y2="${y + 5}" stroke="${C.blue}" stroke-width="1"/>` +
+    t((x1d + x2d) / 2, y - 9, label, 14, C.blue)
+  write('facade.svg', svg(W, H, `<rect x="${x0}" y="${yTop - 10}" width="${wallW}" height="${wallH + 10}" fill="#f6f4f1" stroke="${C.edge}" stroke-width="1.2"/>
+<rect x="${x0 - 7}" y="${yTop - 19}" width="${wallW + 14}" height="9" fill="#ffffff" stroke="${C.edge}" stroke-width="1.2"/>
 ${g}
-<line x1="${x0}" y1="${yTop - 22}" x2="${x0 + wallW}" y2="${yTop - 22}" stroke="${C.blue}" stroke-width="1"/>
-${mods}
-<line x1="${x0 - 26}" y1="${y1}" x2="${x0 - 26}" y2="${y1 - FH}" stroke="${C.blue}" stroke-width="1"/>
-<line x1="${x0 - 30}" y1="${y1}" x2="${x0 - 22}" y2="${y1}" stroke="${C.blue}" stroke-width="1"/>
-<line x1="${x0 - 30}" y1="${y1 - FH}" x2="${x0 - 22}" y2="${y1 - FH}" stroke="${C.blue}" stroke-width="1"/>
-<line x1="${x0 - 40}" y1="${y1 + 6}" x2="${x0 + wallW + 40}" y2="${y1 + 6}" stroke="${C.soft}" stroke-width="1.5"/>`))
+<line x1="${x0}" y1="${yTop - 30}" x2="${x0 + wallW}" y2="${yTop - 30}" stroke="${C.blue}" stroke-width="1"/>
+${ticks}
+${dim(x0, x0 + MOD, yTop - 46, 'one module')}
+<g stroke="${C.blue}" stroke-width="1">
+  <line x1="${x0 - 34}" y1="${y1}" x2="${x0 - 34}" y2="${y1 - FH}"/>
+  <line x1="${x0 - 39}" y1="${y1}" x2="${x0 - 29}" y2="${y1}"/>
+  <line x1="${x0 - 39}" y1="${y1 - FH}" x2="${x0 - 29}" y2="${y1 - FH}"/>
+</g>
+${t(x0 - 44, y1 - FH / 2 + 5, 'floor', 14, C.blue, 'end')}
+<line x1="${x0 - 52}" y1="${y1 + 6}" x2="${x0 + wallW + 30}" y2="${y1 + 6}" stroke="${C.soft}" stroke-width="1.6"/>
+${t(x0 + wallW + 30, yTop + 26, 'parapet', 14, C.soft, 'start')}
+<line x1="${x0 + 8 * MOD + MOD}" y1="${y1 - 4.5 * FH}" x2="${x0 + wallW + 24}" y2="${y1 - 4.5 * FH}" stroke="${C.soft}" stroke-width="0.8"/>
+${t(x0 + wallW + 30, y1 - 4.5 * FH + 5, 'loggia', 14, C.soft, 'start')}
+${t(x0, y1 + 30, 'Twelve bays, eight floors, loggias recessed on two of them.', 15, C.soft, 'start')}`))
 }
 
 // ---------- 5. facade detail: plan section through a reveal and a loggia ----------
@@ -208,8 +227,7 @@ ${mods}
   const wall = (x, w) => `<rect x="${x}" y="150" width="${w}" height="46" fill="#d8d4cd" stroke="${C.ink}" stroke-width="1.6"/>`
   const t = (x, y, s, anchor = 'middle', col = C.soft) =>
     `<text x="${x}" y="${y}" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" fill="${col}" text-anchor="${anchor}">${s}</text>`
-  write('facade-detail.svg', svg(W, H, `<rect width="${W}" height="${H}" fill="${C.paper}"/>
-${wall(60, 120)}${wall(300, 120)}
+  write('facade-detail.svg', svg(W, H, `${wall(60, 120)}${wall(300, 120)}
 <rect x="180" y="150" width="120" height="14" fill="#d8d4cd" stroke="${C.ink}" stroke-width="1.6"/>
 <rect x="180" y="182" width="120" height="14" fill="#d8d4cd" stroke="${C.ink}" stroke-width="1.6"/>
 <rect x="182" y="176" width="116" height="7" fill="${C.glass}" stroke="${C.glassEdge}" stroke-width="1.2"/>
@@ -236,8 +254,7 @@ ${t(60, 464, 'Plan section. The facade is built as panels around the void.', 'st
   const W = 900, H = 520
   const t = (x, y, s, size = 17, col = C.soft, anchor = 'start', weight = 400) =>
     `<text x="${x}" y="${y}" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-size="${size}" font-weight="${weight}" fill="${col}" text-anchor="${anchor}">${s}</text>`
-  write('metrics.svg', svg(W, H, `<rect width="${W}" height="${H}" fill="${C.paper}"/>
-<defs><pattern id="h" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+  write('metrics.svg', svg(W, H, `<defs><pattern id="h" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
 <line x1="0" y1="0" x2="0" y2="9" stroke="${C.blue}" stroke-width="2.4"/></pattern></defs>
 <rect x="70" y="90" width="330" height="112" fill="#ffffff" stroke="${C.ink}" stroke-width="1.6"/>
 <rect x="288" y="90" width="112" height="300" fill="#ffffff" stroke="${C.ink}" stroke-width="1.6"/>

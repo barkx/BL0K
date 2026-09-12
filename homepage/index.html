@@ -148,10 +148,7 @@
       <div class="toy-stage">
         <svg id="toy" viewBox="-47.9 -33.5 108 94" role="img"
              aria-label="An axonometric block that rebuilds as the controls beside it change."></svg>
-        <picture class="toy-fallback">
-          <source srcset="/assets/shot-hero.webp" type="image/webp">
-          <img src="/assets/shot-hero.png" width="1200" height="686" alt="The app in use: a sidebar of parameters on the left, and an L-shaped eight-storey building with balconies standing on its drawn plot, a metrics panel below it.">
-        </picture>
+        <img class="toy-fallback" src="/assets/hero.svg" width="1200" height="720" alt="An eight-storey courtyard block drawn in axonometric on a four-sided plot, its windows set out in an even rhythm across each elevation.">
       </div>
 
       <p class="toy-meta">
@@ -168,11 +165,9 @@
       <h2 id="does">What it does</h2>
 
       <article class="row stack reveal">
-        <figure class="fig fig--shot">
-          <picture>
-          <source srcset="/assets/shot-massing-crop.webp" type="image/webp">
-          <img src="/assets/shot-massing-crop.png" width="1200" height="856" loading="lazy" decoding="async" alt="The app open on the Massing tab: a sidebar of parameters on the left, and an L-shaped eight-storey building standing on its plot in the viewport.">
-        </picture><figcaption>The Massing tab, open on an L-shaped building.</figcaption>
+        <figure class="fig draw reveal">
+          <img src="/assets/massing.svg" width="900" height="460" loading="lazy" decoding="async" alt="Three axonometric blocks side by side: an L-shaped plan, a U-shaped plan, and a courtyard ring around an open centre, each with its floors ruled in.">
+          <figcaption>Three of the six footprints: L, U and courtyard.</figcaption>
         </figure>
         <div class="say">
           <h3>Massing from presets you can then take apart</h3>
@@ -182,11 +177,9 @@
       </article>
 
       <article class="row stack reveal">
-        <figure class="fig fig--shot">
-          <picture>
-          <source srcset="/assets/shot-site-crop.webp" type="image/webp">
-          <img src="/assets/shot-site-crop.png" width="1200" height="856" loading="lazy" decoding="async" alt="The Site tab: plot area and corner count, a button to draw a new boundary, and five planning rules each set to zero, beside a plot drawn on the ground with draggable corners.">
-        </picture><figcaption>The plot, its corner handles, and the five planning rules.</figcaption>
+        <figure class="fig draw reveal">
+          <img src="/assets/site.svg" width="900" height="560" loading="lazy" decoding="async" alt="A site plan: an irregular five-sided plot with draggable corners, a dashed setback line inside it, three blocks placed and rotated, and a dimension between two of them.">
+          <figcaption>A drawn plot, its corner handles, and the setback line inside it.</figcaption>
         </figure>
         <div class="say">
           <h3>A site, not just one building</h3>
@@ -194,6 +187,15 @@
           <p>Place as many buildings as you like, and rotate and drag them on it.</p>
         </div>
       </article>
+
+      <figure class="fig fig--shot bleed reveal">
+        <picture>
+          <source srcset="/assets/shot-massing-crop.webp" type="image/webp">
+          <img src="/assets/shot-massing-crop.png" width="1200" height="856" loading="lazy" decoding="async"
+               alt="The app itself: an icon rail, a Massing panel of footprint presets and sliders for wings, floors and cores, and beside it an L-shaped building on its plot with a metrics panel over the viewport.">
+        </picture>
+        <figcaption>The drawings above are drawings. This is the app.</figcaption>
+      </figure>
     </div>
   </section>
 
@@ -211,6 +213,12 @@
         the void, which is why the geometry stays clean enough to carry into
         another application.
       </p>
+
+      <figure class="fig draw bleed reveal">
+        <img src="/assets/facade.svg" width="900" height="600" loading="lazy" decoding="async"
+             alt="An eight-storey elevation: twelve bays in an even rhythm, windows set back behind a reveal, two columns of recessed loggias, a parapet above, with one module and one floor height dimensioned.">
+        <figcaption>One module and one floor dimensioned. The reveal is the shadow line.</figcaption>
+      </figure>
 
       <dl class="specs reveal">
         <div>
@@ -273,6 +281,12 @@
         change anything. These are the real numbers from one scheme — an L-plan
         block of eight floors on a 9 900 m² plot — with what each one is made of.
       </p>
+
+      <figure class="fig draw reveal">
+        <img src="/assets/metrics.svg" width="900" height="520" loading="lazy" decoding="async"
+             alt="Two wings overlapping in plan with the shared corner hatched, beside the arithmetic: wing A plus wing B, the overlap subtracted once to give GFA, then the core taken off and an efficiency factor applied to give NIA.">
+        <figcaption>Where two wings meet, the shared corner is counted once.</figcaption>
+      </figure>
 
       <table class="metrics reveal">
         <caption>One building, 9 900 m² plot</caption>
@@ -411,11 +425,13 @@
     </svg>
     URBGEN — parametric building design
   </p>
-  <nav class="foot-links" aria-label="Footer">
-    <a href="https://app.urbgen.com">Open the app</a>
-    <a href="mailto:hello@urbgen.com">hello@urbgen.com</a>
-  </nav>
-  <p class="foot-fine">No cookies, no trackers, no third-party requests. &copy; 2026</p>
+
+  <dl class="titleblock">
+    <div><dt>App</dt><dd><a href="https://app.urbgen.com">app.urbgen.com</a></dd></div>
+    <div><dt>Contact</dt><dd><a href="mailto:hello@urbgen.com">hello@urbgen.com</a></dd></div>
+    <div><dt>Privacy</dt><dd>No cookies, no trackers, no third-party requests</dd></div>
+    <div><dt>Year</dt><dd class="num">2026</dd></div>
+  </dl>
 </footer>
 
 <script src="/block.js"></script>

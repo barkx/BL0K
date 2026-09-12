@@ -106,10 +106,18 @@ two-row layouts.
    shape, export) and the two claims that no other section makes: free with no
    account and offline once loaded, and identical inputs giving an identical
    building.
-2. **What it does.** Two blocks, each a screenshot and two sentences: massing
+2. **What it does.** Two blocks, each a **drawing** and two sentences: massing
    presets, and the site — plot, many buildings. Images do the work; prose
    stays short. The facade is deliberately *not* here, because it has its own
    chapter and was previously described in both.
+
+   **The page is drawn, not screenshotted.** Decided 12 September 2026, after a
+   spell where four figures were app captures. Drawings hold the brand, scale
+   to any width, weigh a fraction, and never go stale when the UI moves —
+   which is the maintenance hazard §6 names. **Exactly one screenshot remains**,
+   at the end of this section, captioned so it is unmistakable: the drawings
+   are drawings, and this is the app. A reader still needs to see the real
+   interface once; they do not need to see it four times.
 3. **The facade, and what you can change.** The one capability worth its own
    section, because it is the thing rivals do not have. Presented as the
    *options* — module width, windows per module, window sizes, sill, reveal,
