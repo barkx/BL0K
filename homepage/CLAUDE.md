@@ -134,3 +134,14 @@ Newest last. One line per part, naming the check that settled it.
   the app opens on the Site tab and the hero shot is taken before any tab is
   clicked. Harmless — a visitor fetches one or the other, never both — but the
   capture script could skip one.
+- **Section menu, 12 September 2026.** Seven anchor links in the sticky bar, no
+  script — `block.js` had about 170 bytes of the 5 KB budget left, so a
+  JavaScript menu was never an option. Checked: all seven targets exist, every
+  anchor lands its heading 76 px down and clear of the 57 px bar, and at 320 px
+  the bar is two rows with the link strip scrolling inside itself while
+  `documentElement.scrollWidth` stays at 320. One bug caught in my own CSS:
+  `.sheet:target` can never match, because the ids are on the `h2` elements and
+  not on the sections.
+- **Watch the budget.** HTML and CSS are now 37.9 KB against §7's 40 KB. The
+  next addition to either needs the budget revisited rather than quietly
+  exceeded.

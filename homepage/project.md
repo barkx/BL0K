@@ -90,6 +90,12 @@ the tool does not do is the cheapest trust the page can buy.
 
 One page, in this order. Each section carries exactly one claim.
 
+The sticky bar carries a **section menu** — seven links, one per numbered
+section. It is plain anchors and no script: on a narrow screen it drops to a
+second row and scrolls sideways within itself, never making the page scroll.
+`scroll-padding-top` keeps an anchored heading clear of the bar, and it differs
+between the one-row and two-row layouts.
+
 1. **Hero.** Mark, name, tagline, one sentence, one button: *Open the app*. A
    still of the app behind or beside it, white mode, showing a courtyard block
    on a drawn plot. The button goes to `app.urbgen.com` and is the only primary
