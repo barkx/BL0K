@@ -1,14 +1,19 @@
 /*
-  The block in the hero, rebuilt as you drag. Same isometric projection the
-  static drawings use, and the same defaults the app ships with — 3 m floors,
-  a 0.65 m sill, openings 1.6 m tall.
+  The block in the hero, rotating through schemes on its own. Same isometric
+  projection the static drawings use, and the same defaults the app ships with
+  — 3 m floors, a 0.65 m sill, openings 1.6 m tall.
 
   It is a miniature, not the app: no junction detection, no metrics, no
-  balconies. It exists so the page demonstrates "change a slider and it
-  rebuilds" instead of asserting it.
+  balconies. It exists so the page shows what "change a parameter and it
+  rebuilds" means instead of only asserting it.
 
-  With JavaScript off this file never runs, the controls stay hidden by
-  default, and the static drawing already in the markup is what you get.
+  The rotation is a fixed order rather than a random pick, because determinism
+  is a claim this page makes three sections further down and it would be odd to
+  contradict it in the hero. A visitor sees the same thing either way.
+
+  Nothing here is interactive. Under prefers-reduced-motion it does not rotate
+  at all, and with JavaScript off this file never runs, the static drawing in
+  the markup stands, and the page is complete without it.
 */
 (function () {
   var svg = document.getElementById('toy')
@@ -72,24 +77,41 @@
     return out
   }
 
-  var form = document.getElementById('toy-controls')
-  var get = function (id) { return document.getElementById(id) }
-  var floors = get('t-floors'), mod = get('t-mod'), depth = get('t-depth')
+  // Four schemes, in order. Each is [preset, floors, module, depth, label].
+  var SCHEMES = [
+    ['court', 8, 3.2, 12, 'Courtyard'],
+    ['L', 6, 3.0, 13, 'L-plan'],
+    ['U', 10, 3.4, 12, 'U-plan'],
+    ['bar', 14, 3.2, 14, 'Bar']
+  ]
 
-  function draw() {
-    var preset = (form.querySelector('input[name=preset]:checked') || {}).value || 'court'
-    var f = +floors.value, m = +mod.value, d = +depth.value
-    svg.innerHTML = build(preset, f, m, d)
-    get('v-floors').textContent = f
-    get('v-mod').textContent = m.toFixed(1) + ' m'
-    get('v-depth').textContent = d + ' m'
-    get('v-height').textContent = (f * FH).toFixed(0) + ' m'
+  var label = document.getElementById('toy-label')
+  var height = document.getElementById('toy-height')
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)')
+  var at = 0
+
+  function show(i) {
+    var s = SCHEMES[i]
+    svg.innerHTML = build(s[0], s[1], s[2], s[3])
+    label.textContent = s[4] + ' · ' + s[1] + ' floors · ' + s[2].toFixed(1) + ' m module'
+    height.textContent = (s[1] * FH) + ' m'
   }
 
-  // Straight through, no frame throttle. A rAF latch drops every later input
-  // if the frame never arrives — which is what a backgrounded page does — and
-  // rebuilding this is cheap enough not to need one.
-  form.addEventListener('input', draw)
+  function next() {
+    at = (at + 1) % SCHEMES.length
+    svg.style.opacity = '0'
+    setTimeout(function () { show(at); svg.style.opacity = '1' }, 340)
+  }
+
   document.documentElement.classList.add('js')
-  draw()
+  show(0)
+
+  if (!still.matches) {
+    var timer = setInterval(function () {
+      if (!document.hidden) next()   // a backgrounded tab need not redraw
+    }, 4200)
+    still.addEventListener('change', function (e) {
+      if (e.matches) { clearInterval(timer); svg.style.opacity = '1' }
+    })
+  }
 })()

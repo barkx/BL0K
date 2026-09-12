@@ -58,15 +58,17 @@ these in the page itself.
 
 | | Target | Measured |
 |---|---|---|
-| Total page weight | under 400 KB | 84 KB |
-| HTML + CSS | under 40 KB | 23 KB |
-| JavaScript | under 5 KB | 0 |
-| Requests | under 15 | 9, all same-origin |
+| Total page weight | under 400 KB | 93 KB |
+| HTML + CSS | under 40 KB | 28 KB |
+| JavaScript | under 5 KB | 4.7 KB |
+| Requests | under 15 | 10, all same-origin |
 | Fonts loaded | zero | zero |
 
 The hero drawing is 25 KB of that and the facade elevation 19 KB — both are
 SVG, and both get replaced at M2 by images that will almost certainly weigh
-more. There is room.
+more. There is room, though `block.js` leaves only 400 bytes of the JavaScript
+budget: anything more than a tweak there needs the budget revisited rather than
+quietly exceeded.
 
 ---
 
@@ -153,42 +155,6 @@ It was considered and it is the worse option. `app.urbgen.com` is what
 
 ---
 
-## The redesign prototype
-
-`prototype.html` is a proposed replacement for `index.html`, kept deliberately
-out of the deploy by [`.vercelignore`](.vercelignore) until it is chosen. Serve
-the folder and open `/prototype.html` to compare the two side by side.
-
-Same copy, same palette, same constraints — no build step, no framework, no
-third-party request. What differs:
-
-- **Sheets, not bands.** Sections sit on a drawing-office grid with the sheet
-  number in the margin, sticky as you read, instead of alternating full-width
-  stripes.
-- **A bigger type scale** with `text-wrap: balance`, and headings that wrap at
-  spaces only — `overflow-wrap: break-word` on the body was splitting "design"
-  across two lines at hero size.
-- **Unframed figures.** The 1px box around each drawing made them read as
-  clip-art rather than as the page's content.
-- **Scroll-driven reveals in pure CSS** via `animation-timeline: view()`, inside
-  both `@supports` and `prefers-reduced-motion: no-preference`. No library, no
-  script, and nothing lost when either condition fails.
-- **An interactive block in the hero** — `prototype.js`, 4.1 KB of vanilla
-  JavaScript against the 5 KB budget. Footprint, floors, module and depth
-  rebuild an isometric block live. With JavaScript off the controls never
-  appear and the static drawing stands in its place, so the page stays
-  complete.
-
-Two things in it are **not yet decided**, and both are noted where they sit:
-
-- The `@font-face` block points at a self-hosted variable font that is not in
-  the repo. `project.md` §1 says system font stack; self-hosting still makes no
-  third-party request, so the privacy claim survives, but it is a spec decision.
-  Until the file exists the page falls through to the system stack.
-- Whether any of this replaces `index.html` at all.
-
----
-
 ## Deviations
 
 Departures from [`project.md`](project.md), with the reason. Spec §6 requires
@@ -220,8 +186,24 @@ page goes live**, or the footer is a dead end.
 it. It does not, for now. Nothing in the copy has to be retracted to add it
 later.
 
-**JavaScript: none at all.** §1 allows up to 5 KB. The FAQ uses
-`<details>`/`<summary>`, so there is nothing left for a script to do.
+**The hero is not a still.** §4.1 asks for a still of the app beside the
+headline. It is instead a drawn block that rebuilds itself every few seconds
+through four schemes — courtyard, L, U and bar — captioning the parameters it
+is showing. A page whose first claim is "change a slider and it rebuilds" is
+more convincing if something on it visibly rebuilds. It does not rotate under
+`prefers-reduced-motion`, and it does not redraw in a backgrounded tab.
+
+**There is JavaScript now: `block.js`, 4.7 KB.** §1 allows "optional and tiny"
+and §7 caps it at 5 KB, so this is within the budget rather than against it —
+but it was previously none, which is worth recording. The page stays complete
+without it: the controls-free markup ships a static drawing, and the script
+replaces it only once it runs.
+
+**The font question is still open.** The typography is the largest remaining
+cause of the page looking generic, and the fix — a self-hosted variable font —
+conflicts with §1's "system font stack" while not breaking the privacy claim,
+since self-hosting makes no third-party request. Nothing has been decided, so
+the page still uses the system stack and loads no font at all.
 
 **There is a tenth section.** §4 lists nine, hero through footer. A short
 closing block repeats the *Open the app* button after the FAQ, because by then
@@ -237,6 +219,7 @@ hero button is still the only primary action above it.
 homepage/
 ├── index.html                    the page, top to bottom
 ├── styles.css                    one stylesheet, no preprocessor
+├── block.js                      the rotating hero block, 4.7 KB, no deps
 ├── favicon.svg                   copied from the app's public/
 ├── robots.txt
 ├── sitemap.xml                   one URL; update lastmod when the copy changes

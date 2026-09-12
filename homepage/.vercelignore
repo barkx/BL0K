@@ -12,8 +12,3 @@ README.md
 CLAUDE.md
 tools/
 
-# Redesign prototype, not chosen yet. Kept out of the deploy so the live page
-# stays the one in index.html until it is.
-prototype.html
-prototype.css
-prototype.js

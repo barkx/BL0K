@@ -101,345 +101,210 @@
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="bar">
-  <div class="wrap bar-in">
+  <div class="bar-in">
     <span class="brand">
-      <svg class="mark" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true" focusable="false">
+      <svg class="mark" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false">
         <path d="M12 3 21 8 12 13 3 8Z"/>
         <path d="M3 8 12 13v8L3 16Z" opacity="0.55"/>
         <path d="M21 8v8l-9 5v-8Z" opacity="0.78"/>
       </svg>
       <span class="brand-name">URBGEN</span>
-      <span class="brand-tag">Parametric building design</span>
     </span>
-    <a class="bar-link" href="https://app.urbgen.com">Open the app</a>
+    <a class="bar-cta" href="https://app.urbgen.com">Open the app</a>
   </div>
 </header>
 
 <main id="main">
 
-  <!-- 1. Hero ---------------------------------------------------------- -->
+  <!-- Hero ------------------------------------------------------------- -->
   <section class="hero">
-    <div class="wrap hero-in">
-      <div class="hero-copy">
-        <h1>Parametric building design, in the browser.</h1>
-        <p class="lead">
-          Draw a plot, place buildings on it, and change a slider to rebuild any of
-          them — massing, a facade with real openings, and metrics that show their
-          working.
-        </p>
-        <p class="cta">
-          <a class="btn" href="https://app.urbgen.com">Open the app</a>
-        </p>
-        <p class="note">Free. No account, and nothing is uploaded.</p>
+    <div class="hero-copy reveal">
+      <h1>Parametric building&nbsp;design, in the browser.</h1>
+      <p class="lead">
+        Draw a plot, place buildings on it, and change a slider to rebuild any of
+        them — massing, a facade with real openings, and metrics that show their
+        working.
+      </p>
+      <p class="cta"><a class="btn" href="https://app.urbgen.com">Open the app</a></p>
+      <p class="note">Free. No account, and nothing is uploaded.</p>
+    </div>
+
+    <div class="toy">
+      <div class="toy-stage">
+        <svg id="toy" viewBox="-38 -64 96 120" role="img"
+             aria-label="An axonometric block that rebuilds as the controls beside it change."></svg>
+        <img class="toy-fallback" src="/assets/hero.svg" width="1200" height="720"
+             alt="An eight-storey courtyard block drawn in axonometric on a four-sided plot, its windows set out in an even rhythm across each elevation.">
       </div>
-      <figure class="hero-fig">
-        <img src="/assets/hero.svg" width="1200" height="720" fetchpriority="high" decoding="async" alt="An eight-storey courtyard block drawn in axonometric on a four-sided plot, its windows set out in an even rhythm across each elevation.">
-      </figure>
+
+      <p class="toy-meta">
+        <span id="toy-label">Courtyard · 8 floors · 3.2&thinsp;m module</span>
+        <span class="toy-h">Height <span id="toy-height" class="num">24 m</span></span>
+      </p>
     </div>
   </section>
 
-  <!-- 2. What it does -------------------------------------------------- -->
-  <section class="band" aria-labelledby="does">
-    <div class="wrap">
+  <!-- 01 What it does --------------------------------------------------- -->
+  <section class="sheet" aria-labelledby="does">
+    <p class="n" aria-hidden="true">01</p>
+    <div class="col">
       <h2 id="does">What it does</h2>
 
-      <div class="feature">
-        <figure><img src="/assets/massing.svg" width="900" height="460" loading="lazy" decoding="async" alt="Three axonometric blocks side by side: an L-shaped plan, a U-shaped plan, and a courtyard ring around an open centre."><figcaption>Three of the six presets: L, U and courtyard.</figcaption></figure>
-        <div>
+      <article class="row reveal">
+        <figure class="fig">
+          <img src="/assets/massing.svg" width="900" height="460" loading="lazy" decoding="async" alt="Three axonometric blocks side by side: an L-shaped plan, a U-shaped plan, and a courtyard ring around an open centre.">
+          <figcaption>Three of the six presets: L, U and courtyard.</figcaption>
+        </figure>
+        <div class="say">
           <h3>Massing from presets you can then take apart</h3>
-          <p>
-            Six footprints — bar, L, T, U, courtyard and stacked — each composed from
-            masses with their own size, floor count and base level.
-          </p>
-          <p>
-            Where two wings meet, the junction is detected floor by floor, so an
-            internal elevation goes blank instead of being drawn twice.
-          </p>
+          <p>Six footprints — bar, L, T, U, courtyard and stacked — each composed from masses with their own size, floor count and base level.</p>
+          <p>Where two wings meet, the junction is detected floor by floor, so an internal elevation goes blank instead of being drawn twice.</p>
         </div>
-      </div>
+      </article>
 
-      <div class="feature">
-        <figure><img src="/assets/facade.svg" width="900" height="600" loading="lazy" decoding="async" alt="An eight-storey elevation with windows set in an even module rhythm, two columns of recessed loggias, and a parapet above."><figcaption>Twelve bays at a 3.2&thinsp;m module, eight floors, loggias recessed on two.</figcaption></figure>
-        <div>
+      <article class="row flip reveal">
+        <figure class="fig">
+          <img src="/assets/facade.svg" width="900" height="600" loading="lazy" decoding="async" alt="An eight-storey elevation with windows set in an even module rhythm, two columns of recessed loggias, and a parapet above.">
+          <figcaption>Twelve bays at a 3.2&thinsp;m module, eight floors, loggias recessed on two.</figcaption>
+        </figure>
+        <div class="say">
           <h3>A facade driven by the apartment module</h3>
-          <p>
-            Window rhythm comes from the module width, so the bays always divide
-            evenly across an elevation rather than leaving a remainder at one end.
-          </p>
-          <p>
-            Openings are real geometry, with reveals and sills, and balconies are
-            either projecting slabs or recessed loggias.
-          </p>
+          <p>Window rhythm comes from the module width, so the bays always divide evenly across an elevation rather than leaving a remainder at one end.</p>
+          <p>Openings are real geometry, with reveals and sills, and balconies are either projecting slabs or recessed loggias.</p>
         </div>
-      </div>
+      </article>
 
-      <div class="feature">
-        <figure><img src="/assets/site.svg" width="900" height="560" loading="lazy" decoding="async" alt="A site plan: an irregular five-sided plot with a dashed setback line inside it, three rotated blocks placed on it, and a dimension between two of them."><figcaption>A five-sided plot with its setback line, three buildings placed and rotated.</figcaption></figure>
-        <div>
+      <article class="row reveal">
+        <figure class="fig">
+          <img src="/assets/site.svg" width="900" height="560" loading="lazy" decoding="async" alt="A site plan: an irregular five-sided plot with a dashed setback line inside it, three rotated blocks placed on it, and a dimension between two of them.">
+          <figcaption>A five-sided plot with its setback line, three buildings placed and rotated.</figcaption>
+        </figure>
+        <div class="say">
           <h3>A site, not just one building</h3>
-          <p>
-            Draw the plot boundary, or drop in a map or site plan, set its true scale
-            from two known points, and trace over it.
-          </p>
-          <p>
-            Place as many buildings as you like, rotate and drag them, and watch
-            clashes, off-plot corners and five planning rules as you go.
-          </p>
+          <p>Draw the plot boundary, or drop in a map or site plan, set its true scale from two known points, and trace over it.</p>
+          <p>Place as many buildings as you like, rotate and drag them, and watch clashes, off-plot corners and five planning rules as you go.</p>
         </div>
-      </div>
+      </article>
     </div>
   </section>
 
-  <!-- 3. The facade, in detail ----------------------------------------- -->
-  <section class="band alt" aria-labelledby="facade">
-    <div class="wrap">
+  <!-- 02 The facade ----------------------------------------------------- -->
+  <section class="sheet tint" aria-labelledby="facade">
+    <p class="n" aria-hidden="true">02</p>
+    <div class="col">
       <h2 id="facade">The facade, in detail</h2>
-      <div class="feature wide">
-        <figure><img src="/assets/facade-detail.svg" width="900" height="520" loading="lazy" decoding="async" alt="A plan section through a wall: on the left a window opening with its reveal and jambs dimensioned, on the right a loggia recessed between two cheeks with a soffit over."><figcaption>Window reveal with jambs, left. Loggia between its cheeks, right.</figcaption></figure>
-        <div>
-          <p>
-            This is the part a massing tool usually skips, and it is the reason the
-            output is worth looking at. Reveals have jambs. Loggias have cheeks and a
-            soffit. Every elevation can be overridden on its own, so the street face
-            need not match the courtyard face.
-          </p>
-          <p>
-            None of it is cut out of a solid. Openings are built as panels around the
-            void, which keeps the geometry clean enough to carry into another
-            application.
-          </p>
-        </div>
+      <figure class="fig bleed reveal">
+        <img src="/assets/facade-detail.svg" width="900" height="520" loading="lazy" decoding="async" alt="A plan section through a wall: on the left a window opening with its reveal and jambs dimensioned, on the right a loggia recessed between two cheeks with a soffit over.">
+        <figcaption>Window reveal with jambs, left. Loggia between its cheeks, right.</figcaption>
+      </figure>
+      <div class="prose">
+        <p>This is the part a massing tool usually skips, and it is the reason the output is worth looking at. Reveals have jambs. Loggias have cheeks and a soffit. Every elevation can be overridden on its own, so the street face need not match the courtyard face.</p>
+        <p>None of it is cut out of a solid. Openings are built as panels around the void, which keeps the geometry clean enough to carry into another application.</p>
       </div>
     </div>
   </section>
 
-  <!-- 4. Metrics -------------------------------------------------------- -->
-  <section class="band" aria-labelledby="metrics">
-    <div class="wrap">
+  <!-- 03 Metrics -------------------------------------------------------- -->
+  <section class="sheet" aria-labelledby="metrics">
+    <p class="n" aria-hidden="true">03</p>
+    <div class="col">
       <h2 id="metrics">Metrics that show their working</h2>
-      <div class="feature wide">
-        <figure><img src="/assets/metrics.svg" width="900" height="520" loading="lazy" decoding="async" alt="Two overlapping wings in plan with the shared corner hatched, beside a list of areas: wing A plus wing B, the overlap subtracted once, giving GFA, then core area off and an efficiency factor applied to give NIA."><figcaption>The overlap where two wings meet, counted once.</figcaption></figure>
-        <div>
-          <p>
-            GFA, NIA, facade area, footprint, coverage, plot ratio and a unit estimate,
-            all recomputed as you change anything. Where two wings overlap at a
-            junction, the shared area is counted once rather than twice.
-          </p>
-          <p>
-            NIA takes the core off the geometry that is actually there, then applies an
-            efficiency factor you set — it is not a percentage guessed at the end. The
-            unit count is an estimate from the module width, and the app says so where
-            it shows it.
-          </p>
-          <p>
-            Setback, separation, height cap, floor area ratio and coverage are checked
-            in the same pass and reported with both numbers: the limit, and what the
-            scheme does. A limit set to zero is off, so nothing inherits a rule nobody
-            asked for. The whole table exports as CSV.
-          </p>
-        </div>
+      <figure class="fig bleed reveal">
+        <img src="/assets/metrics.svg" width="900" height="520" loading="lazy" decoding="async" alt="Two overlapping wings in plan with the shared corner hatched, beside a list of areas: wing A plus wing B, the overlap subtracted once, giving GFA, then core area off and an efficiency factor applied to give NIA.">
+        <figcaption>The overlap where two wings meet, counted once.</figcaption>
+      </figure>
+      <div class="prose">
+        <p>GFA, NIA, facade area, footprint, coverage, plot ratio and a unit estimate, all recomputed as you change anything. Where two wings overlap at a junction, the shared area is counted once rather than twice.</p>
+        <p>NIA takes the core off the geometry that is actually there, then applies an efficiency factor you set — it is not a percentage guessed at the end. The unit count is an estimate from the module width, and the app says so where it shows it.</p>
+        <p>Setback, separation, height cap, floor area ratio and coverage are checked in the same pass and reported with both numbers: the limit, and what the scheme does. A limit set to zero is off, so nothing inherits a rule nobody asked for. The whole table exports as CSV.</p>
       </div>
     </div>
   </section>
 
-  <!-- 5. Why it is different -------------------------------------------- -->
-  <section class="band alt" aria-labelledby="why">
-    <div class="wrap">
+  <!-- 04 Why different -------------------------------------------------- -->
+  <section class="sheet tint" aria-labelledby="why">
+    <p class="n" aria-hidden="true">04</p>
+    <div class="col">
       <h2 id="why">Why it is different</h2>
       <ul class="claims" role="list">
-        <li>
-          <h3>Facade depth</h3>
-          <p>
-            Real openings with reveals and jambs, loggias with cheeks and soffits, and
-            per-elevation overrides. Most tools at this stage give you a box with a
-            texture on it.
-          </p>
-        </li>
-        <li>
-          <h3>The same inputs give the same building</h3>
-          <p>
-            Every choice that could be random runs through a seeded generator, so a
-            scheme rebuilds byte for byte. When the job is comparing options, that is
-            the difference between a comparison and a coincidence.
-          </p>
-        </li>
-        <li>
-          <h3>No account, no cloud</h3>
-          <p>
-            It is a static page. There is nothing to sign up for, nothing to upload,
-            and once it has loaded it keeps working without a connection. Schemes are
-            files on your own machine.
-          </p>
-        </li>
-        <li>
-          <h3>Metrics you can audit</h3>
-          <p>
-            Every figure comes from the geometry on screen, and the corrections — the
-            junction overlap, the core area — are ones you can check by hand.
-          </p>
-        </li>
+        <li class="reveal"><h3>Facade depth</h3><p>Real openings with reveals and jambs, loggias with cheeks and soffits, and per-elevation overrides. Most tools at this stage give you a box with a texture on it.</p></li>
+        <li class="reveal"><h3>The same inputs give the same building</h3><p>Every choice that could be random runs through a seeded generator, so a scheme rebuilds byte for byte. When the job is comparing options, that is the difference between a comparison and a coincidence.</p></li>
+        <li class="reveal"><h3>No account, no cloud</h3><p>It is a static page. There is nothing to sign up for, nothing to upload, and once it has loaded it keeps working without a connection. Schemes are files on your own machine.</p></li>
+        <li class="reveal"><h3>Metrics you can audit</h3><p>Every figure comes from the geometry on screen, and the corrections — the junction overlap, the core area — are ones you can check by hand.</p></li>
       </ul>
     </div>
   </section>
 
-  <!-- 6. What it does not do --------------------------------------------- -->
-  <section class="band" aria-labelledby="limits">
-    <div class="wrap narrow">
+  <!-- 05 Limits --------------------------------------------------------- -->
+  <section class="sheet" aria-labelledby="limits">
+    <p class="n" aria-hidden="true">05</p>
+    <div class="col narrow">
       <h2 id="limits">What it does not do</h2>
-      <p class="lead">
-        Worth knowing before you spend an afternoon in it. None of these are
-        hidden in the app either.
-      </p>
+      <p class="lead">Worth knowing before you spend an afternoon in it. None of these are hidden in the app either.</p>
       <ul class="nots" role="list">
-        <li>
-          <strong>No IFC export.</strong> Geometry comes out as glTF, which is a
-          visualisation format — you cannot pick a project up from it in Revit or
-          ArchiCAD. This is the known gap, and the largest one.
-        </li>
-        <li>
-          <strong>No floorplans, corridors, stairs or lifts.</strong> A core is
-          modelled as a shaft, because it takes volume and comes off the net area.
-          What happens inside it is not drawn.
-        </li>
-        <li>
-          <strong>No environmental simulation.</strong> No daylight, shadow, wind or
-          energy analysis of any kind.
-        </li>
-        <li>
-          <strong>Flat ground only.</strong> No terrain, no slope, no cut and fill.
-        </li>
-        <li>
-          <strong>No neighbouring buildings as context.</strong> The site holds what
-          you place on it and nothing else.
-        </li>
-        <li>
-          <strong>No collaboration.</strong> One person, one browser. Schemes are
-          shared by sending the file.
-        </li>
-        <li>
-          <strong>The unit count is an estimate.</strong> It comes from the module
-          width and the floor area, not from a laid-out plan.
-        </li>
-        <li>
-          <strong>No cost estimation.</strong>
-        </li>
+        <li><strong>No IFC export.</strong> Geometry comes out as glTF, which is a visualisation format — you cannot pick a project up from it in Revit or ArchiCAD. This is the known gap, and the largest one.</li>
+        <li><strong>No floorplans, corridors, stairs or lifts.</strong> A core is modelled as a shaft, because it takes volume and comes off the net area. What happens inside it is not drawn.</li>
+        <li><strong>No environmental simulation.</strong> No daylight, shadow, wind or energy analysis of any kind.</li>
+        <li><strong>Flat ground only.</strong> No terrain, no slope, no cut and fill.</li>
+        <li><strong>No neighbouring buildings as context.</strong> The site holds what you place on it and nothing else.</li>
+        <li><strong>No collaboration.</strong> One person, one browser. Schemes are shared by sending the file.</li>
+        <li><strong>The unit count is an estimate.</strong> It comes from the module width and the floor area, not from a laid-out plan.</li>
+        <li><strong>No cost estimation.</strong></li>
       </ul>
     </div>
   </section>
 
-  <!-- 7. How it works ----------------------------------------------------- -->
-  <section class="band alt" aria-labelledby="how">
-    <div class="wrap">
+  <!-- 06 How it works --------------------------------------------------- -->
+  <section class="sheet tint" aria-labelledby="how">
+    <p class="n" aria-hidden="true">06</p>
+    <div class="col">
       <h2 id="how">How it works</h2>
       <ol class="steps" role="list">
-        <li>
-          <h3>Draw the plot</h3>
-          <p>
-            Click out a boundary, or drop in a map or site plan, set its scale from two
-            known points, and trace over it.
-          </p>
-        </li>
-        <li>
-          <h3>Place and shape</h3>
-          <p>
-            Add buildings, drag and rotate them, pick a footprint, then work the
-            sliders — floors, depth, module, balconies, cores.
-          </p>
-        </li>
-        <li>
-          <h3>Take it away</h3>
-          <p>
-            Export the geometry as glTF, the metrics as CSV, and the whole scheme as a
-            JSON file you can reopen later.
-          </p>
-        </li>
+        <li class="reveal"><h3>Draw the plot</h3><p>Click out a boundary, or drop in a map or site plan, set its scale from two known points, and trace over it.</p></li>
+        <li class="reveal"><h3>Place and shape</h3><p>Add buildings, drag and rotate them, pick a footprint, then work the sliders — floors, depth, module, balconies, cores.</p></li>
+        <li class="reveal"><h3>Take it away</h3><p>Export the geometry as glTF, the metrics as CSV, and the whole scheme as a JSON file you can reopen later.</p></li>
       </ol>
     </div>
   </section>
 
-  <!-- 8. FAQ -------------------------------------------------------------- -->
-  <section class="band" aria-labelledby="faq">
-    <div class="wrap narrow">
+  <!-- 07 Questions ------------------------------------------------------ -->
+  <section class="sheet" aria-labelledby="faq">
+    <p class="n" aria-hidden="true">07</p>
+    <div class="col narrow">
       <h2 id="faq">Questions</h2>
-
-      <details>
-        <summary>Do I need an account?</summary>
-        <p>No. There is no sign-up, no login and no trial. Open the page and it is there.</p>
-      </details>
-
-      <details>
-        <summary>Where does my data go?</summary>
-        <p>
-          Nowhere. There is no backend to send it to. Everything is computed in your
-          browser, and a scheme is saved by downloading a JSON file to your machine.
-          The site you are reading sets no cookies and makes no third-party requests.
-        </p>
-      </details>
-
-      <details>
-        <summary>Does it work offline?</summary>
-        <p>
-          Once the page has loaded, yes — the app keeps working with the network gone,
-          because nothing it does needs a server.
-        </p>
-      </details>
-
-      <details>
-        <summary>What can I export?</summary>
-        <p>
-          glTF for the geometry, including the whole site with its buildings named;
-          CSV for the metrics table; JSON for the scheme itself, which reopens with
-          everything as you left it. There is no IFC export yet.
-        </p>
-      </details>
-
-      <details>
-        <summary>Is it really free?</summary>
-        <p>
-          Yes, and there is no pricing page to read. It is a static page with no
-          running cost behind it beyond hosting.
-        </p>
-      </details>
-
-      <details>
-        <summary>Is there AI in it?</summary>
-        <p>
-          No. It is parametric: you set the numbers and the geometry follows from them,
-          the same way every time. The name is short for urban generator, and that is
-          as far as the word goes — nothing here learns, predicts or invents.
-        </p>
-      </details>
+      <details><summary>Do I need an account?</summary><p>No. There is no sign-up, no login and no trial. Open the page and it is there.</p></details>
+      <details><summary>Where does my data go?</summary><p>Nowhere. There is no backend to send it to. Everything is computed in your browser, and a scheme is saved by downloading a JSON file to your machine. The site you are reading sets no cookies and makes no third-party requests.</p></details>
+      <details><summary>Does it work offline?</summary><p>Once the page has loaded, yes — the app keeps working with the network gone, because nothing it does needs a server.</p></details>
+      <details><summary>What can I export?</summary><p>glTF for the geometry, including the whole site with its buildings named; CSV for the metrics table; JSON for the scheme itself, which reopens with everything as you left it. There is no IFC export yet.</p></details>
+      <details><summary>Is it really free?</summary><p>Yes, and there is no pricing page to read. It is a static page with no running cost behind it beyond hosting.</p></details>
+      <details><summary>Is there AI in it?</summary><p>No. It is parametric: you set the numbers and the geometry follows from them, the same way every time. The name is short for urban generator, and that is as far as the word goes — nothing here learns, predicts or invents.</p></details>
     </div>
   </section>
 
-  <!-- closing CTA --------------------------------------------------------- -->
-  <section class="band alt end">
-    <div class="wrap narrow center">
-      <h2>Open it and draw a plot</h2>
-      <p class="lead">It takes about a minute to find out whether it suits the way you work.</p>
-      <p class="cta"><a class="btn" href="https://app.urbgen.com">Open the app</a></p>
-    </div>
+  <section class="close">
+    <h2>Open it and draw a plot</h2>
+    <p class="lead">It takes about a minute to find out whether it suits the way you work.</p>
+    <p class="cta"><a class="btn" href="https://app.urbgen.com">Open the app</a></p>
   </section>
 
 </main>
 
 <footer class="foot">
-  <div class="wrap foot-in">
-    <p class="foot-brand">
-      <svg class="mark" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false">
-        <path d="M12 3 21 8 12 13 3 8Z"/>
-        <path d="M3 8 12 13v8L3 16Z" opacity="0.55"/>
-        <path d="M21 8v8l-9 5v-8Z" opacity="0.78"/>
-      </svg>
-      URBGEN — parametric building design
-    </p>
-    <nav class="foot-links" aria-label="Footer">
-      <a href="https://app.urbgen.com">Open the app</a>
-      <a href="mailto:hello@urbgen.com">hello@urbgen.com</a>
-    </nav>
-    <p class="foot-fine">No cookies, no trackers, no third-party requests. &copy; 2026</p>
-  </div>
+  <p class="foot-brand">
+    <svg class="mark" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false">
+      <path d="M12 3 21 8 12 13 3 8Z"/>
+      <path d="M3 8 12 13v8L3 16Z" opacity="0.55"/>
+      <path d="M21 8v8l-9 5v-8Z" opacity="0.78"/>
+    </svg>
+    URBGEN — parametric building design
+  </p>
+  <nav class="foot-links" aria-label="Footer">
+    <a href="https://app.urbgen.com">Open the app</a>
+    <a href="mailto:hello@urbgen.com">hello@urbgen.com</a>
+  </nav>
+  <p class="foot-fine">No cookies, no trackers, no third-party requests. &copy; 2026</p>
 </footer>
 
+<script src="/block.js"></script>
 </body>
 </html>
