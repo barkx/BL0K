@@ -259,3 +259,31 @@ ${t(500, 342, 'efficiency factor', 17)}${t(840, 342, '\u00d7 0.88', 17, C.ink, '
 ${t(500, 402, 'NIA', 18, C.ink, 'start', 600)}${t(840, 402, '3 147 m\u00b2', 18, C.ink, 'end', 600)}
 ${t(70, 446, 'Where two wings meet, the shared volume is counted once.', 16)}`))
 }
+
+// ---------- 7. the Open Graph card, 1200x630 ----------
+// Rasterised to og.png separately (see README ch.1) because no sharing
+// platform accepts an SVG for og:image.
+{
+  const W = 1200, H = 630
+  const s = masses(courtyard(0, 0, 58, 38, 12, 8))
+  // Reuse the fit machinery, then drop the block into the right-hand half.
+  const inner = render(s, 620, 470, 10, 'none')
+  const body = inner.slice(inner.indexOf('>') + 1, inner.lastIndexOf('</svg>'))
+    .replace(/<rect width="620" height="470" fill="none"\/>/, '')
+  const t = (x, y, str, size, weight, col, spacing) =>
+    `<text x="${x}" y="${y}" font-family="Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif" ` +
+    `font-size="${size}" font-weight="${weight}" fill="${col}" letter-spacing="${spacing || 0}">${str}</text>`
+  write('og.svg', svg(W, H, `<rect width="${W}" height="${H}" fill="${C.paper}"/>
+<g transform="translate(548 92)">${body}</g>
+<g transform="translate(84 210) scale(2.3)" fill="${C.blue}">
+  <path d="M12 3 21 8 12 13 3 8Z"/>
+  <path d="M3 8 12 13v8L3 16Z" opacity="0.55"/>
+  <path d="M21 8v8l-9 5v-8Z" opacity="0.78"/>
+</g>
+${t(148, 262, 'URBGEN', 62, 650, C.ink, '3')}
+${t(86, 330, 'Parametric building design', 30, 400, C.soft)}
+<line x1="86" y1="372" x2="330" y2="372" stroke="${C.blue}" stroke-width="2"/>
+${t(86, 424, 'Massing, a facade with real openings,', 23, 400, C.soft)}
+${t(86, 458, 'and metrics that show their working.', 23, 400, C.soft)}
+${t(86, 536, 'urbgen.com', 22, 600, C.blue, '1')}`))
+}

@@ -55,3 +55,58 @@ npx serve homepage
 
 Then: JavaScript off, 320 px wide, tab through it, and check the network panel
 shows this origin only.
+
+---
+
+## 5. The improvement plan
+
+Ten parts, ordered by how much each changes the page for a visitor. **Keep the
+status column current** — this table is the record, and a part is not done
+until the line says so and says how it was verified.
+
+| # | Part | Owner | Status |
+|---|---|---|---|
+| 1 | Self-host a variable font | needs a decision | **blocked** — §1 says system stack; needs an OK to download the file |
+| 2 | Real app screenshots, replacing the six drawings | Claude | **blocked** — R3F will not size or render its canvas while the window is hidden |
+| 3 | Open Graph image, 1200×630 | Claude | **done** |
+| 4 | Contrast and accessibility re-audit against the new design | Claude | **done** |
+| 5 | Give the hero block a ground plane so it does not float | Claude | not started |
+| 6 | `urbgen.com` primary, `www` redirecting to it | user | **blocked** — Vercel dashboard, and the 308 is cached |
+| 7 | The IFC sentence — "not yet" or silence | needs a decision | **blocked** — `project.md` §10.3 |
+| 8 | Footer repo link and licence | needs a decision | **blocked** — §10.4 |
+| 9 | Attribution, or stay unattributed | needs a decision | **blocked** — §10.6 |
+| 10 | Re-measure the budget and record it | Claude | not started |
+
+### What "blocked" means here
+
+Four of these are not work, they are answers. Do not guess them: 1, 7, 8 and 9
+each change what the page *claims*, and a wrong guess is a thing the page says
+that is not true. 6 is a dashboard setting only the account holder can make.
+2 needs the Claude window in the foreground and nothing else.
+
+### Rules while working through it
+
+- **One part per commit** where the parts are separable, so any of them can be
+  reverted without taking the others with it.
+- **Verify, then write down how.** "Looks right" is not a status. The entries
+  below name the check.
+- Re-run the budget after anything that changes bytes. `block.js` has about
+  400 bytes of headroom against §7's 5 KB, so it is the one to watch.
+- Nothing in this plan may break: the page complete with JavaScript off, zero
+  third-party requests, no cookies, and no claim of AI.
+
+## 6. Work log
+
+Newest last. One line per part, naming the check that settled it.
+
+- *(started 12 September 2026)*
+- **4 — audit. Done.** 18 colour pairs computed against WCAG AA at the sizes
+  they render; all pass, tightest 5.82:1 against a 4.5 requirement. Structure
+  checked in the browser: one `h1`, no heading-level jumps, four landmarks,
+  every image with alt text and explicit dimensions, every `aria-labelledby`
+  resolving, skip-link target present.
+- **3 — Open Graph card. Done.** Generated as `og.svg` by the illustrations
+  script, rasterised to 1200×630 with local headless Chrome, checked by eye,
+  and wired up with `og:image`, its dimensions, alt text, and
+  `twitter:card: summary_large_image`. Verified the PNG header really is
+  1200×630.

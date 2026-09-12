@@ -40,6 +40,20 @@ node homepage/tools/build-illustrations.mjs
 No dependencies — plain Node, writing SVG. Palette values are copied from the
 app's `src/ui/styles.css`; if the brand changes, they change here by hand.
 
+### The Open Graph card
+
+The same script writes `assets/og.svg`. No sharing platform accepts an SVG for
+`og:image`, so it is rasterised with the Chrome already on the machine:
+
+```bash
+chrome --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --window-size=1200,630 --screenshot=assets/og.png assets/og.svg
+```
+
+`og.png` is fetched by crawlers, never by a visitor, so its 115 KB does not
+count against the page weight in §7. Redo both steps if the tagline, the mark
+or the palette changes — and check the result by eye, because a card that
+renders wrong is invisible until someone shares the link.
+
 ### Checking it before it ships
 
 There is no test runner and nothing to typecheck. What is worth doing by hand:
@@ -166,12 +180,6 @@ and a grey box saying "screenshot pending" is worse than a drawing that
 explains the same idea. They are SVG because six drawings come to about 60 KB
 that way and stay sharp at any width. M2 replaces them with `.webp` captures
 and this deviation goes away.
-
-**No Open Graph image.** §7 asks for one and §6 specifies it at 1200×630. It
-needs a render that does not exist until M2. A tag pointing at a missing file
-is worse than no tag, so `og:image` is absent and `twitter:card` is `summary`
-rather than `summary_large_image`. There is a `TODO M2` on the line in
-`index.html`.
 
 **The footer does not link to the repo.** §4 lists a repo link in the footer.
 Open question §10.4 — whether the app's source is public, and under what
