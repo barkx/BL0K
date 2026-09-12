@@ -134,8 +134,20 @@ two-row layouts.
    commitments.
 6. **FAQ.** Six, answering what the positioning provokes: account, data,
    offline, export, price, AI.
-7. **Footer.** Link to the app, a contact address, the year. The repo link
-   waits on §10.4.
+7. **Footer.** Adapted 12 September 2026 from the author's own site,
+   archviz.one, so the two carry one identity: portrait, name, role, social
+   links, and three columns — About me, App, Elsewhere. Then a fine-print line
+   holding the URBGEN mark, the privacy statement and the year.
+
+   Three things were changed in the adaptation, and all three matter:
+   **the "AI-Driven Design & Automation" clause was dropped**, because §5
+   forbids the page implying AI and a visitor will not stop to work out that
+   the phrase describes a person rather than this tool; **only links that
+   resolve are shipped** — Blog, Highlights, Articles, Knowledge Base, Privacy
+   Policy and TOS all return 404 on archviz.one and were cut rather than
+   guessed; and **the portrait is self-hosted**, converted to WebP with a JPEG
+   fallback, because the page makes no third-party requests and a hotlinked
+   image would break that.
 
 ### What was cut, and where its content went
 
@@ -321,11 +333,15 @@ is too big — split it.
    project does not have. Revisit only if a date becomes real.
 4. **A licence, and is the app's source public?** The repo is currently private
    in effect; the footer cannot link to it until that is settled.
-5. **A contact address.** A person, a role alias, or a form? A form needs a
-   backend, which §1 rules out — so an address, and which one.
-6. ~~**Does the page mention it is by a practice?**~~ **Answered, 12 September
-   2026:** unattributed for now. Nothing in the copy has to be retracted to add
-   it later.
+5. ~~**A contact address.**~~ **Answered, 12 September 2026:** the footer sends
+   people to `archviz.one/contact/`, the author's existing contact page. This
+   retires the `hello@urbgen.com` alias before it ever had to exist, and with
+   it the launch blocker that the mailbox had to be created first.
+6. ~~**Does the page mention who made it?**~~ **Answered twice, 12 September
+   2026.** First unattributed, then reversed: the footer now carries the
+   author's name, portrait and links, shared with archviz.one. Attribution to a
+   named architect is the trust signal §3 asks for, and it costs nothing that
+   has to be retracted.
 7. **A gallery of schemes?** Persuasive, and the app can produce them — but
    every image is a maintenance cost, and any scheme shown must be one there is
    a right to show.
