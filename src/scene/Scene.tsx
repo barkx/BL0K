@@ -12,6 +12,7 @@ import { useSiteDrag } from './useSiteDrag'
 import { useCoreDrag } from './useCoreDrag'
 import { PlotDraft, PlotHandles } from './PlotEditor'
 import { Underlay } from './Underlay'
+import { OsmContext } from './Context'
 import type { PlacedBuilding } from '../site/build'
 
 const VIEW_DIRECTION = new Vector3(0.62, 0.46, 0.64).normalize()
@@ -237,6 +238,7 @@ export function Scene() {
       />
 
       <Ground radius={radius} colour={mat.groundColor} shadows={mat.shadows} />
+      <OsmContext mat={mat} />
       <Underlay />
 
       {/*

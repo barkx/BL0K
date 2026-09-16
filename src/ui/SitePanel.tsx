@@ -1,8 +1,13 @@
+import { useState } from 'react'
 import { useStore } from '../store/store'
 import { bounds, polygonArea } from '../lib/poly'
 import { m, m2 } from '../lib/units'
 import { round } from '../lib/clamp'
 import { anyRuleSet } from '../site/rules'
+import { DEFAULT_RADIUS, RADIUS_CHOICES, parseLatLon } from '../geo/project'
+import { fetchContext, summarise, OverpassError } from '../geo/overpass'
+import { OSM_ATTRIBUTION } from '../geo/tiles'
+import { LocationPicker } from './LocationPicker'
 import type { SiteRules } from '../site/types'
 
 /** The list of buildings on the plot: select, add, duplicate, remove, rename. */
@@ -388,6 +393,234 @@ export function RuleControls() {
             : breaches.length === 0
               ? 'The scheme meets every limit set.'
               : `${breaches.length} breach${breaches.length === 1 ? '' : 'es'} — see the metrics panel.`}
+        </div>
+      </div>
+    </>
+  )
+}
+
+/**
+ * Where the project is, in the world.
+ *
+ * Stage one of the OSM work and useful on its own: an anchor makes every export
+ * georeferenced, so a model lands where it belongs in a receiving application
+ * instead of at that application's origin. Nothing here touches the network —
+ * the map picker and the OSM context come next, and both build on this.
+ */
+export function LocationControls() {
+  const geo = useStore((s) => s.site.geo)
+  const setGeo = useStore((s) => s.setGeo)
+  const [draft, setDraft] = useState('')
+  const [bad, setBad] = useState(false)
+  const [picking, setPicking] = useState(false)
+  const context = useStore((st) => st.site.context)
+  const setContext = useStore((st) => st.setContext)
+  const [importing, setImporting] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+
+  /**
+   * `anchor` is passed in rather than read from the store because the store has
+   * not finished updating when a freshly picked location wants importing, and
+   * the closure would still hold the old one.
+   */
+  const runImport = async (anchor = geo) => {
+    if (!anchor) return
+    setImporting(true)
+    setNote(null)
+    try {
+      const fetched = await fetchContext(anchor)
+      setContext(fetched)
+      const { buildings, withHeight, roads } = summarise(fetched)
+      setNote(
+        `${buildings} building${buildings === 1 ? '' : 's'} (${withHeight} with heights), ` +
+          `${roads} road${roads === 1 ? '' : 's'}.`,
+      )
+    } catch (e) {
+      setNote(e instanceof OverpassError ? e.message : 'The import failed.')
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  const picker = picking ? (
+    <LocationPicker
+      initial={geo}
+      onClose={() => setPicking(false)}
+      onPick={({ lat, lon, radius }) => {
+        // Keep whatever north was already set: the map says where, not which
+        // way round the drawing is.
+        const anchor = { lat, lon, radius, trueNorth: geo?.trueNorth ?? 0 }
+        setGeo(anchor)
+        setPicking(false)
+        // Choosing a place is the explicit act; a second press to fetch what
+        // you just chose is ceremony. The rule that matters is unchanged —
+        // nothing reaches the network without someone asking for it.
+        void runImport(anchor)
+      }}
+    />
+  ) : null
+
+  if (!geo) {
+    return (
+      <>
+        {picker}
+        <div className="stack">
+          <button className="ghost" onClick={() => setPicking(true)}>
+            Pick on a map
+          </button>
+        </div>
+        <div className="field">
+          <div className="row">
+            <label htmlFor="geo-paste">Coordinates</label>
+          </div>
+          <input
+            id="geo-paste"
+            className="text"
+            type="text"
+            placeholder="46.0569, 14.5058"
+            value={draft}
+            onChange={(e) => {
+              setDraft(e.target.value)
+              setBad(false)
+            }}
+            onKeyDown={(e) => {
+              if (e.key !== 'Enter') return
+              const parsed = parseLatLon(draft)
+              if (parsed) {
+                const anchor = { ...parsed, trueNorth: 0, radius: DEFAULT_RADIUS }
+                setGeo(anchor)
+                void runImport(anchor)
+              }
+              else setBad(true)
+            }}
+          />
+          <div className={bad ? 'hint error' : 'hint'}>
+            {bad
+              ? 'That is not a latitude and longitude.'
+              : 'Or paste a latitude and longitude and press Enter — right-click a point in Google Maps and the first line is what you want.'}
+          </div>
+        </div>
+        <div className="field">
+          <div className="hint">
+            Without one the site is still a site — it just has no position, and
+            exports say so rather than inventing one.
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  return (
+    <>
+      {picker}
+      <div className="field">
+        <div className="row">
+          <label>Position</label>
+          <span className="value num" style={{ fontSize: 12 }}>
+            {geo.lat.toFixed(5)}, {geo.lon.toFixed(5)}
+          </span>
+        </div>
+        <div className="hint">
+          Written into the IFC, so the model lands here rather than at the
+          origin.
+        </div>
+      </div>
+
+      <div className="field">
+        <div className="row">
+          <label htmlFor="geo-north">True north</label>
+          <span className="value">
+            <input
+              id="geo-north"
+              type="number"
+              step={1}
+              min={-180}
+              max={180}
+              value={round(geo.trueNorth, 1)}
+              onChange={(e) =>
+                Number.isFinite(Number(e.target.value)) &&
+                setGeo({ ...geo, trueNorth: Number(e.target.value) })
+              }
+            />
+            <span className="unit">°</span>
+          </span>
+        </div>
+        <input
+          type="range"
+          aria-label="True north"
+          min={-180}
+          max={180}
+          step={1}
+          value={geo.trueNorth}
+          onChange={(e) => setGeo({ ...geo, trueNorth: Number(e.target.value) })}
+        />
+        <div className="hint">
+          Clockwise from the way the plot was drawn. Zero means the drawing is
+          already oriented with north up.
+        </div>
+      </div>
+
+      <div className="field">
+        <div className="row">
+          <label>Import area</label>
+          <span className="value num" style={{ fontSize: 12 }}>
+            {geo.radius * 2} × {geo.radius * 2} m
+          </span>
+        </div>
+        <div className="chips">
+          {RADIUS_CHOICES.map((r) => (
+            <button
+              key={r}
+              type="button"
+              aria-pressed={r === geo.radius}
+              onClick={() => setGeo({ ...geo, radius: r })}
+            >
+              {r} m
+            </button>
+          ))}
+        </div>
+        <div className="hint">How much surrounding map an import will pull in.</div>
+      </div>
+
+      <div className="stack">
+        <button className="ghost" disabled={importing} onClick={() => void runImport()}>
+          {importing
+            ? 'Importing…'
+            : context
+              ? 'Import surroundings again'
+              : 'Import surroundings'}
+        </button>
+        {note && <div className="hint">{note}</div>}
+        {context ? (
+          <>
+            <div className="hint">
+              {summarise(context).total} features drawn, at true scale and true
+              north. Trace the plot straight over them — no calibration.
+            </div>
+            <div className="hint">
+              Context only: never measured, never exported. {OSM_ATTRIBUTION}.
+            </div>
+            <button className="ghost" onClick={() => setContext(null)}>
+              Remove the surroundings
+            </button>
+          </>
+        ) : (
+          <div className="hint">
+            Buildings, roads and water from OpenStreetMap, drawn around the
+            position as flat linework to trace over. Imported automatically when
+            you pick a place; this is for fetching it again.
+          </div>
+        )}
+      </div>
+
+      <div className="stack">
+        <div className="pair">
+          <button className="ghost" onClick={() => setPicking(true)}>
+            Move on a map
+          </button>
+          <button className="ghost" onClick={() => setGeo(null)}>
+            Clear
+          </button>
         </div>
       </div>
     </>

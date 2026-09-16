@@ -610,3 +610,142 @@ select:focus-visible { outline: none; border-color: var(--blueprint); background
   .toolbar h1 { display: inline-flex; }
   .brand-name { font-size: 14px; }
 }
+
+/* --- the location picker ------------------------------------------------- */
+/* The app's only modal. Scrim closes on a press outside, Escape closes too.  */
+.modal-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 31, 38, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  padding: 16px;
+}
+.picker {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  box-shadow: 0 12px 40px rgba(26, 31, 38, 0.22);
+  width: min(620px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: 14px;
+}
+.picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.picker-head strong { font-size: 13px; font-weight: 600; }
+.picker-search { display: flex; gap: 6px; margin-bottom: 8px; }
+.picker-search .text { flex: 1; }
+.picker-note { margin-bottom: 8px; }
+.picker-results {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  max-height: 132px;
+  overflow: auto;
+  border: 1px solid var(--rule-soft);
+  border-radius: 3px;
+}
+.picker-results button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--rule-soft);
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.picker-results li:last-child button { border-bottom: 0; }
+.picker-results button:hover { background: var(--blueprint-soft); color: var(--ink); }
+
+/* The map. Tiles are absolutely placed, so the frame must not scroll.        */
+.picker-map {
+  position: relative;
+  height: 320px;
+  overflow: hidden;
+  background: var(--panel-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.picker-map:active { cursor: grabbing; }
+.picker-map img { position: absolute; display: block; pointer-events: none; }
+
+/* The import extent, and the crosshair the site sits under.                  */
+.picker-extent {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid var(--blueprint);
+  background: rgba(44, 93, 143, 0.1);
+  pointer-events: none;
+}
+.picker-cross {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--blueprint), var(--blueprint)) center / 1.5px 100% no-repeat,
+    linear-gradient(var(--blueprint), var(--blueprint)) center / 100% 1.5px no-repeat;
+}
+.picker-zoom {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.picker-zoom button {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: var(--panel);
+  line-height: 1;
+}
+/* Attribution is an ODbL requirement, not decoration. It does not hide.      */
+.picker-credit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  font-size: 10px;
+  color: var(--ink-soft);
+  background: rgba(251, 250, 248, 0.86);
+  padding: 2px 5px;
+  pointer-events: none;
+}
+.picker-foot { margin-top: 10px; }
+.picker-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.picker-coords { flex: 1; font-size: 11px; color: var(--ink-faint); }
+.ghost.primary {
+  background: var(--blueprint);
+  border-color: var(--blueprint);
+  color: #fff;
+}
+.ghost.primary:hover { background: #24507b; border-color: #24507b; }
+
+@media (max-width: 700px) {
+  .picker-map { height: 240px; }
+}

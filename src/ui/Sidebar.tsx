@@ -15,7 +15,13 @@ import { mm } from '../lib/units'
 import { download, parseConfig, serialize, stamp } from '../io/config'
 import { siteCsv } from '../io/exportCsv'
 import { siteIfc, SLAB_THICKNESS, WALL_THICKNESS } from '../io/exportIfc'
-import { BuildingList, PlacementControls, PlotControls, RuleControls } from './SitePanel'
+import {
+  BuildingList,
+  LocationControls,
+  PlacementControls,
+  PlotControls,
+  RuleControls,
+} from './SitePanel'
 import { UnderlayPanel } from './UnderlayPanel'
 import {
   IconFacade,
@@ -257,7 +263,7 @@ function SettingsPanel() {
             onClick={() =>
               // Like the CSV and unlike the glTF: string building, no library,
               // so there is nothing to code-split.
-              download(`urbgen-site-${stamp()}.ifc`, siteIfc(build), 'application/x-step')
+              download(`urbgen-site-${stamp()}.ifc`, siteIfc(site, build), 'application/x-step')
             }
           >
             Export IFC (.ifc)
@@ -361,6 +367,9 @@ export function Sidebar() {
             <>
               <Block title="Boundary">
                 <PlotControls />
+              </Block>
+              <Block title="Location">
+                <LocationControls />
               </Block>
               <Block title="Rules">
                 <RuleControls />

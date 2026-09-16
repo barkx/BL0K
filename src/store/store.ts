@@ -12,6 +12,7 @@ import {
   defaultSite,
   makePlacement,
   nextId,
+  resolveGeo,
   resolveRules,
   suggestName,
   type Placement,
@@ -20,6 +21,8 @@ import {
   type Underlay,
 } from '../site/types'
 import { rectanglePoly, type Poly, type Vec2 } from '../lib/poly'
+import type { GeoAnchor } from '../geo/project'
+import type { OsmContext } from '../geo/overpass'
 
 /**
  * The sidebar section, which is also the active tool.
@@ -84,6 +87,10 @@ interface State {
   removePlotVertex: (index: number) => void
 
   setRules: (patch: Partial<SiteRules>) => void
+  /** Where on the earth the site sits. Null clears it. */
+  setGeo: (geo: GeoAnchor | null) => void
+  /** Imported OpenStreetMap surroundings. Null clears them. */
+  setContext: (context: OsmContext | null) => void
 
   setUnderlay: (underlay: Underlay | null) => void
   updateUnderlay: (patch: Partial<Underlay>) => void
@@ -315,6 +322,21 @@ export const useStore = create<State>((set, get) => {
     setRules: (patch) => {
       const site = get().site
       commit({ ...site, rules: resolveRules({ ...site.rules, ...patch }) })
+    },
+
+    /**
+     * Changes no geometry: the anchor ties the existing local frame to a real
+     * place rather than moving anything. It still goes through `commit` so the
+     * exports and any future context see it on the next frame.
+     */
+    setGeo: (geo) => {
+      const site = get().site
+      commit({ ...site, geo: geo === null ? null : resolveGeo(geo) })
+    },
+
+    setContext: (context) => {
+      const site = get().site
+      commit({ ...site, context })
     },
 
     reset: () => {

@@ -1,10 +1,13 @@
 import { DEFAULTS, resolveParams, type Params } from '../store/params'
 import { rectanglePoly, type Poly } from '../lib/poly'
+import { DEFAULT_RADIUS, type GeoAnchor } from '../geo/project'
+import type { OsmContext } from '../geo/overpass'
 import {
   DEFAULT_PLOT_DEPTH,
   DEFAULT_PLOT_WIDTH,
   NO_RULES,
   makePlacement,
+  resolveGeo,
   resolveRules,
   type Placement,
   type Site,
@@ -19,6 +22,11 @@ import {
  *     optional underlay image carried inline as a data URL.
  * v4: the site carries `rules` — the plot's planning limits. A v3 file has no
  *     rules, so it loads with every rule off, which is what it meant.
+ * v7: the site can carry imported OpenStreetMap surroundings alongside the
+ *     anchor. A file without them simply has none.
+ * v6: the site can carry a geo anchor — latitude, longitude and true north.
+ *     A file without one describes a site with no position, which is what it
+ *     meant, so it loads with none rather than with an invented origin.
  * v5: buildings carry a core — count, placement, size, and a hand-placed
  *     position per shaft. A file written before cores existed described a
  *     building without one, so a missing `coreCount` means none rather than
@@ -27,7 +35,7 @@ import {
  * The `app` field is informational only — the loader never reads it — so files
  * written under either earlier name, 3DBlock or BL0K, still load unchanged.
  */
-export const CONFIG_VERSION = 5
+export const CONFIG_VERSION = 7
 
 export interface SavedConfig {
   version: number
@@ -131,6 +139,47 @@ function readRules(incoming: unknown): SiteRules {
   })
 }
 
+/** No position is a perfectly good answer, and the only honest default. */
+function readGeo(incoming: unknown): GeoAnchor | null {
+  if (!incoming || typeof incoming !== 'object') return null
+  const g = incoming as Partial<GeoAnchor>
+  const lat = Number(g.lat)
+  const lon = Number(g.lon)
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null
+  return resolveGeo({
+    lat,
+    lon,
+    trueNorth: Number(g.trueNorth) || 0,
+    radius: Number(g.radius) || DEFAULT_RADIUS,
+  })
+}
+
+/**
+ * Imported surroundings, or none. Half-read context would draw a partial
+ * neighbourhood that looks like survey data, so anything malformed is dropped
+ * whole rather than patched up.
+ */
+function readContext(incoming: unknown): OsmContext | null {
+  if (!incoming || typeof incoming !== 'object') return null
+  const c = incoming as Partial<OsmContext>
+  if (!Array.isArray(c.ways) || c.ways.length === 0) return null
+  const ways = c.ways.filter(
+    (w) =>
+      w &&
+      Array.isArray(w.points) &&
+      w.points.length >= 4 &&
+      w.points.every((n) => Number.isFinite(n)),
+  )
+  if (ways.length === 0) return null
+  return {
+    ways,
+    lat: Number(c.lat) || 0,
+    lon: Number(c.lon) || 0,
+    radius: Number(c.radius) || DEFAULT_RADIUS,
+    fetchedAt: typeof c.fetchedAt === 'string' ? c.fetchedAt : '',
+  }
+}
+
 function readPlacement(incoming: unknown, index: number): Placement {
   const source = (incoming ?? {}) as Partial<Placement> & { params?: unknown }
   const { params } = readParams(source.raw ?? source.params)
@@ -169,6 +218,8 @@ export function parseConfig(text: string): LoadResult {
             : [makePlacement({ name: 'Building A' })],
         underlay: readUnderlay(site.underlay),
         rules: readRules(site.rules),
+        geo: readGeo(site.geo),
+        context: readContext(site.context),
       },
       version,
       migrated: null,
@@ -184,6 +235,8 @@ export function parseConfig(text: string): LoadResult {
       buildings: [makePlacement({ name: 'Building A', raw: params, params })],
       underlay: null,
       rules: { ...NO_RULES },
+      geo: null,
+      context: null,
     },
     version,
     migrated:

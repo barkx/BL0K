@@ -2,6 +2,8 @@ import { footprint, levels, topLevel, type Mass } from '../geometry/masses'
 import type { Elevation } from '../geometry/elevations'
 import type { FacadeModel, Opening } from '../geometry/facade'
 import type { SiteBuild } from '../site/build'
+import type { Site } from '../site/types'
+import { compoundAngle } from '../geo/project'
 
 /**
  * The site as an IFC4 STEP physical file.
@@ -165,6 +167,9 @@ const point2 = (s: Step, x: number, y: number) =>
 
 const direction3 = (s: Step, x: number, y: number, z: number) =>
   s.shared(`IFCDIRECTION((${num(x)},${num(y)},${num(z)}))`)
+
+const direction2 = (s: Step, x: number, y: number) =>
+  s.shared(`IFCDIRECTION((${num(x)},${num(y)}))`)
 
 /** `axis` and `refDirection` left as `$` mean IFC's defaults: +Z and +X. */
 function axis3(s: Step, at: [number, number, number], ref?: [number, number]): number {
@@ -394,7 +399,7 @@ function wallsFor(
  * output that is not a function of the model. Pin it and two exports of one
  * scheme are byte-identical.
  */
-export function siteIfc(build: SiteBuild, when = new Date()): string {
+export function siteIfc(site: Site, build: SiteBuild, when = new Date()): string {
   const s = new Step()
   const seen = new Map<string, number>()
   const guid = (...parts: (string | number)[]) => {
@@ -435,8 +440,16 @@ export function siteIfc(build: SiteBuild, when = new Date()): string {
       `))`,
   )
   const world = axis3(s, [0, 0, 0])
+  // TrueNorth is the direction true north points in the model's own XY plane.
+  // The app measures it clockwise from the model's north, which is IFC's +Y, so
+  // an angle of theta lands at (sin, cos). Left as $ when the site has no
+  // position: an unstated north is honest, an assumed one is not.
+  const north = site.geo ? (site.geo.trueNorth * Math.PI) / 180 : 0
+  const trueNorth = site.geo
+    ? `#${direction2(s, Math.sin(north), Math.cos(north))}`
+    : '$'
   const model = s.add(
-    `IFCGEOMETRICREPRESENTATIONCONTEXT($,${str('Model')},3,1.E-05,#${world},$)`,
+    `IFCGEOMETRICREPRESENTATIONCONTEXT($,${str('Model')},3,1.E-05,#${world},${trueNorth})`,
   )
   const body = s.add(
     `IFCGEOMETRICREPRESENTATIONSUBCONTEXT(${str('Body')},${str('Model')},*,*,*,*,` +
@@ -449,9 +462,14 @@ export function siteIfc(build: SiteBuild, when = new Date()): string {
     `IFCPROJECT(${str(guid('project'))},#${owner},${str('URBGEN site')},$,$,$,$,` +
       `(#${model}),#${units})`,
   )
+  // A georeferenced site lands where it belongs in a receiving application
+  // rather than at that application's origin.
+  const lat = site.geo ? `(${compoundAngle(site.geo.lat).join(',')})` : '$'
+  const lon = site.geo ? `(${compoundAngle(site.geo.lon).join(',')})` : '$'
   const siteId = s.add(
     `IFCSITE(${str(guid('site'))},#${owner},${str('Site')},$,$,` +
-      `#${localPlacement(s, null, axis3(s, [0, 0, 0]))},$,$,.ELEMENT.,$,$,$,$,$)`,
+      `#${localPlacement(s, null, axis3(s, [0, 0, 0]))},$,$,.ELEMENT.,` +
+      `${lat},${lon},${site.geo ? '0.' : '$'},$,$)`,
   )
 
   const buildingIds: number[] = []

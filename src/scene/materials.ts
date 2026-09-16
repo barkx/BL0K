@@ -15,6 +15,9 @@ export interface MaterialSet {
   glass: Material
   /** The core shaft. Only its overrun is ever above the roof to be seen. */
   core: Material
+  /** Imported surroundings. Deliberately recessive: it is not the scheme. */
+  context: Material
+  contextLine: LineBasicMaterial
   slab: Material
   panel: Material
   metal: Material
@@ -57,6 +60,8 @@ function build(mode: RenderMode, keep: <T extends Material>(m: T) => T): Kit {
       // Darker than every mass tint, so the core reads as the one thing on the
       // roof that is not the building.
       core: keep(new MeshBasicMaterial({ color: '#33495f' })),
+      context: keep(new MeshBasicMaterial({ color: '#dfe6ee' })),
+      contextLine: keep(new LineBasicMaterial({ color: '#5f7d9e' })),
       slab: keep(new MeshBasicMaterial({ color: '#f4f6f8' })),
       panel: keep(new MeshBasicMaterial({ color: '#6d8caa', transparent: true, opacity: 0.4, side: DoubleSide })),
       metal: keep(new MeshBasicMaterial({ color: '#3f556b' })),
@@ -88,6 +93,8 @@ function build(mode: RenderMode, keep: <T extends Material>(m: T) => T): Kit {
         }),
       ),
       core: keep(new MeshStandardMaterial({ color: '#b3aea6', roughness: 0.93 })),
+      context: keep(new MeshStandardMaterial({ color: '#b9b5ae', roughness: 0.95 })),
+      contextLine: keep(new LineBasicMaterial({ color: '#5d646b' })),
       slab: keep(new MeshStandardMaterial({ color: '#bdb8b0', roughness: 0.9 })),
       panel: keep(
         new MeshStandardMaterial({
@@ -120,6 +127,8 @@ function build(mode: RenderMode, keep: <T extends Material>(m: T) => T): Kit {
     // A shade off the wall white: on a study model the core is the same
     // material, read only by its shadow and its edge.
     core: keep(new MeshStandardMaterial({ color: '#e4e1dd', roughness: 0.92 })),
+    context: keep(new MeshStandardMaterial({ color: '#e3e0db', roughness: 0.96 })),
+    contextLine: keep(new LineBasicMaterial({ color: '#8a8175' })),
     slab: keep(new MeshStandardMaterial({ color: '#e9e6e2', roughness: 0.9 })),
     panel: keep(
       new MeshStandardMaterial({

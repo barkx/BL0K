@@ -378,6 +378,41 @@ and the viewport is worth more than the bar above it.
   from geometry rather than guessed at by a single factor, and a facade that
   knows where its units cannot be.
 
+## Location and surroundings
+
+Optional, and the app works without it — but it is what turns a drawing into a
+site.
+
+- **Pick on a map** — a search box and a slippy map. The crosshair does not
+  move: you pan the world under it, so "where exactly" is unambiguous at any
+  zoom. The blue square shows how much surrounding map an import will pull, in
+  real metres, so the radius is chosen against what it covers. You can also just
+  paste a latitude and longitude — right-click in Google Maps and the first line
+  is what you want.
+- **True north** — degrees clockwise from the way the plot was drawn. Zero means
+  the drawing is already oriented north-up.
+- **Import surroundings** — buildings, roads, water and rail from
+  OpenStreetMap, drawn as flat linework around the position, **at true scale and
+  true north**. Trace the plot straight over it; there is no calibration step,
+  which is the whole point. It happens by itself when you pick a place.
+- **What it does not do.** Nothing is extruded: the surroundings are a drawn map
+  rather than a field of grey boxes competing with the scheme. The code to
+  extrude tagged buildings is there and tested, switched off in
+  `src/geo/build.ts`.
+- **Context never leaves.** It is excluded from every metric, every clash check
+  and every export. That is partly good manners and partly the licence — OSM is
+  ODbL, and its geometry inside an IFC handed to a client would carry
+  obligations along with it.
+- **Georeferencing.** With a position set, the IFC carries `RefLatitude`,
+  `RefLongitude` and a true-north direction, so the model lands where it belongs
+  in a receiving application rather than at that application's origin.
+
+Two services, both keyless: **Nominatim** to search, **Overpass** to fetch. They
+are the only network the app ever touches, they are touched only when you press
+something, and everything else works offline. Overpass is free and busy — a
+timeout is usually a busy minute, so one retry happens automatically.
+© OpenStreetMap contributors.
+
 ## Placement and elevation overrides
 
 Click a face in the viewport. The panel shows that elevation's length, module

@@ -122,6 +122,49 @@ export class MeshBuilder {
     this.count += 6
   }
 
+  /**
+   * A single triangle. Quads cover almost everything this app builds, but a
+   * triangulated cap — an OSM building's roof, say — has no fourth corner to
+   * invent, and folding one in would emit a degenerate half.
+   */
+  tri(a: V3, b: V3, c: V3, hint?: V3) {
+    const e1x = b[0] - a[0], e1y = b[1] - a[1], e1z = b[2] - a[2]
+    const e2x = c[0] - a[0], e2y = c[1] - a[1], e2z = c[2] - a[2]
+    let nx = e1y * e2z - e1z * e2y
+    let ny = e1z * e2x - e1x * e2z
+    let nz = e1x * e2y - e1y * e2x
+    const l = Math.sqrt(nx * nx + ny * ny + nz * nz)
+    if (l < 1e-9) return
+    nx /= l
+    ny /= l
+    nz /= l
+
+    let [p0, p1, p2] = [a, b, c]
+    if (hint && nx * hint[0] + ny * hint[1] + nz * hint[2] < 0) {
+      ;[p1, p2] = [p2, p1]
+      nx = -nx
+      ny = -ny
+      nz = -nz
+    }
+
+    if ((this.count + 3) * 3 > this.pos.length) this.grow()
+    let p = this.count * 3
+    let t = this.count * 2
+    for (const v of [p0, p1, p2]) {
+      this.pos[p] = v[0]
+      this.pos[p + 1] = v[1]
+      this.pos[p + 2] = v[2]
+      this.nrm[p] = nx
+      this.nrm[p + 1] = ny
+      this.nrm[p + 2] = nz
+      this.uv[t] = v[0]
+      this.uv[t + 1] = v[2]
+      p += 3
+      t += 2
+    }
+    this.count += 3
+  }
+
   toGeometry(): BufferGeometry {
     const g = new BufferGeometry()
     // Views onto the accumulated buffers — no copy.

@@ -29,6 +29,9 @@ current as the app changes, and record any deviation in `README.md`.
 | Site rules | Setback, separation, height cap, FAR and coverage limits; zero is off |
 | Interaction | A tab is a tool: it scopes the viewport's handles and drags. Selection is always live |
 | Core | A rectangular shaft on the perimeter or the spine, draggable along its track. Massing only |
+| Location | A site can carry a latitude, longitude and true north. Georeferences every export |
+| Context | OpenStreetMap surroundings, fetched on request. Drawn and traced over; never measured, never exported |
+| Network | Only on an explicit press. Nothing loads, polls or phones home by itself |
 | Export | glTF, metrics as CSV, save/load the whole site as JSON |
 | Units | Metric throughout (metres, m², internally always metres) |
 | Backend | None. A static site. Anything needing a server is a scope decision |
@@ -38,7 +41,11 @@ current as the app changes, and record any deviation in `README.md`.
   M12** — as a massing shaft only, the volume those things would occupy. The
   things themselves stay out.
 - Terrain, slope, cut and fill. The ground is flat.
-- Neighbouring building volumes as 3D context.
+- Neighbouring building volumes as 3D context. **Approached but not crossed at
+  M15**: OpenStreetMap surroundings arrive as flat linework, not volumes. The
+  extrusion path exists and is tested, behind `EXTRUDE_BUILDINGS` in
+  `src/geo/build.ts`, and is off by decision — turning it on is what would
+  actually reopen this.
 - Differentiated ground-floor plinth (retail).
 - Cost estimation.
 - Multi-user collaboration — it needs a backend, and this has none.
@@ -347,6 +354,7 @@ Do these cheaply now so the deferred features are not rewrites:
 | **M11 Rules & reporting** | Site rules (setback, separation, height cap, FAR, coverage) checked like clashes; NIA from a per-building efficiency factor; metrics as CSV; config v4 |
 | **M12 Core** | A shaft of stairs, lift and risers as massing: count, size, overrun, and a perimeter or centre track it is shared along and can be dragged on. A perimeter shaft blanks the facade it meets — no windows, no units behind a lift. NIA becomes `(GFA − core) × efficiency`. Config v5. Reopens part of a §1 non-goal, by decision |
 
+| **M15 Location and context** | A site carries latitude, longitude and true north, which georeferences the IFC. A map picker with search to choose it, and OpenStreetMap surroundings fetched from Overpass and drawn as linework to trace over — at true scale and true north, which is the hand-calibration step gone. Config v7 |
 | **M13 Tabs as tools** | The open section scopes what the viewport does. Selection and camera stay live everywhere; handles and drags belong to their tab. Clicking drills in — ground and first click to Placement, again to Massing, a face to Facade — and the plot boundary opens Site |
 
 ### In progress
@@ -431,9 +439,10 @@ absence caps the tool's usefulness no matter how good everything else gets.
 1. **IFC export.** See above. Decide dependency vs. own writer first.
 2. **Sun hours and shadow.** The cheapest of the analyses and the most visible,
    and the hook in §7 is already in place waiting to be claimed.
-3. **Geolocated context via OpenStreetMap.** Overpass needs no API key, so it
-   keeps the no-credentials rule intact. Closes the biggest workflow gap:
-   today the site arrives as a hand-calibrated image.
+3. ~~**Geolocated context via OpenStreetMap.**~~ **Done in M15.** Overpass and
+   Nominatim both need no key, so the no-credentials rule held. The gap it was
+   meant to close — a site arriving as a hand-calibrated image — is closed:
+   surroundings arrive already at true scale and true north.
 4. **Unit mix to target ratios.** Modules are already addressable as
    `(elevation, floor, index)` — that address was kept for exactly this. Turns
    the crude estimate into a real number.
@@ -462,6 +471,22 @@ absence caps the tool's usefulness no matter how good everything else gets.
 ---
 
 ## 10. Open questions
+
+**Location and context**
+
+0. **Do the surroundings ever become volumes?** `EXTRUDE_BUILDINGS` is off. If
+   it goes on, `project.md` §1's neighbour-volume non-goal is genuinely
+   reopened, and the ODbL question below gets sharper.
+0. **Does OSM data ever reach an export?** Today it cannot: context is excluded
+   from every metric and every file. That is a licence decision as much as a
+   design one — OSM is ODbL, and its geometry inside an IFC handed to a client
+   would carry obligations with it. Relaxing this is easy and hard to undo.
+0. **Tile policy.** The picker uses OpenStreetMap's own raster tiles, whose
+   policy asks heavy users to seek permission first. Light use today; a
+   user-supplied tile URL is the obvious escape hatch if the app gets traffic.
+0. **Overpass reliability.** The free instance 504s under load and rate-limits
+   per address. One retry after a pause handles most of it. A paid or
+   self-hosted instance would be the answer if this becomes a real workflow.
 
 **Building**
 

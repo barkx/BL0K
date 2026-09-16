@@ -1,5 +1,7 @@
 import { DEFAULTS, resolveParams, type Params } from '../store/params'
 import { rectanglePoly, type Poly, type Vec2 } from '../lib/poly'
+import { DEFAULT_RADIUS, type GeoAnchor } from '../geo/project'
+import type { OsmContext } from '../geo/overpass'
 
 /**
  * One building placed on the site.
@@ -91,6 +93,28 @@ export function resolveRules(raw: SiteRules): SiteRules {
   }
 }
 
+/**
+ * The single place a geo anchor is made sane, alongside `resolveParams()` and
+ * `resolveRules()`. Latitude past the poles or longitude past the date line is
+ * a typo rather than a location.
+ */
+export function resolveGeo(raw: GeoAnchor): GeoAnchor {
+  const clamp = (v: number, limit: number) =>
+    Number.isFinite(v) ? Math.min(limit, Math.max(-limit, v)) : 0
+  let trueNorth = Number.isFinite(raw.trueNorth) ? raw.trueNorth % 360 : 0
+  if (trueNorth > 180) trueNorth -= 360
+  if (trueNorth < -180) trueNorth += 360
+  const radius = Number.isFinite(raw.radius) ? raw.radius : DEFAULT_RADIUS
+  return {
+    lat: clamp(raw.lat, 90),
+    lon: clamp(raw.lon, 180),
+    trueNorth,
+    // A square kilometre of OSM is already a big query; ten would be unkind to
+    // a free service and useless on a site plan.
+    radius: Math.min(2000, Math.max(50, radius)),
+  }
+}
+
 export interface Site {
   /** Plot boundary as a plan polygon; drawn and edited on the ground. */
   plot: Poly
@@ -99,6 +123,19 @@ export interface Site {
   underlay: Underlay | null
   /** Planning limits. All zero — every rule off — until the user sets them. */
   rules: SiteRules
+  /**
+   * Where on the earth this is, and which way north points. Null until set —
+   * a plot drawn from imagination has no coordinates, and pretending otherwise
+   * would put a made-up position into every export.
+   */
+  geo: GeoAnchor | null
+  /**
+   * Surroundings imported from OpenStreetMap. Context only: drawn and traced
+   * over, never measured, never exported. It rides in the config like the
+   * underlay does, so a saved scheme opens with its surroundings and without a
+   * connection.
+   */
+  context: OsmContext | null
 }
 
 // Big enough to hold the default L-shape (40 x 53 m) with room to place a
@@ -131,6 +168,8 @@ export function defaultSite(): Site {
     buildings: [makePlacement({ name: 'Building A' })],
     underlay: null,
     rules: { ...NO_RULES },
+    geo: null,
+    context: null,
   }
 }
 

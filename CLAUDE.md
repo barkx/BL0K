@@ -34,6 +34,11 @@ They are invisible from inside `src/`, and each one goes stale silently.
 3. **The homepage quotes facts and figures from this app** — parameter ranges,
    and a real scheme's metrics written into its markup. Changing a default or a
    clamp can make the homepage state something untrue. Flag it.
+4. **The homepage's FAQ answers "does it work offline" and "where does my data
+   go".** Since M15 both need a qualification: the app still works offline, but
+   searching for a place and importing surroundings reach Nominatim and
+   Overpass. No account, no upload of the user's work — a bounding box goes out,
+   nothing else. Say so; it is the homepage's to write.
 
 ### Do not tidy these away
 
@@ -63,6 +68,21 @@ They are invisible from inside `src/`, and each one goes stale silently.
   `geometry/`. Do not rotate masses within a building.
 - Site area comes from the plot polygon. Render mode is store state. Neither is
   a per-building parameter.
+- **The network is touched only on an explicit press.** Never on load, never on
+  a keystroke, never in the background, never to "keep something fresh". Two
+  services are used, both keyless — Nominatim to search, Overpass to fetch
+  surroundings — and everything else in the app still works with the connection
+  unplugged. Adding a third, or calling either automatically, is a scope
+  decision, not a refactor.
+- **OSM data is context and never leaves.** It is drawn and traced over, and it
+  is excluded from every metric, every clash test and every export. That is the
+  licence as much as the design: OSM is ODbL, and its geometry inside an IFC
+  handed to a client would carry obligations along with it.
+- **Two projections, and they must stay apart.** `geo/project.ts` uses a local
+  tangent plane because the model is measured in metres; `geo/tiles.ts` uses Web
+  Mercator because tile servers assume it. Mercator would inflate distance by
+  1/cos(latitude) — 1.44x at Ljubljana — while looking entirely plausible. Do
+  not "unify" them.
 - **A tab is a tool.** `store.tool` scopes what the viewport does: handles and
   drags belong to their section, while selection and the camera stay live
   everywhere. Add a new viewport gesture by gating it on `tool`, never by
@@ -219,6 +239,18 @@ Refuse:
     to 0.85–0.97 now it no longer has to swallow the core. Config v5: a file
     with no `coreCount` predates cores and loads with none. Reopens part of a §1
     non-goal — massing shaft only, no stairs, lifts or corridors.
+  - **M15, location and context**: a site can carry `geo` — latitude, longitude
+    and true north — which fills `IfcSite`'s `RefLatitude`, `RefLongitude` and
+    the model context's `TrueNorth`. A map picker (`ui/LocationPicker.tsx`,
+    hand-rolled tile grid, no map library) with Nominatim search sets it, and
+    picking a place imports automatically. Overpass then fetches surroundings,
+    stored as **degrees not projected metres** so turning true north swings them
+    with it. Drawn as flat linework: `EXTRUDE_BUILDINGS` in `geo/build.ts` is
+    **off by decision**, and the extrusion path below it is intact and tested.
+    Config v7. Things that bit: Overpass 504s under load and rate-limits per
+    address, so there is one retry after a pause and a client-side cooldown —
+    and 504 and 429 must keep saying different things, because lumping them
+    together sent me chasing the wrong cause for an hour.
   - **M13, tabs as tools**: the open section is `store.tool`, not local sidebar
     state, because the viewport reads it. Plot handles only in Site, block drag
     only in Placement, core drag only in Massing, face override only in Facade;
