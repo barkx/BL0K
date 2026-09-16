@@ -117,14 +117,21 @@ not need running again.
 Both `.bat` files are interactive, so they stall in a non-interactive shell. Run
 the equivalent git commands directly in that case.
 
-To link Vercel (once):
+Vercel is linked, and every push to `main` deploys. Pushes to other branches
+get preview URLs.
 
-1. vercel.com → **Add New** → **Project** → **Import Git Repository**
-2. Pick `barkx/BL0K`. The framework preset should read **Vite**.
-3. Leave build command and output directory alone — [`vercel.json`](vercel.json)
-   already pins `npm run build` and `dist`.
-4. Deploy. From then on every push to `main` deploys automatically, and pushes
-   to other branches get preview URLs.
+**Two Vercel projects build this one repo**, and the difference between them is
+the root directory:
+
+| Project | Root directory | Domain |
+|---|---|---|
+| the app | the repo root | `app.urbgen.com` |
+| the homepage | `homepage/` | `urbgen.com` |
+
+Both [`vercel.json`](vercel.json) files carry an `ignoreCommand` so a push that
+touched only one project does not rebuild the other. Without it the deploy
+history stops being useful for working out what broke. `homepage/` is a separate
+project with its own spec and its own agent — see [`CLAUDE.md`](CLAUDE.md) §0.
 
 Deployed-app secrets go in the Vercel dashboard under **Project → Settings →
 Environment Variables**, never in the repo. Locally they belong in `.env.local`,
@@ -467,6 +474,21 @@ keeps the value you asked for; the building uses the resolved one.
   group per building positioned and rotated as on the plot, with balcony
   instances baked into merged meshes so any downstream tool can open it. The
   exporter is code-split, so it only downloads when you click.
+- **Export IFC (.ifc)** — the site as an IFC4 Reference View file: a project,
+  a site, a building per block placed and rotated as on the plot, a storey per
+  level, floor and roof slabs, exterior walls, and every window as a real
+  `IfcOpeningElement` with an `IfcWindow` filling it. This is the export you
+  continue a project from; the glTF is for looking at.
+
+  Written by hand rather than through a library, so it adds no dependency and
+  runs offline like everything else. GlobalIds are derived from the model, not
+  generated fresh, so saving a scheme and re-exporting it later updates the same
+  elements downstream instead of replacing them — and renaming a building does
+  not disturb them either.
+
+  Not in it yet: balconies, loggia recesses and their windows, cores, the plot
+  boundary, and property sets carrying the metrics. The app models no wall or
+  slab thickness, so the file states an assumed one — see § Deviations.
 - **Export metrics (.csv)** — the metrics panel as a spreadsheet: four tables in
   one file — site totals, a row per building, every rule with its limit, worst
   case and met / breach / off status, then the warnings. Numbers are plain, with
@@ -576,6 +598,14 @@ building had to be built from something else, the slider says so underneath.
   the head allowance that forces the issue.
 - **Windows are merged rather than instanced.** See "Walls and glass are
   merged" above — same draw-call count, less per-frame work.
+- **The IFC export invents a wall and a slab thickness.** The app models
+  facades as zero-thickness panels and does not build floors at all — only
+  levels. IFC has no way to describe a wall without one, so `exportIfc.ts`
+  states `WALL_THICKNESS` and `SLAB_THICKNESS` as named constants, quotes both
+  in the UI beside the button, and says so here. Anything downstream measuring
+  a wall or a slab from an exported file is measuring this assumption, not a
+  result the app computed. Making them real parameters is the honest fix, and
+  it is a massing decision rather than an export one.
 - **A second clamping function, `resolveRules()`.** The rule is one clamping
   point, `resolveParams()`. Site rules are not building parameters — they are
   site state, they never reach a geometry builder, and folding them into

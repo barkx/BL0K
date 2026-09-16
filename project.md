@@ -349,12 +349,32 @@ Do these cheaply now so the deferred features are not rewrites:
 
 | **M13 Tabs as tools** | The open section scopes what the viewport does. Selection and camera stay live everywhere; handles and drags belong to their tab. Clicking drills in — ground and first click to Placement, again to Massing, a face to Facade — and the plot boundary opens Site |
 
-### Next
+### In progress
 
-**M14 — IFC export.** The gap in §9 that caps everything else. Decide a
-dependency versus an own IFC4 writer before any code: a hand-written STEP
-physical file keeps the no-dependency, offline rule intact, but "valid file" and
-"opens cleanly in Revit" are different bars.
+**M14 — IFC export.** The gap in §9 that caps everything else. Decided: **IFC4
+Reference View, written by hand, no dependency** — a STEP physical file is text,
+and keeping it in-house holds the no-dependency, offline rule. `src/io/exportIfc.ts`.
+
+| Stage | | |
+|---|---|---|
+| 1 | **Done** | Spatial structure, SI units, storeys, floor and roof slabs, exterior walls, each building placed and rotated as on the plot |
+| 2 | **Done** | Every window as an `IfcOpeningElement` voiding its wall with an `IfcWindow` filling it — the receiving application cuts the hole itself |
+| 3 | Next | **Balconies and loggias**, then cores, the plot on `IfcSite`, property sets carrying the metrics, and a massing-versus-full detail switch for file size |
+
+Three things stage 3 inherits:
+
+- **Loggia windows are skipped**, deliberately. Their `setback` puts them at the
+  back of a recess the export does not cut, so punching them through the facade
+  plane would put a hole in a wall they do not belong to. Cutting the recess is
+  the first half of the balcony work.
+- **Wall and slab thickness are invented** by the exporter, because the app
+  models neither. Recorded in README § Deviations. Making them real massing
+  parameters is the honest fix and it is a decision for §1, not for the writer.
+- **Size.** A 30-floor courtyard emits 2 220 windows and 1.3 MB. Workable, but
+  it is the reason the detail switch is in stage 3 rather than later.
+
+"Valid file" and "opens cleanly in Revit" remain different bars. The first is
+checked here; the second is checked by importing, and only by importing.
 
 DXF import — plot boundary and context linework from CAD — sits behind it, at
 its place in the §9 order. It needs a parser, which would be the first real new

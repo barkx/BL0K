@@ -14,6 +14,7 @@ import type {
 import { mm } from '../lib/units'
 import { download, parseConfig, serialize, stamp } from '../io/config'
 import { siteCsv } from '../io/exportCsv'
+import { siteIfc, SLAB_THICKNESS, WALL_THICKNESS } from '../io/exportIfc'
 import { BuildingList, PlacementControls, PlotControls, RuleControls } from './SitePanel'
 import { UnderlayPanel } from './UnderlayPanel'
 import {
@@ -247,7 +248,27 @@ function SettingsPanel() {
           >
             {busy ? 'Exporting…' : 'Export glTF (.glb)'}
           </button>
-          <div className="hint">One named group per building, placed as on the plot.</div>
+          <div className="hint">
+            One named group per building, placed as on the plot. Triangles, not a
+            building — for a model you can carry on with, use IFC.
+          </div>
+          <button
+            className="ghost"
+            onClick={() =>
+              // Like the CSV and unlike the glTF: string building, no library,
+              // so there is nothing to code-split.
+              download(`urbgen-site-${stamp()}.ifc`, siteIfc(build), 'application/x-step')
+            }
+          >
+            Export IFC (.ifc)
+          </button>
+          <div className="hint">
+            IFC4: storeys, floor slabs, exterior walls, and every window as a
+            real opening the receiving application cuts for itself. The app
+            models no thickness, so the export assumes {mm(WALL_THICKNESS)} walls
+            and {mm(SLAB_THICKNESS)} slabs — anything downstream measuring those
+            is measuring the assumption. Cores and balconies come next.
+          </div>
           <button
             className="ghost"
             onClick={() =>

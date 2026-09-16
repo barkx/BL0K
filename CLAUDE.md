@@ -188,7 +188,7 @@ Refuse:
 
 ## 6. Project State
 
-- **M1–M12 complete**, see `project.md` §8.
+- **M1–M13 complete**, see `project.md` §8.
   - **M1–M7, the building**: six presets with per-floor junction detection,
     module-driven facade with real openings, projecting and loggia balconies,
     three render modes, metrics, glTF export, config I/O, per-elevation
@@ -219,11 +219,6 @@ Refuse:
     to 0.85–0.97 now it no longer has to swallow the core. Config v5: a file
     with no `coreCount` predates cores and loads with none. Reopens part of a §1
     non-goal — massing shaft only, no stairs, lifts or corridors.
-- **UI**: the sidebar is an icon rail with six sections — Site, Placement,
-  Massing, Facade (balconies live here), Units, Settings. Rules sit in Site;
-  the core sits in Massing; the efficiency factor sits in Units. The top bar is
-  deliberately bare — render mode and the PNG snapshot are in Settings, and
-  double-clicking the ground frames the site, so there is no Fit button.
   - **M13, tabs as tools**: the open section is `store.tool`, not local sidebar
     state, because the viewport reads it. Plot handles only in Site, block drag
     only in Placement, core drag only in Massing, face override only in Facade;
@@ -235,8 +230,13 @@ Refuse:
     Clicking drills in: ground and first click to Placement, second to Massing,
     a vertical face to Facade with that elevation open. Consequence to know
     about: a click on the ground *inside* the plot leaves the Site tab, because
-    the ground is the site surface and returns you to the site scale. Inside a panel,
-  sections are flat `Block`s, not nested accordions. Roads and parking are
+    the ground is the site surface and returns you to the site scale.
+- **UI**: the sidebar is an icon rail with six sections — Site, Placement,
+  Massing, Facade (balconies live here), Units, Settings. Rules sit in Site;
+  the core sits in Massing; the efficiency factor sits in Units. The top bar is
+  deliberately bare — render mode and the PNG snapshot are in Settings, and
+  double-clicking the ground frames the site, so there is no Fit button. Inside
+  a panel, sections are flat `Block`s, not nested accordions. Roads and parking are
   intended for Placement. Horizontal rail in the bottom sheet under 900 px.
 - **Brand**: URBGEN — short for urban generator, though the tagline stays
   "Parametric building design" precisely so nothing reads as generative AI.
@@ -245,7 +245,14 @@ Refuse:
   flat faces, no strokes — `src/ui/Logo.tsx`, same shape as the favicon. The
   palette is unchanged drawing-office greys and blueprint ink. There is no AI
   in this app and the branding must not claim otherwise.
-- **Next**: M14 IFC export — see the gap below. DXF import sits behind it.
+- **Next**: M14 IFC export, **stages 1 and 2 landed** — see `project.md` §8.
+  `src/io/exportIfc.ts` writes IFC4 Reference View by hand, no dependency:
+  storeys, slabs, exterior walls, and windows as real openings. Stage 3 is
+  balconies and loggias first, then cores, the plot, property sets and a detail
+  switch. Two things to know before touching it: **loggia windows are skipped on
+  purpose** until the recess is cut, and **GlobalIds are derived from
+  `placement.id` alone** so a rename does not reissue every element's identity.
+  DXF import sits behind all of it.
 - **Biggest gap, by decision**: no **IFC export**. glTF is a visualisation
   format — nobody continues a project from it, so today the tool dead-ends
   rather than feeding Revit or ArchiCAD. Treated as a blocker, not a backlog
@@ -273,7 +280,6 @@ Refuse:
   spec's three facade defaults cannot coexist; windows are merged, not
   instanced; site rules get a second clamping function, `resolveRules()`.
 - **Not done yet**:
-  - Vercel project is **not linked** — one dashboard step, see README.md ch.1.
   - `npx plugins add vercel/vercel-plugin` was deliberately not run. User's call.
   - No test runner. `project.md` §9 answers are provisional.
   - 30-floor courtyard rebuilds in ~25 ms warm. If that needs to improve, the
