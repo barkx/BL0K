@@ -106,20 +106,25 @@ two-row layouts.
    shape, export) and the two claims that no other section makes: free with no
    account and offline once loaded, and identical inputs giving an identical
    building.
-2. **What it does.** Two short blocks of prose, side by side: massing presets,
-   and the site. No figure for now.
+2. **What it does.** **The app's own eight tabs, each with a line icon and one
+   sentence** — Site, Placement, Massing, Program, Facade, Units, Drawings,
+   Settings, in the order the decisions happen. Then one line about design
+   options and undo, which belong to the window rather than to any tab.
 
-   **Chapters 2, 3 and 4 carry no images, as of 12 September 2026.** The
-   drawings that were there did not match what the app actually produces, and a
-   drawing that misrepresents the thing it illustrates is worse than no drawing
-   — it is a claim, and a wrong one. They come out until they can be redrawn
-   against the real output. The prose was rewritten to stand on its own rather
-   than to caption something that is no longer there.
+   Chosen 17 September 2026 after prose, then drawings, then screenshots had
+   each been tried and cut. It explains the app by its own structure instead of
+   describing it from outside, which is both shorter and harder to get wrong:
+   if a tab is added or renamed, the list is obviously stale rather than subtly
+   so.
 
-   The intent is unchanged: **the page is drawn, not screenshotted.** Drawings
-   hold the brand, read at any width where a 1600 px desktop UI does not, weigh
-   a fraction, and do not rot when the app's UI moves. When the figures return
-   they return as drawings, and the files are still in `assets/`.
+   **Icons are drawn here, not imported.** Same rule as the mark and the
+   palette — `homepage/` has no build step and cannot reach into `src/`. They
+   are inline SVG, so they cost no request and inherit the ink colour.
+
+   **No interface screenshots.** Tried on the 17th and cut the same day. §6's
+   staleness hazard is the standing reason; the immediate one is that a desktop
+   UI shrunk into a column is texture rather than information, which §8 already
+   recorded once about the earlier set.
 
 3. **The facade, and what you can change.** The one capability worth its own
    section, because it is the thing rivals do not have. Presented as the

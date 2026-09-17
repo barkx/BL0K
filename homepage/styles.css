@@ -375,6 +375,32 @@ body { counter-reset: sheet; }
   border-top: 1px solid var(--rule);
 }
 
+/* ---------- the eight tabs ---------- */
+
+.tabs {
+  list-style: none;
+  margin: 0 0 clamp(26px, 3.4vw, 42px);
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+.tabs li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 2px;
+  align-items: start;
+  padding: clamp(16px, 2vw, 22px) 0;
+  border-top: 1px solid var(--rule);
+}
+.tabs .ico { grid-row: 1 / span 2; color: var(--blueprint); margin-top: 1px; }
+.tabs h3 { margin: 0; font-size: clamp(17px, 1.35vw, 19px); }
+.tabs p { margin: 0; color: var(--ink-soft); max-width: 54ch; }
+
+@media (min-width: 820px) {
+  .tabs { grid-template-columns: 1fr 1fr; column-gap: clamp(28px, 4vw, 56px); }
+}
+
 /* ---------- text pairs ---------- */
 
 /* Chapters 01-03 carry no figures for now, so the prose has to hold the

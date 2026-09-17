@@ -164,67 +164,60 @@
     <div class="col">
       <h2 id="does">What it does</h2>
       <p class="lead">
-        Two things, and it tries to do both properly rather than a dozen badly:
-        a building you can shape, and a site to put it on.
+        Eight tabs, in the order the decisions actually happen. Each one scopes
+        what the viewport does, so the handles on screen are the ones belonging
+        to the thing you are doing.
       </p>
 
-      <figure class="fig shot bleed reveal">
-        <img src="/assets/ui-interface.webp" width="1200" height="810" loading="lazy" decoding="async"
-             alt="The app: an icon rail of eight tabs down the left, the Site panel showing plot area, a per-edge setback for each of four boundary edges, and the planning rules; an L-shaped building on its plot in the viewport, with a metrics panel over it.">
-        <figcaption>The Site tab, with a setback field per boundary edge.</figcaption>
-      </figure>
+      <ul class="tabs" role="list">
+        <li class="reveal">
+          <svg class="ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5 11 3.5l9 4-1 10.5-8 3-7.5-3.5Z"/><circle cx="3" cy="8.5" r="1.6"/><circle cx="11" cy="3.5" r="1.6"/><circle cx="20" cy="7.5" r="1.6"/><circle cx="19" cy="18" r="1.6"/><circle cx="3.5" cy="17.5" r="1.6"/></svg>
+          <h3>Site</h3>
+          <p>Draw the plot or trace it over a scaled map. Setbacks, separation, height and area caps — for the whole boundary, or a different figure per edge.</p>
+        </li>
+        <li class="reveal">
+          <svg class="ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="10" width="9" height="7" rx="0.5"/><path d="M4 20h16"/><path d="M14.5 6.5a5 5 0 0 1 5 5"/><path d="M12.8 5.2 14.6 6.5 13.3 8.3"/></svg>
+          <h3>Placement</h3>
+          <p>Put buildings on it, rotate and drag them. Clashes and corners falling outside the plot are found as you move.</p>
+        </li>
+        <li class="reveal">
+          <svg class="ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V9l6-3v14"/><path d="M10 20V6l6 3v11"/><path d="M16 20v-8l4 2v6"/><path d="M3 20h18"/></svg>
+          <h3>Massing</h3>
+          <p>Six footprints, wings with their own depths, floors, cores, a setback top. Plus a freeform option the app labels experimental.</p>
+        </li>
+        <li class="reveal">
+          <svg class="ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 9h16M4 14h16"/><path d="M4 14h16v6H4z" fill="currentColor" opacity=".18" stroke="none"/></svg>
+          <h3>Program</h3>
+          <p>Give a run of floors to retail, office or amenity. They take their own shopfront glazing and never a balcony.</p>
+        </li>
+        <li class="reveal">
+          <svg class="ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="1"/><path d="M8 7h3v3.5H8zM13 7h3v3.5h-3zM8 13.5h3V17H8zM13 13.5h3V17h-3z"/></svg>
+          <h3>Facade</h3>
+          <p>Module width, windows per module, sill, reveal, balconies — and any elevation can differ from the rest.</p>
+        </li>
+        <li class="reveal">
+          <svg class="ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="1"/><path d="M8.5 8v8M13 8v8M17 8v8"/><path d="M3 8h5.5v8H3z" fill="currentColor" opacity=".22" stroke="none"/></svg>
+          <h3>Units</h3>
+          <p>A target mix by apartment type, reported against what the building actually fits, and the efficiency factor NIA is built from.</p>
+        </li>
+        <li class="reveal">
+          <svg class="ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 3.5h11l4 4v13h-15z"/><path d="M15.5 3.5v4h4"/><path d="M7.5 17.5h9M7.5 14.5h5"/></svg>
+          <h3>Drawings</h3>
+          <p>Site plan, floor plan, elevation and section, at a scale that survives printing.</p>
+        </li>
+        <li class="reveal">
+          <svg class="ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+          <h3>Settings</h3>
+          <p>Render mode — white, shaded or diagram — and a PNG of the view.</p>
+        </li>
+      </ul>
 
-      <div class="pair">
-        <article class="say reveal">
-          <h3>Six footprints, then take them apart</h3>
-          <p>
-            Bar, L, T, U, courtyard, stacked. Each is built from masses with their
-            own size, floor count and base level, so a preset is a starting point
-            rather than a template you are stuck inside. Wings carry their own
-            depths, and the top floors can step in from every face that is not a
-            junction.
-          </p>
-          <p>
-            Where two wings meet, the junction is found floor by floor. The
-            internal elevation goes blank instead of being drawn twice, and the
-            overlap is counted once in the area.
-          </p>
-          <p>
-            There is also a freeform option — trace a centreline and the building
-            follows it at any angle, corners mitred. The app labels it
-            experimental and so does this page: it is the newest way to shape a
-            building and the least worn in.
-          </p>
-        </article>
-
-        <article class="say reveal">
-          <h3>A site, not just one building</h3>
-          <p>
-            Click out the plot boundary, or trace it over a map or site plan you
-            have scaled from two known points. Corners drag, and the boundary can
-            be concave.
-          </p>
-          <p>
-            Place as many buildings on it as you like, rotate and drag them, and
-            every metric and planning check follows as you move. The boundary
-            setback can be one figure for the whole plot or a different one per
-            edge — and zero on an edge is a real answer, meaning a party boundary
-            a building may sit right on.
-          </p>
-        </article>
-
-        <article class="say reveal">
-          <h3>Several schemes, not one at a time</h3>
-          <p>
-            Keep design options side by side in the same session: switch between
-            them, duplicate one as the start of a variation, rename or discard.
-            Each carries its own undo, fifty steps deep.
-          </p>
-          <p>
-            Every option is saved with the file, so a comparison survives the round
-            trip rather than living only in the session you made it in.
-          </p>
-        </article>
+      <div class="prose">
+        <p>
+          Above all of it: several design options in one session, each with its
+          own undo fifty steps deep, saved together so a comparison survives the
+          round trip.
+        </p>
       </div>
     </div>
   </section>
@@ -311,16 +304,6 @@
         change anything. These are the real numbers from one scheme — an L-plan
         block of eight floors on a 9 900 m² plot — with what each one is made of.
       </p>
-
-      <figure class="fig shot narrow reveal">
-        <img src="/assets/ui-metrics.webp" width="260" height="365" loading="lazy" decoding="async"
-             alt="The metrics panel: GFA with a retail figure beneath it, plot ratio, coverage, NIA, core, a unit count, then one row per apartment type with its count and achieved share, and the tallest height.">
-        <figcaption>
-          A different scheme from the table below — twenty floors, a retail ground
-          floor, and a target mix — so the retail and per-type rows have something
-          to show.
-        </figcaption>
-      </figure>
 
       <table class="metrics reveal">
         <caption>One building, 9 900 m² plot</caption>

@@ -332,3 +332,19 @@ scheme so it cannot be read against the table below it.
 `… · rebuilt in 19.7 ms`, and §5 forbids an unmeasured, unattributed performance
 figure on the page. Cropping 46 px off the bottom removes it. Anything else
 published from that folder needs the same check.
+
+**Third pass, same day: icons.** The two interface snapshots came back out and
+the metrics chapter went back to its table alone. Chapter 1 is now the app's
+eight tabs — icon, name, one sentence — which explains the app by its own
+structure rather than describing it from outside.
+
+The icons are **drawn here**, inline, not taken from `src/ui/Icons.tsx`: same
+rule as the mark and the palette, and inline SVG costs no request. Two were
+redrawn immediately because Facade and Units had both come out as grids and read
+as the same thing — Units is now a segmented bar, which is what a mix looks like.
+
+Worth recording, because four approaches have now been tried for this chapter:
+prose alone, drawn figures, app screenshots, and icons. Each of the first three
+was cut for a different reason — thin, inaccurate, and unreadable at column
+width respectively. If a fifth is proposed, that history is the argument to
+answer.
