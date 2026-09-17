@@ -153,6 +153,7 @@
     var rule = document.getElementById('m-rule')
     var HOLD = 2600, FADE = 420, SPAN = HOLD + FADE
     var shown = -1
+    var big = metrics.querySelector('.metric-big')
 
     function put(i) {
       shown = i
@@ -162,6 +163,16 @@
       rule.textContent = M[i][3]
     }
 
+    // The block beside the figures is the very scheme they describe: the app's
+    // default, two wings of 40 x 13 on its real 110 x 90 plot. Static, because
+    // the numbers are what move here.
+    var stage = document.getElementById('metrics-block')
+    if (stage && window.URBGEN) {
+      var r = window.URBGEN.block('ref', 8, 6, 13, [110, 90])
+      stage.setAttribute('viewBox', r.viewBox)
+      stage.innerHTML = r.svg
+    }
+
     document.documentElement.classList.add('js-metrics')
     put(0)
     if (still.matches) return
@@ -169,7 +180,7 @@
       var i = Math.floor(ms / SPAN) % M.length
       var into = ms % SPAN
       var out = into > HOLD ? 1 - (into - HOLD) / FADE : 1
-      metrics.style.opacity = String(Math.max(0, out))
+      big.style.opacity = String(Math.max(0, out))
       if (i !== shown && into < HOLD) put(i)
     })
   })()
@@ -245,6 +256,7 @@
     ga.textContent = N2(ra.gfa) + ' m²'
 
     var shown = -1
+    var big = metrics.querySelector('.metric-big')
     function showB(i) {
       shown = i
       var b = B[i], r = window.URBGEN.block(b.preset, b.floors, b.mod, b.depth)

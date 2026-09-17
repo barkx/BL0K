@@ -454,3 +454,21 @@ new scene did not, and looked broken in every headless capture.
 hide, parameter lists stand open, the metrics table and spec list are
 untouched, the hero falls back to its drawing. No overflow at 320 px, no
 heading-level jumps, no dead nav links.
+
+**Metrics chapter, restructured the same day.** Static plot and building on the
+left, the figures shuffling on the right, and **no panel behind the figures** —
+they sit on the page, which is what makes them read as the page's own claim
+rather than as a picture of one.
+
+The block beside them is **the very scheme the figures describe**: the app's
+default, two wings of 40 × 13 on its real 110 × 90 m plot. That took two
+additions to `block.js` — a `ref` plan whose footprint is exactly 1 040 m², and
+an optional explicit plot so the boundary is the app's rather than a margin
+invented around the massing. A real boundary is far larger than the massing, so
+the fixed viewBox could not hold it and `block()` fits its own box when a plot
+is given.
+
+Worth the trouble: at 1 040 m² on 9 900 m², the building covers 10.5% of the
+drawn plot, so the coverage figure can be read off the picture beside it. A
+block drawn at any other size would have quietly contradicted every number in
+the chapter.

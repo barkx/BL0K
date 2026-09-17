@@ -496,16 +496,34 @@ body { counter-reset: sheet; }
 
 /* ---------- the metric, one at a time ---------- */
 
-#metrics-scene { transition: opacity .2s linear; }
-.metric-big {
+#metrics-scene { margin-bottom: clamp(26px, 3.4vw, 42px); }
+
+.metric-pair { display: grid; gap: clamp(18px, 3vw, 40px); align-items: center; }
+@media (min-width: 760px) {
+  .metric-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); }
+}
+
+.metric-plot {
   background: linear-gradient(#cfcfce, #c7c7c6);
   border: 1px solid var(--rule);
   border-radius: 3px;
-  padding: clamp(22px, 4vw, 44px) clamp(18px, 3vw, 36px);
-  min-height: clamp(180px, 22vw, 240px);
+  padding: clamp(12px, 1.8vw, 18px);
+}
+.metric-plot svg { display: block; width: 100%; height: auto; max-height: 40vh; }
+.metric-cap {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* No panel behind the figures: they sit on the page, which is what makes them
+   read as the page's own claim rather than as a screenshot of one. */
+.metric-big {
   display: grid;
   align-content: center;
   gap: 4px;
+  transition: opacity .2s linear;
 }
 .m-name {
   margin: 0;
@@ -516,17 +534,18 @@ body { counter-reset: sheet; }
 }
 .m-val {
   margin: 0;
-  font-size: clamp(44px, 9vw, 96px);
+  font-size: clamp(46px, 8vw, 92px);
   line-height: 1;
   font-weight: 620;
   letter-spacing: -0.035em;
   color: var(--ink-deep);
   font-variant-numeric: tabular-nums;
 }
-.m-val span:last-child { font-size: 0.34em; font-weight: 500; color: var(--ink-soft); letter-spacing: 0; }
+.m-val span:last-child { font-size: 0.32em; font-weight: 500; color: var(--ink-soft); letter-spacing: 0; }
 .m-rule {
-  margin: 6px 0 0;
-  max-width: 48ch;
+  margin: 8px 0 0;
+  max-width: 44ch;
+  min-height: 3em;
   font-size: clamp(14px, 1.2vw, 16px);
   color: var(--blueprint);
   font-variant-numeric: tabular-nums;

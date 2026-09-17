@@ -19,6 +19,7 @@
 
   // Footprints as [x0, z0, x1, z1] in metres, building-local.
   function plan(preset, d) {
+    if (preset === 'ref') return [[0, 0, 40, 13], [40, 0, 53, 40]]
     if (preset === 'bar') return [[0, 0, 48, d]]
     if (preset === 'L') return [[0, 0, 42, d], [0, d, d, 40]]
     if (preset === 'U') return [[0, 0, d, 40], [d, 40 - d, 44, 40], [44, 0, 44 + d, 40]]
@@ -69,12 +70,16 @@
   // The plot as the app draws it: a blue line on the viewport with a round
   // handle at each corner, and a soft shadow under the massing. No filled
   // plate — in the app the ground simply is the background.
-  function ground(ms) {
+  function ground(ms, plot) {
     var x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9, e = 6
     ms.forEach(function (m) {
       x0 = Math.min(x0, m[0]); z0 = Math.min(z0, m[1])
       x1 = Math.max(x1, m[2]); z1 = Math.max(z1, m[3])
     })
+    if (plot) {                      // an explicit boundary, massing centred in it
+      var mx = (x0 + x1 - plot[0]) / 2, mz = (z0 + z1 - plot[1]) / 2
+      x0 = mx; z0 = mz; x1 = mx + plot[0]; z1 = mz + plot[1]; e = 0
+    }
     var c = [[x0 - e, z0 - e], [x1 + e, z0 - e], [x1 + e, z1 + e], [x0 - e, z1 + e]]
     var shadow = ms.map(function (m) {
       return path([iso(m[0] - 2, 0, m[1] + 5), iso(m[2] - 2, 0, m[1] + 5),
@@ -102,6 +107,7 @@
             ((x0 + z0) / 2 - h + (x1 + z1 + 2 * e) / 2) / 2]
   }
 
+  var PLOT = null
   function build(preset, floors, mod, depth) {
     var h = floors * FH
     // Back to front. Emitted per mass, not grouped by face: grouping is
@@ -109,7 +115,7 @@
     var ms = order(plan(preset, depth))
     var c = centre(ms, h)
     svg.setAttribute('viewBox', n(c[0] - VW / 2) + ' ' + n(c[1] - VH / 2) + ' ' + VW + ' ' + VH)
-    var out = ground(ms)
+    var out = ground(ms, PLOT)
     ms.forEach(function (m) {
       var x0 = m[0], z0 = m[1], x1 = m[2], z1 = m[3]
       var p = function (x, y, z) { return iso(x, y, z) }
@@ -193,13 +199,34 @@
     file and the drawings generator.
   */
   window.URBGEN = {
-    block: function (preset, floors, mod, depth) {
+    block: function (preset, floors, mod, depth, plot) {
+      PLOT = plot || null
       var ms = order(plan(preset, depth)), h = floors * FH
-      var c = centre(ms, h), f = figures(preset, floors, depth)
+      var f = figures(preset, floors, depth), vb
+      if (plot) {
+        // A real boundary is far larger than the massing, so the fixed box
+        // sized for a 6 m margin cannot hold it. Fit to what is drawn.
+        var x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9
+        ms.forEach(function (m) {
+          x0 = Math.min(x0, m[0]); z0 = Math.min(z0, m[1])
+          x1 = Math.max(x1, m[2]); z1 = Math.max(z1, m[3])
+        })
+        var px = (x0 + x1 - plot[0]) / 2, pz = (z0 + z1 - plot[1]) / 2
+        var pts = [iso(px, 0, pz), iso(px + plot[0], 0, pz),
+                   iso(px + plot[0], 0, pz + plot[1]), iso(px, 0, pz + plot[1]),
+                   iso(x0, h, z0), iso(x1, h, z1)]
+        var xs = pts.map(function (q) { return q[0] }), ys = pts.map(function (q) { return q[1] })
+        var ax = Math.min.apply(0, xs) - 3, ay = Math.min.apply(0, ys) - 3
+        vb = n(ax) + ' ' + n(ay) + ' ' + n(Math.max.apply(0, xs) - ax + 6) +
+             ' ' + n(Math.max.apply(0, ys) - ay + 6)
+      } else {
+        var c = centre(ms, h)
+        vb = n(c[0] - VW / 2) + ' ' + n(c[1] - VH / 2) + ' ' + VW + ' ' + VH
+      }
       return {
         svg: build(preset, floors, mod, depth),
-        viewBox: n(c[0] - VW / 2) + ' ' + n(c[1] - VH / 2) + ' ' + VW + ' ' + VH,
-        foot: f.foot, gfa: f.gfa, tall: f.tall
+        plot: plot ? plot[0] * plot[1] : null,
+        viewBox: vb, foot: f.foot, gfa: f.gfa, tall: f.tall
       }
     }
   }
