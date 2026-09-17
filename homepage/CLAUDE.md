@@ -314,3 +314,21 @@ bug as the screenshots in September; caught the same way, by reading the file.
 
 **Sheet numbers now come from a CSS counter.** They were typed by hand and had
 already drifted — the FAQ read `07` in a six-chapter page.
+
+**Second pass the same day.** The exports chapter and the roadmap chapter were
+both cut at the user's request. A table of file extensions is inventory, not a
+claim, and a chapter about what is not built yet had already been rewritten once
+without earning its room. Five chapters again.
+
+`from-app/assets/ui/` arrived after the first read of the folder — twelve PNGs,
+six shots as full frame and crop. **Note the crops start at y=40 and so cut the
+top bar**, which is where the design-option menu lives; that feature is only
+visible in the full frames. Two are published, both re-cropped and converted
+here: the Site tab with its per-edge setback fields, and the metrics panel from
+a twenty-storey scheme with retail and a unit mix, captioned as a different
+scheme so it cannot be read against the table below it.
+
+**Both had to lose their last line.** The metrics panel footer reads
+`… · rebuilt in 19.7 ms`, and §5 forbids an unmeasured, unattributed performance
+figure on the page. Cropping 46 px off the bottom removes it. Anything else
+published from that folder needs the same check.

@@ -131,16 +131,20 @@ two-row layouts.
    each row saying what the number is made of, plus the planning limits checked
    in the same pass. **Marked up, not a screenshot** — a picture of numbers
    cannot be read by a screen reader, selected, or checked.
-5. **What you get out.** Added 17 September 2026, when the app's agent handed
-   over four real exported drawings. Six formats, and the four drawing sheets
-   shown as **the exporter's own unretouched output** — which is the only kind
-   of graphic this page will carry after the drawn figures came out for not
-   matching the app. The IFC row states what the file holds and what it does
-   not, including that it has never been through a Revit or ArchiCAD import.
-6. **What is being built next.** In the order the work is pointed at: finishing
-   the IFC file, DXF import, roads and parking. No dates — §5 forbids a roadmap
-   stated as a promise, so the section says plainly that these are not
-   commitments.
+5. **Drawings you can print.** Three exported sheets — site plan, floor plan,
+   section — shown as the exporter's own unretouched output, with the true-scale
+   claim that makes them worth having. The elevation lives in §4.3 instead,
+   where it illustrates the facade chapter's own subject. Not a list of file
+   formats: that was tried on 17 September as "What you get out" and cut the
+   same day, because a table of extensions is inventory rather than a claim.
+   The formats live in the FAQ, where somebody looking for them will look.
+
+   **There is no roadmap chapter.** "What it does not do" became "What is being
+   built next" on 12 September and was deleted on the 17th. Both framings spent
+   a chapter on what the tool is not yet, and neither earned the room. §5's ban
+   on roadmap-as-promise is unaffected — with no roadmap on the page there is
+   nothing to promise.
+
 7. **FAQ.** Six, answering what the positioning provokes: account, data,
    offline, export, price, AI.
 8. **Footer.** Portrait, name, role — *Architect | BIM Specialist* — and three
@@ -175,7 +179,9 @@ appears: free, no account, nothing uploaded; the unit count labelled an
 estimate on the row where it appears; runs in the browser and keeps working
 offline; and, **since 17 September 2026**, IFC export stated as *partial*
 rather than absent — what the file carries, what it does not, and that it has
-not been import-tested — in both the exports chapter and the FAQ. The page said
+not been import-tested. That now lives **in the FAQ only**, since the chapter
+that also carried it was cut; if the FAQ answer is ever trimmed, this claim has
+nowhere else to live and must move rather than vanish. The page said
 "there is no IFC export" until the app's agent handed over a correction; it had
 been true when written and quietly stopped being so.
 

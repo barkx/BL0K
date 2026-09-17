@@ -78,7 +78,7 @@
       "name": "What can I export?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "glTF for the geometry, IFC4 for a BIM model, measured drawings as SVG, the metrics as CSV, a PNG of the view, and JSON for the scheme itself, which reopens with everything as you left it."
+        "text": "glTF for the geometry, IFC4 for a BIM model, measured drawings as SVG, the metrics as CSV, a PNG of the view, and JSON for the scheme itself. The IFC file carries storeys, slabs, walls, every window as a real opening, balconies and georeferencing; cores, the plot boundary and property sets are not in it yet, and it has not been through a Revit or ArchiCAD import."
       }
     },
     {
@@ -119,8 +119,7 @@
       <a href="#does">What it does</a>
       <a href="#facade">Facade</a>
       <a href="#metrics">Metrics</a>
-      <a href="#out">Exports</a>
-      <a href="#next">Next</a>
+      <a href="#out">Drawings</a>
       <a href="#faq">Questions</a>
     </nav>
     <a class="bar-cta" href="https://app.urbgen.com">Open the app</a>
@@ -168,6 +167,12 @@
         Two things, and it tries to do both properly rather than a dozen badly:
         a building you can shape, and a site to put it on.
       </p>
+
+      <figure class="fig shot bleed reveal">
+        <img src="/assets/ui-interface.webp" width="1200" height="810" loading="lazy" decoding="async"
+             alt="The app: an icon rail of eight tabs down the left, the Site panel showing plot area, a per-edge setback for each of four boundary edges, and the planning rules; an L-shaped building on its plot in the viewport, with a metrics panel over it.">
+        <figcaption>The Site tab, with a setback field per boundary edge.</figcaption>
+      </figure>
 
       <div class="pair">
         <article class="say reveal">
@@ -239,6 +244,12 @@
         another application.
       </p>
 
+      <figure class="fig plate wide reveal">
+        <img src="/assets/drawings/elevation.svg" width="254" height="164" loading="lazy" decoding="async"
+             alt="An elevation exported by the app: the silhouette run by run, floor lines, every opening in its module rhythm, projecting balconies drawn solid and loggias dashed.">
+        <figcaption>An exported elevation — every opening, in the module rhythm that produced it.</figcaption>
+      </figure>
+
       <dl class="specs reveal">
         <div>
           <dt>Module width</dt>
@@ -300,6 +311,16 @@
         change anything. These are the real numbers from one scheme — an L-plan
         block of eight floors on a 9 900 m² plot — with what each one is made of.
       </p>
+
+      <figure class="fig shot narrow reveal">
+        <img src="/assets/ui-metrics.webp" width="260" height="365" loading="lazy" decoding="async"
+             alt="The metrics panel: GFA with a retail figure beneath it, plot ratio, coverage, NIA, core, a unit count, then one row per apartment type with its count and achieved share, and the tallest height.">
+        <figcaption>
+          A different scheme from the table below — twenty floors, a retail ground
+          floor, and a target mix — so the retail and per-type rows have something
+          to show.
+        </figcaption>
+      </figure>
 
       <table class="metrics reveal">
         <caption>One building, 9 900 m² plot</caption>
@@ -373,20 +394,20 @@
     </div>
   </section>
 
-  <!-- 04 What you get out ----------------------------------------------- -->
+  <!-- 04 Drawings ------------------------------------------------------ -->
   <section class="sheet tint" aria-labelledby="out">
     <p class="n" aria-hidden="true"></p>
     <div class="col">
-      <h2 id="out">What you get out</h2>
+      <h2 id="out">Drawings you can print</h2>
       <p class="lead">
-        Six formats, all written by the app itself rather than by a library, so
-        every one of them works with the connection unplugged.
+        Sheets are sized in millimetres and drawn in millimetres, so one metre is
+        exactly <span class="num">1000 ÷ scale</span> mm on the page. Print at 100%
+        and a scale rule reads true. A scale bar rides along regardless, because
+        the ratio only holds if nobody resized the sheet.
       </p>
-
       <p class="stmt">
-        The drawings below are not mock-ups. They are the exporter's own output,
-        unretouched — sized in millimetres and drawn in millimetres, so printing
-        at 100% gives a sheet you can put a scale rule on.
+        These are the exporter's own output, unretouched. Line weights are fixed
+        in millimetres, so they read the same at 1:100 and at 1:1000.
       </p>
 
       <div class="sheets">
@@ -401,86 +422,19 @@
           <figcaption>Floor plan — outline, cores, module rhythm.</figcaption>
         </figure>
         <figure class="fig plate reveal">
-          <img src="/assets/drawings/elevation.svg" width="254" height="164" loading="lazy" decoding="async"
-               alt="An elevation of one face: the silhouette run by run, floor lines, every opening, projecting balconies drawn solid and loggias dashed.">
-          <figcaption>Elevation — openings, floor lines, balconies.</figcaption>
-        </figure>
-        <figure class="fig plate reveal">
           <img src="/assets/drawings/section.svg" width="244" height="124" loading="lazy" decoding="async"
                alt="A section through the site: every mass the cut line passes through, at its real height, with floor lines and the ground.">
           <figcaption>Section — what the cut line passes through.</figcaption>
         </figure>
       </div>
 
-      <dl class="specs reveal">
-        <div>
-          <dt>IFC4</dt>
-          <dd class="num">.ifc</dd>
-          <dd class="what">Storeys, floor and roof slabs, exterior walls, every window as a real opening the receiving application cuts itself, balconies and enclosed loggias, and georeferencing. Cores, the plot boundary and property sets are not in it yet, and it has not been through a Revit or ArchiCAD import.</dd>
-        </div>
-        <div>
-          <dt>Drawings</dt>
-          <dd class="num">.svg</dd>
-          <dd class="what">Site plan, floor plan, elevation and section, at a true printed scale with a scale bar. Of the massing: no speculative room layouts, and no imported map context, which is the OpenStreetMap licence as much as a choice.</dd>
-        </div>
-        <div>
-          <dt>Geometry</dt>
-          <dd class="num">.glb</dd>
-          <dd class="what">The whole site as glTF, with each building named. A visualisation format — good for a render, not for continuing a project.</dd>
-        </div>
-        <div>
-          <dt>Metrics</dt>
-          <dd class="num">.csv</dd>
-          <dd class="what">Site totals, a row per building, every planning rule with its result, and the warnings.</dd>
-        </div>
-        <div>
-          <dt>The scheme</dt>
-          <dd class="num">.json</dd>
-          <dd class="what">Everything you drew, reopening as you left it — including every design option, so a comparison survives the round trip.</dd>
-        </div>
-      </dl>
-    </div>
-  </section>
-
-  <!-- 05 What comes next ------------------------------------------------ -->
-  <section class="sheet dense" aria-labelledby="next">
-    <p class="n" aria-hidden="true"></p>
-    <div class="col">
-      <h2 id="next">What is being built next</h2>
-      <p class="lead">
-        In the order they are being worked on. No dates — these are what the work
-        is pointed at, not commitments.
-      </p>
-
-      <ol class="queue" role="list">
-        <li class="reveal">
-          <h3>Finishing the IFC file</h3>
-          <p>
-            What it carries today is above. What it does not carry yet: cores, the
-            plot boundary, property sets to take the metrics across with the
-            geometry, and a switch between a massing model and a full one for file
-            size. It has also not been through a Revit or ArchiCAD import, and
-            writing a valid file and opening cleanly in someone else's software are
-            different bars.
-          </p>
-        </li>
-        <li class="reveal">
-          <h3>DXF import</h3>
-          <p>
-            Bring a surveyed boundary straight in, instead of tracing it over a
-            scaled image. The tracing workflow stays — it is faster when all you
-            have is a screenshot of a map.
-          </p>
-        </li>
-        <li class="reveal">
-          <h3>Roads and parking</h3>
-          <p>
-            Placement currently handles buildings on a plot. Roads and parking
-            belong in the same tab, so that coverage and the space between blocks
-            start to mean something at the site scale.
-          </p>
-        </li>
-      </ol>
+      <div class="prose">
+        <p>
+          A plan here is a plan of the massing: outline, core, module rhythm,
+          openings. No speculative room layouts, and no imported map context —
+          that last one is the OpenStreetMap licence as much as a choice.
+        </p>
+      </div>
     </div>
   </section>
 
@@ -492,7 +446,7 @@
       <details><summary>Do I need an account?</summary><p>No. There is no sign-up, no login and no trial. Open the page and it is there.</p></details>
       <details><summary>Where does my data go?</summary><p>Nowhere. There is no backend to send it to. Everything is computed in your browser, and a scheme is saved by downloading a JSON file to your machine. The site you are reading sets no cookies and makes no third-party requests.</p></details>
       <details><summary>Does it work offline?</summary><p>Once the page has loaded, yes — with two exceptions, and both only happen when you press for them: searching for a place, and importing surroundings to trace over. Those use Nominatim and OpenStreetMap's Overpass, neither of which needs an account or a key, and what goes out is a bounding box rather than anything you have drawn. Everything else works with the connection unplugged, including every export.</p></details>
-      <details><summary>What can I export?</summary><p>glTF for the geometry, IFC4 for a BIM model, measured drawings as SVG, the metrics as CSV, a PNG of the view, and JSON for the scheme itself, which reopens with everything as you left it.</p></details>
+      <details><summary>What can I export?</summary><p>glTF for the geometry, IFC4 for a BIM model, measured drawings as SVG, the metrics as CSV, a PNG of the view, and JSON for the scheme itself. The IFC file carries storeys, slabs, walls, every window as a real opening, balconies and georeferencing; cores, the plot boundary and property sets are not in it yet, and it has not been through a Revit or ArchiCAD import.</p></details>
       <details><summary>Is it really free?</summary><p>Yes, and there is no pricing page to read. It is a static page with no running cost behind it beyond hosting.</p></details>
       <details><summary>Is there AI in it?</summary><p>No. It is parametric: you set the numbers and the geometry follows from them, the same way every time. The name is short for urban generator, and that is as far as the word goes — nothing here learns, predicts or invents.</p></details>
     </div>

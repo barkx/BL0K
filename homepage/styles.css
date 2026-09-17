@@ -329,6 +329,32 @@ body { counter-reset: sheet; }
 @media (min-width: 720px) { .sheets { grid-template-columns: 1fr 1fr; } }
 
 .fig.plate { margin: 0; }
+/* A single plate outside the 2x2 grid keeps its own proportions. */
+.fig.plate.wide { margin: 0 0 clamp(26px, 3.4vw, 42px); }
+.fig.plate.wide img { height: auto; max-height: none; }
+
+/* Interface shots: they carry their own white and take an edge, never the
+   multiply the line drawings use. */
+.fig.shot { margin: 0 0 clamp(26px, 3.4vw, 42px); }
+.fig.shot img {
+  width: 100%;
+  height: auto;
+  mix-blend-mode: normal;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+}
+.fig.shot.narrow { max-width: 300px; }
+.fig.shot figcaption {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--rule);
+  max-width: 46ch;
+}
+.fig.shot.bleed { margin-left: calc(var(--rail) * -1); }
+@media (max-width: 700px) { .fig.shot.bleed { margin-left: 0; } }
 .fig.plate img {
   width: 100%;
   /* Four sheet formats at four aspect ratios made a ragged grid. Cap the
