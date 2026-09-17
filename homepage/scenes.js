@@ -36,100 +36,6 @@
     requestAnimationFrame(frame)
   }
 
-  /* ---------------------------------------------------------------- facade */
-
-  var facade = document.getElementById('facade-scene')
-  if (facade) (function () {
-    var LEN = 48, FLOORS = 4, FH = 3, PIER = 0.3, WH = 2.1
-    var BASE = { mod: 6, per: 2, sill: 0.65, balc: 'none' }
-
-    // Each step is a configuration the app can actually produce, and the
-    // caption names it. Module width and sill tween; the discrete choices
-    // switch at the midpoint of a step, where the change reads clearly.
-    var STEPS = [
-      { mod: 6.0, per: 2, sill: 0.65, balc: 'none', say: 'Module 6.0 m · two windows' },
-      { mod: 3.2, per: 1, sill: 0.65, balc: 'none', say: 'Module 3.2 m · the bays re-divide' },
-      { mod: 6.0, per: 2, sill: 0.65, balc: 'projecting', say: 'Projecting balconies' },
-      { mod: 7.5, per: 3, sill: 0.65, balc: 'loggia', say: 'Loggias, cut into the wall' },
-      { mod: 6.0, per: 2, sill: 0.00, balc: 'none', say: 'Sill 0 · floor to ceiling' }
-    ]
-    var HOLD = 1500, MOVE = 1100, SPAN = HOLD + MOVE
-    var say = document.getElementById('facade-say')
-
-    function fit(mod) {
-      var count = Math.max(1, Math.round(LEN / mod))
-      return { count: count, actual: LEN / count }
-    }
-    function winWidth(actual, per) {
-      return Math.max(0.4, Math.min(1.6, (actual - (per + 1) * PIER) / per))
-    }
-
-    function draw(mod, sill, per, balc) {
-      var f = fit(mod), w = winWidth(f.actual, per), out = ''
-      var wallTop = FLOORS * FH
-      out += '<rect x="0" y="' + n(-wallTop) + '" width="' + LEN + '" height="' + wallTop + '" fill="#b0b0af"/>'
-      out += '<rect x="-0.3" y="' + n(-wallTop - 0.9) + '" width="' + (LEN + 0.6) + '" height="0.9" fill="#d6d5d4"/>'
-
-      for (var i = 0; i < f.count; i++) {
-        var x0 = i * f.actual
-        for (var fl = 0; fl < FLOORS; fl++) {
-          var base = -(fl + 1) * FH
-          if (balc === 'loggia' && fl > 0) {
-            out += '<rect x="' + n(x0 + PIER) + '" y="' + n(base + 0.22) + '" width="' +
-              n(f.actual - 2 * PIER) + '" height="' + n(FH - 0.5) + '" fill="#7b8084"/>'
-            out += '<rect x="' + n(x0 + PIER) + '" y="' + n(base + FH - 0.28) + '" width="' +
-              n(f.actual - 2 * PIER) + '" height="0.28" fill="#c9c9c8"/>'
-            continue
-          }
-          for (var k = 0; k < per; k++) {
-            var gap = (f.actual - per * w) / (per + 1)
-            var wx = x0 + gap + k * (w + gap)
-            out += '<rect x="' + n(wx) + '" y="' + n(base + sill) + '" width="' + n(w) +
-              '" height="' + n(Math.min(WH, FH - sill - 0.25)) + '" fill="#7e8388"/>'
-          }
-          if (balc === 'projecting' && fl > 0) {
-            out += '<rect x="' + n(x0 + 0.2) + '" y="' + n(base + 0.9) + '" width="' +
-              n(f.actual - 0.4) + '" height="0.16" fill="#d6d5d4"/>'
-            out += '<rect x="' + n(x0 + 0.2) + '" y="' + n(base + 0.9 - 1.1) + '" width="' +
-              n(f.actual - 0.4) + '" height="1.1" fill="#c4c4c3" opacity=".85"/>'
-          }
-        }
-        if (i) out += '<rect x="' + n(x0 - 0.04) + '" y="' + n(-wallTop) + '" width="0.08" height="' +
-          wallTop + '" fill="#a2a2a1"/>'
-      }
-      out += '<rect x="-1" y="0" width="' + (LEN + 2) + '" height="0.16" fill="#8b8b8a"/>'
-      return out
-    }
-
-    facade.setAttribute('viewBox', '-1.5 ' + (-FLOORS * FH - 2) + ' ' + (LEN + 3) + ' ' + (FLOORS * FH + 3.2))
-
-    function at(ms) {
-      var i = Math.floor(ms / SPAN) % STEPS.length
-      var j = (i + 1) % STEPS.length
-      var into = ms % SPAN
-      var t = into < HOLD ? 0 : ease((into - HOLD) / MOVE)
-      var a = STEPS[i], b = STEPS[j]
-      return {
-        mod: lerp(a.mod, b.mod, t), sill: lerp(a.sill, b.sill, t),
-        per: t < 0.5 ? a.per : b.per, balc: t < 0.5 ? a.balc : b.balc,
-        say: t < 0.5 ? a.say : b.say
-      }
-    }
-
-    function render(s) {
-      facade.innerHTML = draw(s.mod, s.sill, s.per, s.balc)
-      if (say && say.textContent !== s.say) say.textContent = s.say
-    }
-
-    document.documentElement.classList.add('js-facade')
-    // Draw once before the loop. `loop` skips frames while the document is
-    // hidden, so a scene that only ever draws inside it comes up empty in a
-    // background tab — and stays empty until it is looked at.
-    render(STEPS[0])
-    if (still.matches) return
-    loop(function (ms) { render(at(ms)) })
-  })()
-
   /* --------------------------------------------------------------- metrics */
 
   var metrics = document.getElementById('metrics-scene')
@@ -278,7 +184,6 @@
 
     var svgA = document.getElementById('opt-a'), svgB = document.getElementById('opt-b')
     var nameA = document.getElementById('opt-a-say'), nameB = document.getElementById('opt-b-say')
-    var chips = document.getElementById('opt-chips')
     var diff = document.getElementById('opt-diff')
 
     var N2 = function (v) {
@@ -330,9 +235,6 @@
           (d >= 0 ? '+' : '−') + pct + '%'
         diff.className = 'opt-diff ' + (d >= 0 ? 'up' : 'down')
       }
-      if (chips) [].forEach.call(chips.children, function (c, k) {
-        c.classList.toggle('on', k === i + 1)
-      })
     }
 
     document.documentElement.classList.add('js-options')
@@ -343,4 +245,208 @@
       if (i !== shown) showB(i)
     })
   })()
+
+  /* ------------------------------------------------------------------ tour */
+
+  /*
+    The eight tabs, animated. One stage, not eight: the chapter then reads the
+    way the app is laid out — a rail of tools and a single viewport — and only
+    ever one animation runs. The step shown is whichever tab is open, so the
+    sequence is driven by the reader's presses rather than by a timer, which is
+    the rule the tab list itself now follows.
+
+    The first four steps and the last are the app's own isometric, drawn by
+    block.js on one small site and cumulative: a plot, then buildings on it,
+    then height, then use. The middle three leave the site view behind because
+    the app does — a facade, a mix and a sheet are not looked at from above.
+  */
+  var tour = document.getElementById('tour')
+  if (tour && window.URBGEN && tabs) (function () {
+    var TP = [90, 70]                                  // the tour's plot, in metres
+    var TB = [[12, 12, 38, 12], [12, 40, 38, 12], [62, 12, 16, 40]]
+    var RETAIL = '#a8734a', OFFICE = '#6d8496'
+    var say = document.getElementById('tour-say')
+    var clamp = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v }
+    var seg = function (t, a, b) { return ease(clamp((t - a) / (b - a))) }
+
+    // The three buildings at a height, optionally banded, palettised, or with
+    // the third still being dragged in from the right.
+    function at(floors, bands, pal, third) {
+      return TB.map(function (b, i) {
+        return [i === 2 && third != null ? third : b[0], b[1], b[2], b[3],
+                floors[i], pal, bands && bands[i]]
+      })
+    }
+
+    // One frame for every isometric step, so the site does not change scale as
+    // the reader steps down the list. Solved off the tallest state.
+    var FRAME = window.URBGEN.frame([
+      window.URBGEN.site(TP, []).extent,
+      window.URBGEN.site(TP, at([5, 3, 9])).extent
+    ], 3)
+
+    function iso(bs, opts) {
+      return { svg: window.URBGEN.site(TP, bs, opts).svg, viewBox: FRAME }
+    }
+    function flat(w, h, body) {          // a step that is not the site view
+      return { svg: body, viewBox: '0 0 ' + w + ' ' + h }
+    }
+
+    var STEPS = [
+      // Site — the boundary draws itself, a handle appearing at each corner.
+      function (t) { return iso([], { edge: seg(t, 0, 0.75) }) },
+
+      // Placement — buildings arrive one at a time, the last dragged into place.
+      function (t) {
+        var k = t < 0.22 ? 1 : t < 0.44 ? 2 : 3
+        var slide = 24 * (1 - seg(t, 0.44, 0.8))
+        return iso(at([3, 3, 3], null, null, 62 + slide).slice(0, k))
+      },
+
+      // Massing — floors, on the buildings the reader would have selected.
+      function (t) {
+        return iso(at([3 + 2 * seg(t, 0.1, 0.5), 3, 3 + 6 * seg(t, 0.25, 0.8)]))
+      },
+
+      // Program — a run of levels handed to another use. Painted on the faces,
+      // because that is what changes in the app: the glazing, not the shape.
+      function (t) {
+        var r = seg(t, 0.1, 0.45), o = seg(t, 0.5, 0.85)
+        return iso(at([5, 3, 9], [[[0, r, RETAIL]], [[0, r, RETAIL]],
+                                  [[0, r, RETAIL], [1, 1 + 3 * o, OFFICE]]]))
+      },
+
+      // Facade — the app's own fit: count = round(length / module), so the bays
+      // re-divide rather than leaving a remainder at the end of the wall.
+      function (t) {
+        var LEN = 30, FL = 3, H = 3
+        var mod = 7.5 - 4.3 * seg(t, 0.12, 0.8)
+        var count = Math.max(1, Math.round(LEN / mod)), act = LEN / count
+        // The same pier minimum and the same clamp as the chapter below, so
+        // the two drawings cannot disagree about what the app produces.
+        var w = Math.max(0.4, Math.min(1.6, act - 0.6)), WH = 2.1
+        var d = '<rect x="0" y="0" width="' + LEN + '" height="' + (FL * H) + '" fill="#b0b0af"/>'
+        d += '<rect x="-0.3" y="-0.8" width="' + (LEN + 0.6) + '" height="0.8" fill="#d6d5d4"/>'
+        for (var i = 0; i < count; i++) {
+          var x = i * act
+          for (var f = 0; f < FL; f++)
+            d += '<rect x="' + n(x + (act - w) / 2) + '" y="' + n(f * H + H - 0.65 - WH) +
+                 '" width="' + n(w) + '" height="' + WH + '" fill="#7e8388"/>'
+          if (i) d += '<rect x="' + n(x - 0.04) + '" y="0" width="0.08" height="' +
+                      (FL * H) + '" fill="#a2a2a1"/>'
+        }
+        d += '<rect x="-1" y="' + (FL * H) + '" width="' + (LEN + 2) + '" height="0.18" fill="#8b8b8a"/>'
+        return flat(LEN + 2, FL * H + 2, '<g transform="translate(1,0.6)">' + d + '</g>')
+      },
+
+      // Units — a target share per type, each filling to its mark. Labelled,
+      // because an unlabelled striped bar is a gradient. The dashed line is
+      // the target and the block is what the building fits, which is the whole
+      // point of the tab: the app reports the share achieved against the share
+      // asked for, and calls the count an estimate.
+      function (t) {
+        var TYPE = ['Studio', '1 bed', '2 bed', '3 bed']
+        var TGT = [0.15, 0.35, 0.34, 0.16]      // asked for
+        var ACH = [0.13, 0.37, 0.33, 0.17]      // what the building fits
+        var TONE = ['#9aaebd', '#8298a9', '#6d8496', '#5a7183']
+        var W = 62, x = 0, d = '', i
+        ACH.forEach(function (sh, k) {
+          var full = W * sh, w = full * seg(t, 0.08 + k * 0.11, 0.52 + k * 0.11)
+          d += '<rect x="' + n(x) + '" y="0" width="' + n(w) + '" height="8" fill="' + TONE[k] + '"/>'
+          d += '<text x="' + n(x + full / 2) + '" y="12.6" text-anchor="middle" font-size="2.3" ' +
+               'fill="#5c5c58" font-family="system-ui,sans-serif">' + TYPE[k] + '</text>'
+          d += '<text x="' + n(x + full / 2) + '" y="15.9" text-anchor="middle" font-size="2.3" ' +
+               'fill="#2f6ea8" font-family="system-ui,sans-serif">' + Math.round(sh * 100) + '%</text>'
+          x += full
+        })
+        d += '<rect x="0" y="0" width="' + W + '" height="8" fill="none" stroke="#84847f" stroke-width=".2"/>'
+        var run = 0
+        for (i = 0; i < 3; i++) {
+          run += W * TGT[i]
+          d += '<line x1="' + n(run) + '" y1="-1.8" x2="' + n(run) +
+               '" y2="9.8" stroke="#2f6ea8" stroke-width=".2" stroke-dasharray=".8 .8"/>'
+        }
+        return flat(W + 6, 26, '<g transform="translate(3,5)">' + d + '</g>')
+      },
+
+      // Drawings — a sheet with its plan drawn on, a title block and a scale
+      // bar. Sized in millimetres in the app; here it only has to read as paper.
+      function (t) {
+        var P = [[6, 5], [30, 5], [30, 13], [18, 13], [18, 24], [6, 24]]
+        var run = clamp(seg(t, 0.1, 0.8)) * P.length
+        var d = 'M' + P[0][0] + ' ' + P[0][1], i
+        for (i = 1; i <= P.length; i++) {
+          var a = P[i - 1], b = P[i % P.length], f = clamp(run - (i - 1))
+          if (f <= 0) break
+          d += 'L' + n(a[0] + (b[0] - a[0]) * f) + ' ' + n(a[1] + (b[1] - a[1]) * f)
+        }
+        var s = '<rect x="0" y="0" width="46" height="32" fill="#faf9f7" stroke="#84847f" stroke-width=".25"/>'
+        s += '<path d="' + d + '" fill="none" stroke="#3c3c3a" stroke-width=".55" stroke-linejoin="round"/>'
+        s += '<rect x="32.5" y="21" width="11.5" height="9" fill="none" stroke="#84847f" stroke-width=".2"/>'
+        s += '<line x1="32.5" y1="24" x2="44" y2="24" stroke="#84847f" stroke-width=".15"/>'
+        s += '<line x1="32.5" y1="27" x2="44" y2="27" stroke="#84847f" stroke-width=".15"/>'
+        var bar = '<g transform="translate(6,28.4)">'
+        for (i = 0; i < 4; i++)
+          bar += '<rect x="' + (i * 2.4) + '" y="0" width="2.4" height="0.85" fill="' +
+                 (i % 2 ? '#faf9f7' : '#3c3c3a') + '" stroke="#3c3c3a" stroke-width=".12"/>'
+        bar += '</g>'
+        return flat(48, 34, '<g transform="translate(1,1)">' + s + bar + '</g>')
+      },
+
+      // Settings — the three render modes, each held long enough to be read.
+      function (t) {
+        return iso(at([5, 3, 9]), { pal: t < 0.34 ? 'white' : t < 0.67 ? 'shaded' : 'diagram' })
+      }
+    ]
+
+    var SAY = [
+      'Draw the boundary, or trace it over a scaled map.',
+      'Place buildings on it, and drag them where they go.',
+      'Give one its footprint and its floors.',
+      'Hand a run of levels to retail or office.',
+      'Set the module width, and the bays divide to fit.',
+      'Set a target mix; the blocks are the share the building fits.',
+      'Plans, elevations and sections, drawn to scale.',
+      'White, shaded or diagram.'
+    ]
+    var SPAN = 4600
+
+    function open() {
+      var li = tabs.querySelector('li.on')
+      return li ? [].indexOf.call(tabs.children, li) : -1
+    }
+
+    var was = -1, t0 = 0
+    function paint(i, t) {
+      var r = STEPS[i](t)
+      tour.setAttribute('viewBox', r.viewBox)
+      tour.innerHTML = r.svg
+      if (say && say.textContent !== SAY[i]) {
+        say.textContent = SAY[i]
+        tour.setAttribute('aria-label', SAY[i])
+      }
+    }
+
+    document.documentElement.classList.add('js-tour')
+    // Draw once before the loop, for the reason the facade scene does: `loop`
+    // skips frames while the document is hidden, and a scene that only ever
+    // draws inside it comes up empty in a background tab.
+    paint(0, 1)
+    if (still.matches) {
+      // Asked not to animate, but the stage must still answer the press, or it
+      // sits on the first step captioning a tab nobody has open.
+      tabs.addEventListener('click', function () {
+        var i = open()
+        if (i >= 0) paint(i, 1)
+      })
+      return
+    }
+    loop(function (ms) {
+      var i = open()
+      if (i < 0) return                 // every tab closed: hold the last frame
+      if (i !== was) { was = i; t0 = ms }
+      paint(i, ((ms - t0) % SPAN) / SPAN)
+    })
+  })()
+
 })()

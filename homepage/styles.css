@@ -186,14 +186,6 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
 .hero-copy .lead, .hero-copy p { max-width: 46ch; }
 .lead { font-size: clamp(17px, 1.35vw, 20px); color: var(--ink-soft); }
 
-.stmt {
-  max-width: 54ch;
-  margin: clamp(18px, 2.2vw, 28px) 0 clamp(24px, 3vw, 36px);
-  padding-left: 18px;
-  border-left: 2px solid var(--blueprint);
-  font-size: clamp(16px, 1.15vw, 17.5px);
-  color: var(--ink);
-}
 .cta { margin: 28px 0 12px; }
 .note { font-size: 15px; color: var(--ink-soft); }
 
@@ -426,25 +418,7 @@ body { counter-reset: sheet; }
 /* Nothing here exists without the script: the markup around each scene already
    carries the claim, so an empty stage would be an empty promise. */
 .scene { display: none; margin: 0 0 clamp(26px, 3.4vw, 42px); }
-.js-facade .scene, .js-metrics .scene, .js-options .scene { display: block; }
-.js-metrics #metrics-scene { display: block; }
-
-.scene-stage {
-  background: linear-gradient(#cfcfce, #c7c7c6);
-  border: 1px solid var(--rule);
-  border-radius: 3px;
-  padding: clamp(14px, 2vw, 24px);
-}
-.scene-stage svg { display: block; width: 100%; height: auto; }
-.scene-say {
-  font-size: 13.5px;
-  color: var(--ink-soft);
-  margin-top: 10px;
-  padding-top: 9px;
-  border-top: 1px solid var(--rule);
-  font-variant-numeric: tabular-nums;
-}
-.scene-off { margin: 10px 0 0; font-size: 14px; color: var(--ink-soft); }
+.js-metrics .scene, .js-options .scene { display: block; }
 
 /* ---------- options, side by side ---------- */
 
@@ -492,28 +466,6 @@ body { counter-reset: sheet; }
 .opt-diff { display: inline-block; font-weight: 550; font-variant-numeric: tabular-nums; }
 .opt-diff.up { color: #2c7a4b; }
 .opt-diff.down { color: #a4462d; }
-
-/* Ten of them, because "several" is vaguer than showing the row. */
-.opt-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  list-style: none;
-  margin: clamp(14px, 2vw, 20px) 0 0;
-  padding: 0;
-}
-.opt-chips li {
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--rule);
-  border-radius: 3px;
-  font-size: 12px;
-  color: var(--ink-soft);
-  background: var(--panel);
-}
-.opt-chips li.on { background: var(--ink-deep); border-color: var(--ink-deep); color: #fff; }
 
 /* ---------- the metric, one at a time ---------- */
 
@@ -648,6 +600,33 @@ body { counter-reset: sheet; }
 }
 .tab-open:hover { color: var(--blueprint); }
 
+/* The tour stands on its own id rather than on .scene, so a stage whose
+   script never ran stays hidden instead of showing an empty panel. */
+/* Capped, because the isometric is about 3:2 and a full-column stage left a
+   third of its width as empty grey on either side. On the figure, not the
+   stage, so the caption's rule ends where the panel does. */
+#tour-scene { display: none; margin: 0 0 clamp(18px, 2.4vw, 26px); max-width: 660px; }
+.js-tour #tour-scene { display: block; }
+/* A fixed height, not a fixed aspect: the eight steps are drawn at eight
+   different aspect ratios, and a stage that sized itself to each one would
+   shift the page under the reader on every press. Each drawing is centred in
+   the same box instead. */
+.tour-stage {
+  background: #cacac9;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 10px;
+  height: clamp(190px, 27vw, 330px);
+}
+.tour-stage svg { display: block; width: 100%; height: 100%; }
+.tour-say {
+  margin: 10px 0 0;
+  padding-top: 9px;
+  border-top: 1px solid var(--rule);
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
 .tabs-hint { display: none; }
 .js-tabs .tabs-hint {
   display: block;
@@ -729,26 +708,6 @@ body { counter-reset: sheet; }
 .claims p { color: var(--ink-soft); }
 @media (min-width: 800px) {
   .claims { grid-template-columns: 1fr 1fr; column-gap: clamp(24px, 4vw, 64px); }
-}
-
-/* ---------- spec list ---------- */
-
-.specs { margin: 0 0 clamp(24px, 3vw, 40px); padding: 0; }
-.specs > div {
-  display: grid;
-  gap: 4px 24px;
-  padding: 16px 0;
-  border-top: 1px solid var(--rule);
-  align-items: baseline;
-}
-.specs dt { font-weight: 600; }
-.specs dd { margin: 0; color: var(--ink-soft); }
-.specs .num { color: var(--blueprint); font-variant-numeric: tabular-nums; }
-.specs .what { max-width: 58ch; }
-
-@media (min-width: 820px) {
-  .specs > div { grid-template-columns: 13rem 15rem minmax(0, 1fr); }
-  .specs .what { grid-column: 3; grid-row: 1; }
 }
 
 /* ---------- metrics table ---------- */

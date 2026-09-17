@@ -17,6 +17,17 @@
   var K = Math.cos(Math.PI / 6)
   var FH = 3, SILL = 0.65, WH = 1.6
   var VW = 108, VH = 94   // fits the widest and tallest scheme, centred
+
+  // The app's three render modes, sampled from its own viewport rather than
+  // chosen. `white` is the default and what every drawing on the page uses.
+  var PAL = {
+    white: { roof: '#d6d5d4', right: '#b0b0af', front: '#9b9b9a', line: '#84847f',
+             bayR: '#8b9094', bayF: '#7e8388', sto: '#8b8b89' },
+    shaded: { roof: '#e6e5e2', right: '#a0a09e', front: '#7c7c7b', line: '#6d6d69',
+              bayR: '#7d8288', bayF: '#6b7076', sto: '#77776f' },
+    diagram: { roof: '#f2f0ec', right: '#e4e1dc', front: '#d5d2cc', line: '#2f6ea8',
+               bayR: '#bcd0e2', bayF: '#aec6dc', sto: '#7fa6c8' }
+  }
   var iso = function (x, y, z) { return [(x - z) * K, (x + z) / 2 - y] }
   var n = function (v) { return Math.round(v * 10) / 10 }
 
@@ -112,52 +123,85 @@
     return [mx, mz, mx + plot[0], mz + plot[1]]
   }
 
-  // The plot as the app draws it: a blue line on the viewport with a round
-  // handle at each corner, and a soft shadow under the massing. No filled
-  // plate — in the app the ground simply is the background.
-  function ground(ms, rect) {
+  /*
+    The plot as the app draws it: a blue line on the viewport with a round
+    handle at each corner, and a soft shadow under the massing. No filled
+    plate — in the app the ground simply is the background.
+
+    `edge` is how much of the boundary is drawn, 0 to 1, which is how the
+    tour's first step draws a plot. Measured along the projected edges rather
+    than the real ones, so the line grows at an even speed on screen; a corner
+    handle appears as the line reaches it.
+  */
+  function ground(ms, rect, edge) {
     var c = [[rect[0], rect[1]], [rect[2], rect[1]], [rect[2], rect[3]], [rect[0], rect[3]]]
+    var q = c.map(function (v) { return iso(v[0], 0, v[1]) })
+    var e = edge == null ? 1 : Math.max(0, Math.min(1, edge))
+    var seg = [], total = 0
+    for (var i = 0; i < 4; i++) {
+      var a = q[i], b = q[(i + 1) % 4]
+      var L = Math.sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]))
+      seg.push([a, b, L]); total += L
+    }
+    var want = total * e, run = 0, d = e > 0 ? 'M' + n(q[0][0]) + ' ' + n(q[0][1]) : '', reached = 0
+    for (i = 0; i < 4 && run < want; i++) {
+      var t = Math.min(1, (want - run) / seg[i][2]), A = seg[i][0], B = seg[i][1]
+      d += 'L' + n(A[0] + (B[0] - A[0]) * t) + ' ' + n(A[1] + (B[1] - A[1]) * t)
+      run += seg[i][2]
+      if (t === 1) reached = i + 1
+    }
+    if (e >= 1) d += 'Z'   // a finished boundary closes, as it did before
+    var handles = q.map(function (v, k) {
+      if (e <= 0 || (k > 0 && k > reached)) return ''
+      return '<circle cx="' + n(v[0]) + '" cy="' + n(v[1]) + '" r="1.45" fill="#0f5c9a"/>'
+    }).join('')
     var shadow = ms.map(function (m) {
       return path([iso(m.x0 - 2, 0, m.z0 + 5), iso(m.x1 - 2, 0, m.z0 + 5),
                    iso(m.x1 - 2, 0, m.z1 + 5), iso(m.x0 - 2, 0, m.z1 + 5)])
     }).join('')
-    var handles = c.map(function (q) {
-      var t = iso(q[0], 0, q[1])
-      return '<circle cx="' + n(t[0]) + '" cy="' + n(t[1]) + '" r="1.45" fill="#0f5c9a"/>'
-    }).join('')
-    return '<path d="' + shadow + '" fill="#bcbcbb"/><path d="'
-      + path(c.map(function (q) { return iso(q[0], 0, q[1]) }))
-      + '" fill="none" stroke="#2f6ea8" stroke-width=".3"/>' + handles
+    return '<path d="' + shadow + '" fill="#bcbcbb"/>'
+      + '<path d="' + d + '" fill="none" stroke="#2f6ea8" stroke-width=".3"/>' + handles
   }
 
   function box(m) {
     var h = m.h, x0 = m.x0, z0 = m.z0, x1 = m.x1, z1 = m.z1
     var floors = Math.round(h / FH)
+    var c = PAL[m.pal] || PAL.white
     var p = iso
     var solid = function (d, fill) {
-      return '<path d="' + d + '" fill="' + fill + '" stroke="#84847f" stroke-width=".35"/>'
+      return '<path d="' + d + '" fill="' + fill + '" stroke="' + c.line + '" stroke-width=".35"/>'
     }
     var right = function (u, v) { return p(x1, v, z0 + u) }
     var front = function (u, v) { return p(x0 + u, v, z1) }
     var out = ''
-    out += solid(path([p(x0, h, z0), p(x1, h, z0), p(x1, h, z1), p(x0, h, z1)]), '#d6d5d4')
-    out += solid(path([p(x1, 0, z0), p(x1, 0, z1), p(x1, h, z1), p(x1, h, z0)]), '#b0b0af')
-    out += solid(path([p(x0, 0, z1), p(x1, 0, z1), p(x1, h, z1), p(x0, h, z1)]), '#9b9b9a')
+    out += solid(path([p(x0, h, z0), p(x1, h, z0), p(x1, h, z1), p(x0, h, z1)]), c.roof)
+    out += solid(path([p(x1, 0, z0), p(x1, 0, z1), p(x1, h, z1), p(x1, h, z0)]), c.right)
+    out += solid(path([p(x0, 0, z1), p(x1, 0, z1), p(x1, h, z1), p(x0, h, z1)]), c.front)
+    // A programme band is a run of floors given another use, so it is painted
+    // over the two visible faces rather than modelled: the app changes the
+    // glazing of those floors, not the shape of the building.
+    if (m.bands) m.bands.forEach(function (b) {
+      var y0 = b[0] * FH, y1 = Math.min(b[1] * FH, h)
+      if (y1 <= y0) return
+      out += '<path d="' + path([p(x1, y0, z0), p(x1, y0, z1), p(x1, y1, z1), p(x1, y1, z0)])
+           + path([p(x0, y0, z1), p(x1, y0, z1), p(x1, y1, z1), p(x0, y1, z1)])
+           + '" fill="' + b[2] + '"/>'
+    })
     if (m.mod) {
-      out += '<path d="' + bays(z1 - z0, right, m.mod, floors) + '" fill="#8b9094"/>'
-      out += '<path d="' + bays(x1 - x0, front, m.mod, floors) + '" fill="#7e8388"/>'
+      out += '<path d="' + bays(z1 - z0, right, m.mod, floors) + '" fill="' + c.bayR + '"/>'
+      out += '<path d="' + bays(x1 - x0, front, m.mod, floors) + '" fill="' + c.bayF + '"/>'
     } else {
       out += '<path d="' + storeys(z1 - z0, right, floors) +
         storeys(x1 - x0, front, floors) +
-        '" fill="none" stroke="#8b8b89" stroke-width=".22"/>'
+        '" fill="none" stroke="' + c.sto + '" stroke-width=".22"/>'
     }
     return out
   }
 
   // Back to front. Emitted per mass, not grouped by face: grouping is smaller
   // but lets a far roof paint over a near wall.
-  function render(ms, rect) {
-    var out = ground(ms, rect)
+  function render(ms, rect, edge) {
+    var out = ground(ms, rect, edge)
     order(ms).forEach(function (m) { out += box(m) })
     return out
   }
@@ -239,14 +283,18 @@
     // a design option actually is in the app. No rotation, on purpose: the
     // depth sort above is the axis-aligned test, and a turned box needs a
     // different one.
-    site: function (plot, buildings) {
+    site: function (plot, buildings, opts) {
+      var o = opts || {}
       var ms = buildings.map(function (b) {
-        return mass([b[0], b[1], b[0] + b[2], b[1] + b[3]], b[4], 0)
+        var m = mass([b[0], b[1], b[0] + b[2], b[1] + b[3]], b[4], 0)
+        m.pal = b[5] || o.pal
+        m.bands = b[6] || null
+        return m
       })
       var rect = [0, 0, plot[0], plot[1]]
       var f = figures(ms, rect)
       return {
-        svg: render(ms, rect), extent: extent(ms, rect), viewBox: vb(extent(ms, rect), 3),
+        svg: render(ms, rect, o.edge), extent: extent(ms, rect), viewBox: vb(extent(ms, rect), 3),
         foot: f.foot, gfa: f.gfa, tall: f.tall, plot: f.plot,
         cover: f.cover, far: f.far, count: buildings.length
       }

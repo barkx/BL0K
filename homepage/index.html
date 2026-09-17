@@ -117,7 +117,6 @@
     </span>
     <nav class="bar-nav" aria-label="Sections">
       <a href="#does">What it does</a>
-      <a href="#facade">Facade</a>
       <a href="#metrics">Metrics</a>
       <a href="#options">Options</a>
       <a href="#faq">Questions</a>
@@ -167,7 +166,14 @@
         to the thing you are doing.
       </p>
 
-      <p class="tabs-hint">Open a tab to see the parameters it holds.</p>
+      <figure class="scene" id="tour-scene">
+        <div class="tour-stage">
+          <svg id="tour" role="img" aria-label="Draw the boundary, or trace it over a scaled map."></svg>
+        </div>
+        <figcaption class="tour-say" id="tour-say">Draw the boundary, or trace it over a scaled map.</figcaption>
+      </figure>
+
+      <p class="tabs-hint">Open a tab — the viewport above plays that step, and the list under it is what you can set.</p>
 
       <ul class="tabs" role="list">
         <li class="reveal">
@@ -227,81 +233,6 @@
           round trip.
         </p>
       </div>
-    </div>
-  </section>
-
-  <!-- 02 The facade ----------------------------------------------------- -->
-  <section class="sheet tint" aria-labelledby="facade">
-    <p class="n" aria-hidden="true"></p>
-    <div class="col">
-      <h2 id="facade">The facade, and what you can change</h2>
-      <p class="lead">
-        Driven by one number — the width of an apartment module — with everything
-        else set against it, and any elevation free to differ from the rest.
-      </p>
-      <p class="stmt">
-        None of it is cut out of a solid. Every opening is built as panels around
-        the void, which is why the geometry stays clean enough to carry into
-        another application.
-      </p>
-
-      <figure class="scene">
-        <div class="scene-stage">
-          <svg id="facade-scene" role="img"
-               aria-label="An elevation whose module width, window count, sill and balconies change in turn, the bays re-dividing each time so no ragged bay is left."></svg>
-        </div>
-        <figcaption class="scene-say" id="facade-say">Module 6.0&thinsp;m · two windows</figcaption>
-        <noscript><p class="scene-off">The list below is the whole of it; the animation only illustrates it.</p></noscript>
-      </figure>
-
-      <dl class="specs reveal">
-        <div>
-          <dt>Module width</dt>
-          <dd class="num">3.0 – 9.0 m</dd>
-          <dd class="what">One apartment. The app re-fits it to the elevation so modules divide evenly — you are told the requested width and the actual one, and there is never a ragged bay left at one end.</dd>
-        </div>
-        <div>
-          <dt>Windows per module</dt>
-          <dd class="num">1 – 3</dd>
-          <dd class="what">How the module is subdivided. Two reads as a typical dual-aspect flat; one gives a wider, calmer rhythm.</dd>
-        </div>
-        <div>
-          <dt>Window width</dt>
-          <dd class="num">0.6 – 3.5 m</dd>
-          <dd class="what">Clamped to what the module can take, so a value you type can never produce geometry that does not close.</dd>
-        </div>
-        <div>
-          <dt>Window height</dt>
-          <dd class="num">1.2 – 2.8 m</dd>
-          <dd class="what">Clamped against the floor-to-floor height, less the sill and the head.</dd>
-        </div>
-        <div>
-          <dt>Sill height</dt>
-          <dd class="num">0 – 1.2 m</dd>
-          <dd class="what">Zero is floor-to-ceiling glazing. Anything above it gives you a spandrel below the opening.</dd>
-        </div>
-        <div>
-          <dt>Reveal</dt>
-          <dd class="num">0 – 0.4 m</dd>
-          <dd class="what">How far the window sits back from the wall face. This is the parameter that decides whether a facade reads as flat or as built, because it is what casts the shadow.</dd>
-        </div>
-        <div>
-          <dt>Balconies</dt>
-          <dd class="num">none · projecting · loggia · mixed</dd>
-          <dd class="what">Projecting slabs stand proud of the wall; loggias are cut into it, with cheeks either side and a soffit over. Mixed picks per module.</dd>
-        </div>
-        <div>
-          <dt>Balcony pattern</dt>
-          <dd class="num">every module · alternate · checkerboard · seeded mix</dd>
-          <dd class="what">Where they land across the elevation. The seeded mix is repeatable: the same seed gives the same arrangement every time.</dd>
-        </div>
-        <div>
-          <dt>Per elevation</dt>
-          <dd class="num">override any face</dd>
-          <dd class="what">Balcony type, pattern and windows per module can be set for one elevation alone. Click a face in the viewport and it is that face you are editing.</dd>
-        </div>
-      </dl>
-
     </div>
   </section>
 
@@ -412,7 +343,9 @@
         A design option is a whole site — the boundary and everything standing
         on it. Switch between options, duplicate one as the start of a
         variation, and the metrics move with you, so a comparison is a number
-        rather than a memory.
+        rather than a memory. Each option carries its own undo, and every one of
+        them is saved with the file. Both below stand on the same
+        110 × 90&thinsp;m plot, drawn at the same scale.
       </p>
 
       <figure class="scene" id="options-scene">
@@ -437,11 +370,6 @@
             <p class="opt-delta"><span class="opt-diff up" id="opt-diff">+3 780 m² GFA · +30%</span></p>
           </div>
         </div>
-        <ol class="opt-chips" id="opt-chips" role="list" aria-hidden="true">
-          <li>A</li><li class="on">B</li><li>C</li><li>D</li><li>E</li>
-          <li>F</li><li>G</li><li>H</li><li>I</li><li>J</li>
-        </ol>
-        <figcaption class="scene-say">The same 110 × 90&thinsp;m plot in both, drawn at the same scale. Each option carries its own undo, and every one of them is saved with the file.</figcaption>
       </figure>
     </div>
   </section>

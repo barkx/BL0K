@@ -537,3 +537,116 @@ the four animation commits took it past without the log noticing. JavaScript is
 project is written in. **Left over budget deliberately, for the user to rule
 on** — either the targets move or the prose does, and quietly exceeding a
 written target is the one option that is not available.
+
+## 16. The tabs animate, 17 September 2026
+
+**One stage, not eight.** The chapter now carries a single viewport above the
+tab list that plays the step for whichever tab is open. Eight small figures
+would have meant eight animations running at once and eight panels of markup;
+one stage costs a fraction of that and makes the chapter read the way the app
+is laid out — a rail of tools and one viewport. It is driven by the reader's
+presses, which is the rule §15 set for the list itself.
+
+The first four steps and the last are the app's own isometric on one small
+90 × 70 m site, and they are cumulative: a boundary, then buildings on it, then
+height, then use. The middle three leave the site view because the app does — a
+facade, a mix and a sheet are not looked at from above.
+
+`block.js` grew three things for it, all of which default to exactly what was
+drawn before:
+
+- **`ground()` takes a draw fraction.** Measured along the *projected* edges,
+  not the real ones, so the line grows at an even speed on screen, and a corner
+  handle appears as the line reaches it. Checked at seven fractions: the path
+  goes 0 → 2 → 3 → 4 → 5 vertices and the handles 0 → 1 → 3 → 4. A finished
+  boundary still closes with `Z`, so the hero, the metrics block and the
+  options drawings are unchanged.
+- **A mass can carry programme bands**, painted over the two visible faces
+  rather than modelled — which is honest, because what the app changes for a
+  band is the glazing, not the shape.
+- **Three render-mode palettes**, sampled from the app's own viewport as §13's
+  colours were.
+
+**Four things caught while checking, all in the new work:**
+
+1. **The stage changed height on every press.** Eight steps drawn at eight
+   aspect ratios, each sizing the panel to itself — a layout shift on every
+   press, which §7 forbids. The stage now has a fixed height and each drawing
+   is centred in it. Measured at all eight: 330 px every time.
+2. **The units bar said nothing.** An unlabelled four-tone bar is a gradient.
+   It now carries the type and the share.
+3. **And then it claimed a comparison it was not making**: the dashed target
+   lines sat exactly on the block edges, because achieved was drawn as equal to
+   target. The blocks are now the share the building fits and the dashed line
+   is the share asked for, which is what the tab is actually about.
+4. **The facade windows came out square.** They now use the same pier minimum
+   and the same clamp as the facade chapter below, so the two drawings cannot
+   disagree about what the app produces.
+
+**Checked** with scripting off — the stage is `display: none` on its own id
+rather than on `.scene`, so a stage whose script never ran shows nothing rather
+than an empty panel — and under `prefers-reduced-motion`, where nothing
+animates but the stage still follows the press. Without that last bit it would
+have sat on step one captioning a tab nobody had open. No overflow at 320, 430,
+680, 900 or 1280.
+
+**The options chapter lost its chip row and its caption**, at the user's
+request. Both of the caption's claims moved into the lead rather than
+disappearing: that each option carries its own undo and is saved with the file,
+and that both drawings stand on the same plot at the same scale. Worth knowing:
+nothing on the page now shows ten of anything, so the chapter's title is
+carrying that alone.
+
+**Budget, and it is now badly over on the JavaScript line.**
+
+| | Now | Target | Was before §15 |
+|---|---|---|---|
+| HTML + CSS | 56.6 KB | 40 KB | 54.8 KB |
+| JavaScript | 39.0 KB | 24 KB | 21.5 KB |
+| Total transferred | 168.7 KB | 400 KB | — |
+| Requests | 7 | 15 | — |
+| Third-party | 0 | 0 | — |
+
+What a visitor actually fetches is well inside the page targets: 169 KB over 7
+requests, none of it third-party, and that is *before* the host compresses it —
+gzipped the JavaScript is 14 KB. The two per-file targets are the ones being
+missed, and about 9 KB of the JavaScript is comments, so they are reachable
+only by deleting the commentary this project is written in. **This needs a
+decision and has not had one**: either §7's per-file lines move, or they start
+being measured compressed, or the prose goes.
+
+One easy saving, unrelated and not taken: `assets/hero.svg` is 24.6 KB and is
+fetched by every visitor even though `.toy-fallback` is `display: none`
+whenever the script runs. It is also still in the old beige-and-blue palette
+(§13). A `<picture>` or a script-side `src` swap would drop 24.6 KB off the
+first load for almost everyone.
+
+## 17. Chapter 02, the facade, removed, 17 September 2026
+
+Cut whole at the user's request, and with it the facade scene in `scenes.js`,
+the `#facade` nav link, and the rules only it used — `.specs`, `.stmt`,
+`.scene-stage`, `.scene-say`, `.scene-off` and the `js-facade` branch of the
+`.scene` display rule. Grepped after: none of those six names now appears in
+any of the three files. Sheet numbers come from a CSS counter since §11, so
+Metrics became 02 on its own; verified in the browser rather than assumed.
+
+Four chapters, 1 256 words.
+
+**Two things left the page with it, and neither is duplicated elsewhere.**
+
+1. **The ranges.** Module width 3–9 m, windows per module 1–3, window
+   0.6–3.5 × 1.2–2.8 m, sill 0–1.2 m, reveal 0–0.4 m, the four balcony types
+   and the four patterns. These were checked against `from-app/facts.json` on
+   17 September, and they were the only numbers on the page for anything a
+   reader can actually set. The Facade tab in chapter 01 still lists the
+   parameters by name; it does not give a single range.
+2. **"None of it is cut out of a solid."** The no-CSG claim, which §8 called
+   the section's best line and which is the page's one technical
+   differentiator. It is now nowhere.
+
+Neither is on §7's protected list, so nothing had to move. Both are a sentence
+each if they should come back — the tabs list is where they would go.
+
+**Budget after the cut.** HTML + CSS 51.9 KB against 40, JavaScript 35.0 KB
+against 24. The cut paid back 4.9 KB and 4.2 KB respectively; the targets are
+still missed and still need the decision §16 asked for.
