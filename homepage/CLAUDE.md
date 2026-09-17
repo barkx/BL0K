@@ -650,3 +650,53 @@ each if they should come back — the tabs list is where they would go.
 **Budget after the cut.** HTML + CSS 51.9 KB against 40, JavaScript 35.0 KB
 against 24. The cut paid back 4.9 KB and 4.2 KB respectively; the targets are
 still missed and still need the decision §16 asked for.
+
+## 18. Commentary out, tour out, metrics table out, 17 September 2026
+
+**The comments are gone from `block.js`, `scenes.js` and `styles.css`**, at the
+user's decision on the budget §16 and §17 asked about. The reasoning they held
+is not lost: it is in this log, sections 8 to 17, which is where the record has
+always been. The depth sort is §10, the module fit and the draw-once rule §14,
+the drawing functions' purity §15, the stage and palette decisions §16.
+
+Stripped with a state machine, not a regex over lines: a line-based stripper
+would have mangled the thousand-separator regex and any `//` inside a string.
+**Proved neutral rather than assumed neutral** — every drawing the page can
+produce was hashed before and after, 631 of them over a grid of preset, floors,
+module, depth, plot and site layout, and the two dumps were byte-identical at
+6 904 259 bytes, sha256 `e2ef98b2…`.
+
+**The tour is removed** and the tabs are a plain click-to-open list again, hint
+reworded to what it said before. **The metrics table is removed**; that chapter
+is now its lead, the animated figure, and the closing prose.
+
+With the tour gone, three things in `block.js` had no caller left — the
+boundary draw fraction, the programme bands and the three palettes — so they
+went too. Same treatment: 605 drawings hashed before and after. The only
+difference was the boundary path, and it is a *return* to the original form:
+the tour-era walk emitted a final `L` back to the start **and** a `Z`, where
+`path()` emits three `L`s and a `Z`. Normalising that one redundant point away,
+all 605 match exactly. Caught a real break in the same pass — the slice that
+removed the palettes took `iso` and `n` with it, and the hash is what found it.
+
+**One claim had to move.** The table was where the page said plainly that the
+unit count is an estimate, which §7's "what must survive the cut" requires. It
+is now on the Units tab in chapter 01, in full: an estimate from the module
+width and the floor area, not a laid-out plan, labelled one wherever it
+appears. The other three survivors were checked in place — free and no account,
+nothing uploaded, offline once loaded, and that IFC export exists.
+
+**Budget, and the JavaScript line is met for the first time since the animation
+work began.**
+
+| | Now | Before this pass | Target |
+|---|---|---|---|
+| HTML + CSS | 41.3 KB | 51.9 KB | 40 KB |
+| JavaScript | 15.5 KB | 35.0 KB | 24 KB |
+
+HTML + CSS is 1.3 KB over and there is no commentary left in it to cut, so
+closing that last gap means cutting markup or rules, not prose. **Worth saying
+plainly: the comments are the only thing that has been removed from the code,
+and they were removed to meet a number. If the targets are ever revisited — for
+instance to measure compressed, where the whole page is 15 KB of CSS and 13 KB
+of JavaScript — the commentary is the thing to bring back first.**

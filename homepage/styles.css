@@ -1,16 +1,4 @@
-/*
-  URBGEN homepage — redesign prototype.
 
-  Same palette, same copy, same constraints: no build step, no framework, no
-  third-party request. What changes is the structure. The band-and-stripe
-  rhythm is gone; sections are sheets on a drawing-office grid, with the sheet
-  number sitting in the margin and staying with you as you read.
-
-  Motion is scroll-driven CSS (animation-timeline), so there is no library and
-  no script behind it. It is wrapped in @supports and switched off entirely
-  under prefers-reduced-motion, which means the page is complete and static
-  without any of it.
-*/
 
 :root {
   --paper: #f0eeea;
@@ -31,18 +19,6 @@
   color-scheme: light;
 }
 
-/*
-  Inter, self-hosted. project.md §1 used to say system font stack; the reason
-  behind that rule was "no third-party font requests", and self-hosting keeps
-  that true — the file comes from this origin and Google never sees a visitor.
-  The spec row was changed rather than quietly broken.
-
-  Latin subset only, 48 KB, which is the range this page actually uses: the
-  em-dash, the thin space, the middle dot in the hero caption and the U+2212
-  minus the FAQ toggle draws when open. Licence sits beside the file.
-
-  Named "Inter var" so a locally installed static Inter cannot shadow it.
-*/
 @font-face {
   font-family: "Inter var";
   src: url("/assets/fonts/inter-latin-var.woff2") format("woff2");
@@ -106,8 +82,6 @@ p:last-child { margin-bottom: 0; }
         border: 1px solid var(--rule); padding: 10px 14px; z-index: 20; }
 .skip:focus { left: 8px; top: 8px; }
 
-/* ---------- bar ---------- */
-
 .bar {
   position: sticky;
   top: 0;
@@ -125,9 +99,7 @@ p:last-child { margin-bottom: 0; }
   min-height: 56px;
   padding: 8px var(--pad);
 }
-/* Narrow: brand and the call to action share the first row, the section list
-   takes a second one and scrolls sideways inside itself rather than making the
-   page scroll. Wide: all three sit on one row. */
+
 .brand { display: flex; align-items: center; gap: 9px; flex: 1 1 auto; font-size: 15px; }
 
 .bar-nav {
@@ -150,8 +122,7 @@ p:last-child { margin-bottom: 0; }
   border-bottom: 1px solid transparent;
 }
 .bar-nav a:hover { color: var(--blueprint); border-bottom-color: var(--blueprint); }
-/* Only the section you jumped to is marked, and only after you jump — no
-   script, so no scroll-spy. */
+
 h2:target { text-decoration: underline; text-decoration-color: var(--blueprint); text-underline-offset: 6px; }
 
 @media (min-width: 1080px) {
@@ -173,8 +144,6 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
 }
 .bar-cta:hover { border-color: var(--blueprint); color: var(--blueprint); }
 
-/* ---------- hero ---------- */
-
 .hero {
   display: grid;
   gap: clamp(28px, 4vw, 56px);
@@ -189,8 +158,6 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
 .cta { margin: 28px 0 12px; }
 .note { font-size: 15px; color: var(--ink-soft); }
 
-/* The two claims that used to be a chapter of their own. They belong beside
-   the button, where the decision is actually being made. */
 .creds {
   list-style: none;
   margin: 28px 0 0;
@@ -226,13 +193,11 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
   .hero { grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr); }
 }
 
-/* ---------- the interactive block ---------- */
-
 .toy {
   position: relative;
   display: grid;
   gap: 0;
-  /* #cacac9, sampled from the app's viewport, not chosen. */
+
   background: linear-gradient(#cfcfce, #c7c7c6);
   border: 1px solid var(--rule);
   border-radius: 3px;
@@ -244,12 +209,9 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
 #toy { display: none; width: 100%; max-height: 56vh; overflow: visible; }
 .js #toy { display: block; }
 .js .toy-fallback { display: none; }
-/* The stand-in is a drawing now, and drawings take no frame. */
+
 .toy-fallback { width: 100%; mix-blend-mode: multiply; }
 
-/* The app's metrics panel, rebuilt: #f7f6f4 card, label left, value right, and
-   the working set as the small qualifier the app puts beside its numbers.
-   Hidden without the script, because without it there is nothing computing. */
 .toy-figures { display: none; margin: 0; }
 .js .toy-figures {
   display: grid;
@@ -294,7 +256,6 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
   .toy-figures .w { display: block; grid-column: 3; grid-row: 1; text-align: right; min-width: 5.6em; white-space: nowrap; }
 }
 
-/* The pill the app floats at the top of its viewport. */
 .toy-hint { display: none; margin: 0; }
 .js .toy-hint {
   display: block;
@@ -313,8 +274,6 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
   text-overflow: ellipsis;
 }
 
-/* ---------- sheets ---------- */
-
 .sheet {
   display: grid;
   grid-template-columns: var(--rail) minmax(0, 1fr);
@@ -323,8 +282,6 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
 }
 .sheet.tint { background: var(--panel); }
 
-/* Sheet numbers come from a counter, never from the markup: they had already
-   drifted once, with the FAQ reading 07 in a six-chapter page. */
 body { counter-reset: sheet; }
 .sheet { counter-increment: sheet; }
 .sheet > .n::before { content: counter(sheet, decimal-leading-zero); }
@@ -332,8 +289,7 @@ body { counter-reset: sheet; }
 .sheet > .n {
   position: sticky;
   top: 84px;
-  /* A rule running toward the heading, so the number reads as its label
-     rather than as a mark floating in the margin. */
+
   padding-bottom: 10px;
   border-bottom: 1px solid var(--blueprint);
   margin-right: 22px;
@@ -354,11 +310,6 @@ body { counter-reset: sheet; }
   .sheet > .n { position: static; }
 }
 
-/* ---------- drawing plates ---------- */
-
-/* These are the app's own exported sheets. A drawing sheet is white by
-   definition, so unlike the line drawings they do not multiply onto the page —
-   they sit on it, framed, the way a print would. */
 .sheets {
   display: grid;
   gap: clamp(16px, 2.2vw, 26px);
@@ -367,12 +318,10 @@ body { counter-reset: sheet; }
 @media (min-width: 720px) { .sheets { grid-template-columns: 1fr 1fr; } }
 
 .fig.plate { margin: 0; }
-/* A single plate outside the 2x2 grid keeps its own proportions. */
+
 .fig.plate.wide { margin: 0 0 clamp(26px, 3.4vw, 42px); }
 .fig.plate.wide img { height: auto; max-height: none; }
 
-/* Interface shots: they carry their own white and take an edge, never the
-   multiply the line drawings use. */
 .fig.shot { margin: 0 0 clamp(26px, 3.4vw, 42px); }
 .fig.shot img {
   width: 100%;
@@ -395,9 +344,7 @@ body { counter-reset: sheet; }
 @media (max-width: 700px) { .fig.shot.bleed { margin-left: 0; } }
 .fig.plate img {
   width: 100%;
-  /* Four sheet formats at four aspect ratios made a ragged grid. Cap the
-     height and contain: the sheet is white and so is the box, so the
-     letterboxing is invisible and the plates line up. */
+
   height: clamp(220px, 26vw, 330px);
   object-fit: contain;
   object-position: center;
@@ -413,14 +360,8 @@ body { counter-reset: sheet; }
   border-top: 1px solid var(--rule);
 }
 
-/* ---------- animated scenes ---------- */
-
-/* Nothing here exists without the script: the markup around each scene already
-   carries the claim, so an empty stage would be an empty promise. */
 .scene { display: none; margin: 0 0 clamp(26px, 3.4vw, 42px); }
 .js-metrics .scene, .js-options .scene { display: block; }
-
-/* ---------- options, side by side ---------- */
 
 .opts { display: grid; gap: clamp(12px, 1.8vw, 20px); }
 @media (min-width: 680px) { .opts { grid-template-columns: 1fr 1fr; } }
@@ -440,9 +381,7 @@ body { counter-reset: sheet; }
   color: var(--ink-soft);
 }
 .opt-note { text-transform: none; letter-spacing: 0; color: var(--blueprint); }
-/* Three figures under each drawing. Coverage and plot ratio are printable
-   here and not under the hero because there is a real boundary: the same
-   110 x 90 m plot carries both options. */
+
 .opt-figs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -467,8 +406,6 @@ body { counter-reset: sheet; }
 .opt-diff.up { color: #2c7a4b; }
 .opt-diff.down { color: #a4462d; }
 
-/* ---------- the metric, one at a time ---------- */
-
 #metrics-scene { margin-bottom: clamp(26px, 3.4vw, 42px); }
 
 .metric-pair { display: grid; gap: clamp(18px, 3vw, 40px); align-items: center; }
@@ -490,8 +427,6 @@ body { counter-reset: sheet; }
   font-variant-numeric: tabular-nums;
 }
 
-/* No panel behind the figures: they sit on the page, which is what makes them
-   read as the page's own claim rather than as a screenshot of one. */
 .metric-big {
   display: grid;
   align-content: center;
@@ -524,8 +459,6 @@ body { counter-reset: sheet; }
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- the eight tabs ---------- */
-
 .tabs {
   list-style: none;
   margin: 0 0 clamp(26px, 3.4vw, 42px);
@@ -546,9 +479,6 @@ body { counter-reset: sheet; }
 .tabs h3 { margin: 0; font-size: clamp(17px, 1.35vw, 19px); }
 .tabs p { margin: 0; color: var(--ink-soft); max-width: 54ch; }
 
-/* The parameter lists are in the markup and open by default, so the chapter is
-   whole without the script. Only once `.stepped` is set does one open at a
-   time. */
 .tab-params {
   grid-column: 2;
   list-style: none;
@@ -569,8 +499,6 @@ body { counter-reset: sheet; }
   border-top: 1px solid var(--blueprint);
 }
 
-/* max-height rather than the 0fr grid trick: that collapses only the first
-   implicit row, and these lists have six. */
 .tabs.stepped .tab-params {
   max-height: 0;
   margin-top: 0;
@@ -600,33 +528,6 @@ body { counter-reset: sheet; }
 }
 .tab-open:hover { color: var(--blueprint); }
 
-/* The tour stands on its own id rather than on .scene, so a stage whose
-   script never ran stays hidden instead of showing an empty panel. */
-/* Capped, because the isometric is about 3:2 and a full-column stage left a
-   third of its width as empty grey on either side. On the figure, not the
-   stage, so the caption's rule ends where the panel does. */
-#tour-scene { display: none; margin: 0 0 clamp(18px, 2.4vw, 26px); max-width: 660px; }
-.js-tour #tour-scene { display: block; }
-/* A fixed height, not a fixed aspect: the eight steps are drawn at eight
-   different aspect ratios, and a stage that sized itself to each one would
-   shift the page under the reader on every press. Each drawing is centred in
-   the same box instead. */
-.tour-stage {
-  background: #cacac9;
-  border: 1px solid var(--rule);
-  border-radius: 3px;
-  padding: 10px;
-  height: clamp(190px, 27vw, 330px);
-}
-.tour-stage svg { display: block; width: 100%; height: 100%; }
-.tour-say {
-  margin: 10px 0 0;
-  padding-top: 9px;
-  border-top: 1px solid var(--rule);
-  font-size: 13.5px;
-  color: var(--ink-soft);
-}
-
 .tabs-hint { display: none; }
 .js-tabs .tabs-hint {
   display: block;
@@ -639,18 +540,12 @@ body { counter-reset: sheet; }
   .tabs { grid-template-columns: 1fr 1fr; column-gap: clamp(28px, 4vw, 56px); }
 }
 
-/* ---------- text pairs ---------- */
-
-/* Chapters 01-03 carry no figures for now, so the prose has to hold the
-   column on its own. Two abreast reads better than one long stack. */
 .pair { display: grid; gap: clamp(22px, 3vw, 44px); }
 .pair .say { padding-top: clamp(18px, 2.2vw, 26px); border-top: 1px solid var(--rule); }
 .pair h3 { margin-bottom: 0.55em; }
 .pair p { color: var(--ink-soft); max-width: 46ch; }
 
 @media (min-width: 800px) { .pair { grid-template-columns: 1fr 1fr; } }
-
-/* ---------- rows ---------- */
 
 .row {
   display: grid;
@@ -664,22 +559,16 @@ body { counter-reset: sheet; }
 @media (min-width: 860px) {
   .row { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); }
   .row.flip .fig { order: 2; }
-  /* A stacked row gives the screenshot the whole column. A desktop interface
-     shown at half width is texture, not information. */
+
   .row.stack { grid-template-columns: 1fr; gap: clamp(14px, 2vw, 22px); }
   .row.stack .say { max-width: 74ch; }
   .row.stack .fig { margin-left: calc(var(--rail) * -1); }
 }
 
-/* Figures carry no frame. The drawings already sit on paper; boxing them made
-   them read as clip-art rather than as the page's own content. */
 .fig { margin: 0; }
-/* The drawings are ink on paper and sit better multiplied onto the page.
-   Screenshots are not — they carry their own white, so they get an edge
-   instead of a blend. */
+
 .fig img { width: 100%; mix-blend-mode: multiply; }
-/* Drawings are ink on paper: they multiply into the page and take no frame.
-   Screenshots carry their own white and get an edge instead. */
+
 .fig.draw { margin-bottom: clamp(26px, 3.4vw, 44px); }
 .fig.draw img { width: 100%; max-width: 820px; }
 .fig.draw figcaption { max-width: 46ch; }
@@ -697,11 +586,9 @@ body { counter-reset: sheet; }
   border-top: 1px solid var(--rule);
   max-width: 52ch;
 }
-/* Pulled back across the rail, so the drawing runs wider than the text. */
+
 .fig.bleed { margin-left: calc(var(--rail) * -1); margin-bottom: clamp(20px, 3vw, 40px); }
 @media (max-width: 700px) { .fig.bleed { margin-left: 0; } }
-
-/* ---------- claims ---------- */
 
 .claims { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
 .claims li { padding: clamp(18px, 2.2vw, 30px) 0; border-top: 1px solid var(--rule); }
@@ -709,57 +596,6 @@ body { counter-reset: sheet; }
 @media (min-width: 800px) {
   .claims { grid-template-columns: 1fr 1fr; column-gap: clamp(24px, 4vw, 64px); }
 }
-
-/* ---------- metrics table ---------- */
-
-.metrics {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0 0 clamp(24px, 3vw, 40px);
-  font-size: 15.5px;
-}
-.metrics caption {
-  text-align: left;
-  font-size: 12.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--ink-soft);
-  padding-bottom: 10px;
-}
-.metrics th, .metrics td {
-  text-align: left;
-  vertical-align: baseline;
-  padding: 13px 16px 13px 0;
-  border-top: 1px solid var(--rule);
-}
-.metrics thead th {
-  font-size: 12.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--ink-soft);
-  font-weight: 600;
-  border-top: 0;
-  padding-top: 0;
-}
-.metrics tbody th { font-weight: 600; white-space: nowrap; }
-.metrics td:last-child { color: var(--ink-soft); padding-right: 0; }
-.metrics .num {
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  color: var(--ink);
-  font-weight: 550;
-}
-.metrics .est { color: var(--ink-soft); font-weight: 400; font-size: 13px; }
-
-@media (max-width: 700px) {
-  /* Three columns will not fit; stack each row into a block instead. */
-  .metrics, .metrics tbody, .metrics tr, .metrics th, .metrics td { display: block; }
-  .metrics thead { display: none; }
-  .metrics tr { border-top: 1px solid var(--rule); padding: 14px 0; }
-  .metrics th, .metrics td { border: 0; padding: 0 0 4px; }
-}
-
-/* ---------- what comes next ---------- */
 
 .queue { list-style: none; counter-reset: q; margin: 0; padding: 0; }
 .queue li {
@@ -779,8 +615,6 @@ body { counter-reset: sheet; }
 }
 .queue p { color: var(--ink-soft); }
 
-/* ---------- steps ---------- */
-
 .steps { list-style: none; counter-reset: step; margin: 0; padding: 0;
          display: grid; gap: clamp(22px, 3vw, 40px); }
 .steps li { counter-increment: step; }
@@ -799,8 +633,6 @@ body { counter-reset: sheet; }
 .steps p { color: var(--ink-soft); }
 @media (min-width: 800px) { .steps { grid-template-columns: repeat(3, 1fr); } }
 
-/* ---------- questions ---------- */
-
 details { border-top: 1px solid var(--rule); }
 details:last-of-type { border-bottom: 1px solid var(--rule); }
 summary {
@@ -811,8 +643,6 @@ summary::-webkit-details-marker { display: none; }
 summary::before { content: "+"; color: var(--blueprint); font-weight: 600; width: 12px; flex: none; }
 details[open] summary::before { content: "\2212"; }
 details p { margin: 0 0 18px 26px; color: var(--ink-soft); }
-
-/* ---------- close + footer ---------- */
 
 .close {
   text-align: center;
@@ -887,19 +717,12 @@ details p { margin: 0 0 18px 26px; color: var(--ink-soft); }
 .foot-mark { display: inline-flex; align-items: center; gap: 7px; color: var(--ink); font-weight: 600; letter-spacing: 0.05em; }
 .foot-mark svg { color: var(--blueprint); }
 
-/* ---------- scroll-driven motion ----------
-   Progressive enhancement, twice over: the browser must support scroll
-   timelines, and the reader must not have asked for less motion. Neither
-   condition holding leaves a page that was already complete. */
-
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .reveal {
       animation: rise linear both;
       animation-timeline: view();
-      /* Ends at entry 100%: anything fully inside the viewport is fully
-         opaque. With a 'cover' range, content already on screen at load on a
-         very tall display can sit half-faded until the reader scrolls. */
+
       animation-range: entry 0% entry 100%;
     }
     @keyframes rise {
