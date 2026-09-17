@@ -186,6 +186,24 @@
     setTimeout(function () { show(at); svg.style.opacity = '1' }, 340)
   }
 
+  /*
+    The one thing this file publishes. scenes.js draws the same blocks for the
+    options scene, and duplicating the projection would have meant two places
+    to get the depth sort wrong — which has already happened once across this
+    file and the drawings generator.
+  */
+  window.URBGEN = {
+    block: function (preset, floors, mod, depth) {
+      var ms = order(plan(preset, depth)), h = floors * FH
+      var c = centre(ms, h), f = figures(preset, floors, depth)
+      return {
+        svg: build(preset, floors, mod, depth),
+        viewBox: n(c[0] - VW / 2) + ' ' + n(c[1] - VH / 2) + ' ' + VW + ' ' + VH,
+        foot: f.foot, gfa: f.gfa, tall: f.tall
+      }
+    }
+  }
+
   document.documentElement.classList.add('js')
   show(0)
 

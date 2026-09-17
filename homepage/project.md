@@ -283,15 +283,30 @@ not finished until the shots that show it are retaken.
 |---|---|
 | Total page weight | Under 400 KB including images |
 | HTML + CSS | Under 40 KB uncompressed |
-| JavaScript | Under 8 KB, or none |
+| JavaScript | Under 24 KB, or none |
 | Requests | Under 15 |
 | Fonts loaded | Zero |
 
 Targets, not measurements. Nothing goes on the page claiming a number until it
 has been measured.
 
-**The JavaScript target has moved twice, and that is one more time than a
-budget should move.** 5 KB to 6 KB on 12 September 2026, then to 8 KB on the
+**The JavaScript target has now moved three times: 5 → 6 → 8 → 24 KB.** The
+first three were argued in bytes. This one is different in kind, and pretending
+otherwise would be dishonest: on 17 September the page was asked for four
+animated scenes — the tabs opening in turn, a facade that stretches and swaps
+its balconies, metrics shuffling one at a time, and two design options compared
+side by side. That is not a tweak to a static page, it is a different page, and
+8 KB was set for the old one.
+
+So the number is re-set rather than nudged: **24 KB across all scripts**, which
+is 20 KB used and room to finish. Over the wire it is about 7 KB brotli'd. What
+does *not* move is §1's rule, and it is the one that actually matters: the page
+must be complete with JavaScript off. Every scene is an enhancement over markup
+that already carries the claim, and that is checked — with scripting off the
+scenes hide, the parameter lists stand open, the metrics table and the spec
+list are untouched, and the hero shows a static drawing.
+
+The earlier note, kept because the history is the point: 5 KB to 6 KB on 12 September 2026, then to 8 KB on the
 17th when the hero block began computing and showing its own arithmetic — the
 page's central claim, made literal, in about 1.4 KB. Both moves were argued
 rather than slipped, and both are recorded here. **A third move needs a

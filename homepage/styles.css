@@ -421,6 +421,117 @@ body { counter-reset: sheet; }
   border-top: 1px solid var(--rule);
 }
 
+/* ---------- animated scenes ---------- */
+
+/* Nothing here exists without the script: the markup around each scene already
+   carries the claim, so an empty stage would be an empty promise. */
+.scene { display: none; margin: 0 0 clamp(26px, 3.4vw, 42px); }
+.js-facade .scene, .js-metrics .scene, .js-options .scene { display: block; }
+.js-metrics #metrics-scene { display: block; }
+
+.scene-stage {
+  background: linear-gradient(#cfcfce, #c7c7c6);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: clamp(14px, 2vw, 24px);
+}
+.scene-stage svg { display: block; width: 100%; height: auto; }
+.scene-say {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--rule);
+  font-variant-numeric: tabular-nums;
+}
+.scene-off { margin: 10px 0 0; font-size: 14px; color: var(--ink-soft); }
+
+/* ---------- options, side by side ---------- */
+
+.opts { display: grid; gap: clamp(12px, 1.8vw, 20px); }
+@media (min-width: 680px) { .opts { grid-template-columns: 1fr 1fr; } }
+
+.opt-stage {
+  background: linear-gradient(#cfcfce, #c7c7c6);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 10px;
+}
+.opt-stage svg { display: block; width: 100%; height: auto; max-height: 34vh; }
+.opt-name {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+.opt-note { text-transform: none; letter-spacing: 0; color: var(--blueprint); }
+.opt-gfa { margin: 10px 0 0; font-size: 14px; color: var(--ink-soft); }
+.opt-gfa .num { color: var(--ink); font-weight: 550; }
+.opt-diff { display: inline-block; margin-left: 8px; font-weight: 550; font-variant-numeric: tabular-nums; }
+.opt-diff.up { color: #2c7a4b; }
+.opt-diff.down { color: #a4462d; }
+
+/* Ten of them, because "several" is vaguer than showing the row. */
+.opt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: clamp(14px, 2vw, 20px) 0 0;
+  padding: 0;
+}
+.opt-chips li {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  background: var(--panel);
+}
+.opt-chips li.on { background: var(--ink-deep); border-color: var(--ink-deep); color: #fff; }
+
+/* ---------- the metric, one at a time ---------- */
+
+#metrics-scene { transition: opacity .2s linear; }
+.metric-big {
+  background: linear-gradient(#cfcfce, #c7c7c6);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: clamp(22px, 4vw, 44px) clamp(18px, 3vw, 36px);
+  min-height: clamp(180px, 22vw, 240px);
+  display: grid;
+  align-content: center;
+  gap: 4px;
+}
+.m-name {
+  margin: 0;
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--ink-soft);
+}
+.m-val {
+  margin: 0;
+  font-size: clamp(44px, 9vw, 96px);
+  line-height: 1;
+  font-weight: 620;
+  letter-spacing: -0.035em;
+  color: var(--ink-deep);
+  font-variant-numeric: tabular-nums;
+}
+.m-val span:last-child { font-size: 0.34em; font-weight: 500; color: var(--ink-soft); letter-spacing: 0; }
+.m-rule {
+  margin: 6px 0 0;
+  max-width: 48ch;
+  font-size: clamp(14px, 1.2vw, 16px);
+  color: var(--blueprint);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- the eight tabs ---------- */
 
 .tabs {
@@ -430,7 +541,7 @@ body { counter-reset: sheet; }
   display: grid;
   gap: 0;
 }
-.tabs li {
+.tabs > li {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
   column-gap: 16px;
@@ -442,6 +553,60 @@ body { counter-reset: sheet; }
 .tabs .ico { grid-row: 1 / span 2; color: var(--blueprint); margin-top: 1px; }
 .tabs h3 { margin: 0; font-size: clamp(17px, 1.35vw, 19px); }
 .tabs p { margin: 0; color: var(--ink-soft); max-width: 54ch; }
+
+/* The parameter lists are in the markup and open by default, so the chapter is
+   whole without the script. Only once `.stepped` is set does one open at a
+   time. */
+.tab-params {
+  grid-column: 2;
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 5px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.tab-params li { padding-left: 14px; position: relative; }
+.tab-params li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.65em;
+  width: 7px;
+  border-top: 1px solid var(--blueprint);
+}
+
+/* max-height rather than the 0fr grid trick: that collapses only the first
+   implicit row, and these lists have six. */
+.tabs.stepped .tab-params {
+  max-height: 0;
+  margin-top: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height .42s ease, opacity .3s ease, margin-top .42s ease;
+}
+.tabs.stepped > li.on .tab-params {
+  max-height: 18em;
+  margin-top: 10px;
+  opacity: 1;
+}
+.tabs.stepped > li { transition: opacity .3s ease; }
+.tabs.stepped > li:not(.on) { opacity: .55; }
+.tabs.stepped > li.on .ico { color: var(--blueprint); }
+
+.tab-open {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.tab-open:hover { color: var(--blueprint); }
 
 @media (min-width: 820px) {
   .tabs { grid-template-columns: 1fr 1fr; column-gap: clamp(28px, 4vw, 56px); }

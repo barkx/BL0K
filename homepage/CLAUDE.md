@@ -419,3 +419,38 @@ bare `SyntaxError`; pass a URL instead.
 **Known inconsistency:** the no-JavaScript fallback is still `hero.svg`, drawn
 in the old beige-and-blue palette. Seen only with scripting off, and left rather
 than churning the generator for a path almost nobody takes.
+
+## 14. Four animated scenes, 17 September 2026
+
+`scenes.js` — the tabs opening in turn, a facade that stretches and swaps its
+balconies, the metrics shuffling one at a time, and two design options compared
+side by side. `block.js` now publishes one function, `window.URBGEN.block`, so
+the options scene draws with the same projection as the hero rather than a
+second copy of it — this file and the drawings generator have already had the
+same depth-sort bug independently, and once was enough.
+
+**Geometry follows the app, not an impression of it.** The facade uses the real
+fit from `src/geometry/facade.ts` — `count = max(1, round(length / requested))`,
+`actual = length / count`, windows clamped by `PIER_MIN = 0.3` — which is why
+the bays visibly re-divide instead of leaving a ragged remainder.
+
+**Three bugs, all mine, all worth remembering:**
+
+1. `tabs.querySelectorAll('li')` also returns the parameter items nested inside
+   each tab, so the open class landed *inside* a tab rather than on one. Use
+   `tabs.children`.
+2. The `grid-template-rows: 0fr` collapse trick only constrains the first
+   implicit row. These lists have six items, so nothing collapsed. `max-height`
+   instead.
+3. `.tabs li` matched the nested items too, handing them the icon column and
+   the dimming. Scoped to `.tabs > li`.
+
+And a fourth that is really a rule: **a scene must draw once before its loop
+starts.** `loop()` skips frames while the document is hidden, so the facade came
+up empty in a background tab and stayed empty. The hero always did this; the
+new scene did not, and looked broken in every headless capture.
+
+**Checked with scripting off**, because that is §1's actual constraint: scenes
+hide, parameter lists stand open, the metrics table and spec list are
+untouched, the hero falls back to its drawing. No overflow at 320 px, no
+heading-level jumps, no dead nav links.
