@@ -96,7 +96,7 @@ function Ground({
           if (e.nativeEvent.button !== 0) return
           e.stopPropagation()
           const point = { x: e.point.x, z: e.point.z }
-          if (plotMode === 'draw') addDraftPoint(point)
+          if (plotMode === 'draw' || plotMode === 'spine') addDraftPoint(point)
           else addCalibrationPoint(point)
           return
         }
@@ -246,7 +246,7 @@ export function Scene() {
         drawn in every tab — it is the thing the scheme is measured against, and
         losing it would be losing context, not clutter.
       */}
-      {plotMode === 'draw' ? (
+      {plotMode === 'draw' || plotMode === 'spine' ? (
         <PlotDraft draft={plotDraft} />
       ) : plotMode === 'idle' && tool === 'site' ? (
         <PlotHandles plot={site.plot} />

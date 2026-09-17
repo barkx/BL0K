@@ -63,9 +63,23 @@ They are invisible from inside `src/`, and each one goes stale silently.
 - Rebuild geometry at most once per frame. Never once per pixel of a drag.
 - Instance repeated boxes; merge static walls. Do not regress to per-element meshes.
 - Docker locating lives only in `scripts/docker.mjs`. Do not duplicate it.
-- Buildings are generated in their **own local frame** with axis-aligned masses.
-  Placement (position, rotation) belongs to the site layer, never inside
-  `geometry/`. Do not rotate masses within a building.
+- Buildings are generated in their **own local frame**. Placement (position,
+  rotation of the whole building) still belongs to the site layer, never inside
+  `geometry/`.
+- **A mass is a prism over a convex polygon** (`Mass.shape`), not a rectangle.
+  Changed in M21 so a freely-angled plan is expressible: two bars meeting at
+  anything but a right angle must be mitred, and a mitred bar is a trapezoid.
+  Every preset still emits a rectangle via `rectShape`, and `facesOf` derives
+  one face per edge — for an axis-aligned mass those are provably the same four
+  frames the hand-written cardinal ones produced.
+  - Keep outlines **convex and consistently wound**. `facesOf` reads the winding
+    to point normals outward (`normal = (-dz, dx)`), and the junction test
+    assumes an edge is one straight face.
+  - `footprint()` still returns the **bounding box** and still means the
+    footprint for an axis-aligned mass. Anything that must see the real outline
+    takes `massShape`. They are being migrated one at a time on purpose, so it
+    stays obvious which is which — a blanket rename would hide the ones that
+    are still only correct for rectangles.
 - Site area comes from the plot polygon. Render mode is store state. Neither is
   a per-building parameter.
 - **The network is touched only on an explicit press.** Never on load, never on
@@ -208,7 +222,75 @@ Refuse:
 
 ## 6. Project State
 
-- **M1–M13, M15–M16, M18 complete**, see `project.md` §8.
+- **M21 freeform massing is COMPLETE — all three stages.** Read this before
+  touching `geometry/`. The goal is a drawn polyline
+  that becomes a building with segments at any angle, in **one** building — the
+  user chose that over an orthogonal-only polyline and over one-building-per-
+  segment, knowing the cost. Stage 1 made `Mass` a convex polygon and
+  generalised faces and the flush test, with **zero behaviour change**, proven
+  by 19 366 assertions comparing the new frames and flush results against the
+  old cardinal formulas re-derived independently. Stage 2 is the polyline with
+  mitred corners; stage 3 is GFA by polygon union, roofs by polygon
+  subtraction, cores on the spine, setback by edge inset and outline floor
+  plans — **all done**. `lib/convex.ts` is the single primitive underneath:
+  clipping a convex polygon against a half-plane gives intersection, difference
+  and inset, and every mass is convex so they compose. **Nothing in the app
+  measures a mass by its bounding box any more**; `footprint()` still returns
+  one and is still right for an axis-aligned mass, but area, roofs, setbacks,
+  core spines and floor plans all take `shape`. If you add something that
+  measures a mass, take the outline.
+  - **Freeform is presented as experimental**, in its own labelled row under the
+    six preset chips rather than as a seventh, with the approximations named in
+    the panel. The default preset is still `L`. Do not promote it until stage 3
+    lands.
+  - **Elevation keys are derived in exactly one place**, `buildElevations`.
+    `Building.tsx` used to rebuild them from the nearest bounding-box edge,
+    which named faces that do not exist on a mitred mass; it now asks the
+    elevations themselves via `faceAtPoint`, which also refuses buried faces.
+    If a third place ever needs a key, take it from the elevation.
+  - **Stage 2**: `geometry/spine.ts` mitres a drawn centreline into one quad per
+    leg. Adjacent quads share their joining edge exactly — same two points, in
+    opposite order — which is what lets `isFlush` bury them. Mitres are clamped
+    at `MITRE_LIMIT` so a hairpin leaves a finite notch rather than a spike to
+    infinity. Drawing reuses the boundary's machinery: `plotMode` gained
+    `'spine'` and `plotDraft` carries the points, so the same three keys work
+    and leaving Massing cancels it.
+- **M22, undo**: `past`/`future` stacks of whole `Site` snapshots in the store,
+  because every mutation already funnels through one `commit()` and a site is
+  already the single immutable object `serialize` writes. There is nothing to
+  invert and so nothing to fall out of step. Consecutive commits sharing a
+  `label` within 600 ms coalesce, which is what makes a slider drag one step
+  rather than fifty — **pass a label from any new action that fires repeatedly**,
+  or dragging it will flood the stack. Undo forces a rebuild rather than
+  scheduling one, and puts away any half-drawn boundary or centreline first.
+- **M1–M13, M15–M16, M18–M20 complete**, see `project.md` §8.
+  - **M20, drawings**: `src/io/exportSvg.ts` writes site plan, floor plan and
+    elevation as SVG by hand — third hand-written format after the CSV and the
+    IFC, and no dependency. **Sized in millimetres and drawn in millimetres**,
+    so 1 m is `1000 / scale` mm and printing at 100% is true to scale; line
+    weights are fixed in mm so they read the same at every scale. The panel
+    preview is the exported string itself, so there is no second renderer to
+    drift. Two absences are load-bearing, not oversights: **no rooms** — a plan
+    is of the massing, and drawing a speculative wall is the easiest way to
+    imply the §1 floorplan non-goal — and **no OSM context**, because a drawing
+    is an export and ODbL follows the geometry. Sections are the obvious next
+    piece and are analytic (rectangle arithmetic on axis-aligned masses), so
+    they never reopen the no-CSG rule.
+  - **M19, massing gaps**: answers §10 questions 1 and 4, so **README's "as
+    built" answers changed** — check there before assuming either is still
+    open. (a) **Per-wing depth**: `depthB` / `depthC`, zero meaning "same as
+    wing A", resolved once in `wingDepths()`. A wing's depth slider appears
+    where its length slider does, so courtyard and stacked keep one depth. Every
+    clamp that read `buildingDepth` now reads the wing it is about — U's spine
+    clears `dB + dC + 4`, T's clears `dB + 4`, and a loggia and a core are
+    limited by `minWingDepth()`, not by wing A. (b) **Top setback**:
+    `applyTopSetback()` in `store/presets.ts` splits every mass that reaches the
+    top and insets the new one. **Only free faces move** — a face butted against
+    another wing stays put, or the joint opens a gap — and which are free is a
+    geometric test on the rects, not per-preset logic, so a courtyard steps back
+    from its void too. The bulk keeps its mass id so cores and IFC GlobalIds do
+    not reissue; the new mass is `<id>-top`. A wing too narrow keeps 4 m of plan
+    and gives away what it can. Config v10.
   - **M18, unit mix**: `store/unitMix.ts`. A target share per apartment type
     plus the modules one flat of that type spans; every share zero means no mix
     and the estimate falls back to `modulesPerUnit`, which is also the
@@ -290,8 +372,8 @@ Refuse:
     a vertical face to Facade with that elevation open. Consequence to know
     about: a click on the ground *inside* the plot leaves the Site tab, because
     the ground is the site surface and returns you to the site scale.
-- **UI**: the sidebar is an icon rail with seven sections — Site, Placement,
-  Massing, Program, Facade (balconies live here), Units, Settings. Program sits
+- **UI**: the sidebar is an icon rail with eight sections — Site, Placement,
+  Massing, Program, Facade (balconies live here), Units, Drawings, Settings. Program sits
   between Massing and Facade because that is the order the decisions happen in.
   Rules sit in Site;
   the core sits in Massing; the efficiency factor and the unit mix sit in Units. The top bar is

@@ -20,12 +20,14 @@ current as the app changes, and record any deviation in `README.md`.
 | Site | A plot polygon, drawn on the ground; many buildings placed on it |
 | Placement | Free rotation about Y, dragged or typed |
 | Underlay | A map or site plan image, scaled from two known points |
-| Footprints | L / U / T, courtyard, stacked & offset masses |
+| Footprints | L / U / T, courtyard, stacked & offset masses, and a freeform plan drawn as a centreline. Each wing carries its own depth |
+| Roof | Flat with a parapet, and optionally the top floors stepped in from the free faces |
 | Facade fidelity | Windows + balconies |
 | Window rhythm | Driven by apartment module width |
 | Balconies | Projecting slabs, recessed loggias, and per-elevation config |
 | Render modes | Toggle: white model / PBR / diagram |
-| Metrics | GFA, NIA, facade area, unit estimate, footprint, coverage, plot ratio |
+| Metrics | GFA, NIA, facade area, unit estimate, footprint, coverage, plot ratio. Areas from the real outline, never a bounding box |
+| History | Undo and redo over whole-site snapshots, coalesced so a drag is one step |
 | Unit mix | Target shares per apartment type, filled greedily against the target. Counts and areas only — never which flat sits in which bay |
 | Site rules | Setback, separation, height cap, FAR and coverage limits; zero is off |
 | Interaction | A tab is a tool: it scopes the viewport's handles and drags. Selection is always live |
@@ -34,7 +36,8 @@ current as the app changes, and record any deviation in `README.md`.
 | Location | A site can carry a latitude, longitude and true north. Georeferences every export |
 | Context | OpenStreetMap surroundings, fetched on request. Drawn and traced over; never measured, never exported |
 | Network | Only on an explicit press. Nothing loads, polls or phones home by itself |
-| Export | glTF, metrics as CSV, save/load the whole site as JSON |
+| Export | glTF, metrics as CSV, drawings as SVG at true scale, save/load the whole site as JSON |
+| Drawings | Site plan, a plan of any level, and each elevation — of the massing. Never room layouts |
 | Units | Metric throughout (metres, m², internally always metres) |
 | Backend | None. A static site. Anything needing a server is a scope decision |
 
@@ -362,11 +365,33 @@ Do these cheaply now so the deferred features are not rewrites:
 | **M12 Core** | A shaft of stairs, lift and risers as massing: count, size, overrun, and a perimeter or centre track it is shared along and can be dragged on. A perimeter shaft blanks the facade it meets — no windows, no units behind a lift. NIA becomes `(GFA − core) × efficiency`. Config v5. Reopens part of a §1 non-goal, by decision |
 
 | **M15 Location and context** | A site carries latitude, longitude and true north, which georeferences the IFC. A map picker with search to choose it, and OpenStreetMap surroundings fetched from Overpass and drawn as linework to trace over — at true scale and true north, which is the hand-calibration step gone. Config v7 |
+| **M22 Undo** | Undo and redo across every edit, on Ctrl+Z and Ctrl+Shift+Z. Snapshots of the whole site rather than invertible operations, because every mutation already funnels through one `commit` and a site is already one immutable object. Consecutive edits of the same kind coalesce, so a slider drag is one step |
+| **M20 Drawings** | A Drawings tab: site plan, a plan of any level, and each elevation, written as SVG by hand and sized in millimetres so printing at 100% is true to scale. Plans of the *massing* — outline, core, module rhythm, openings — never room layouts. OSM context is excluded, as it is from every export |
+| **M19 Massing gaps** | Two of §10's open questions answered. A wing carries its own depth, with zero meaning "the same as wing A". The top floors can step in from every face that is not a junction, which splits each topmost mass in two — the same shape `stacked` already builds, so elevations, roofs, metrics and exports needed nothing. Config v10 |
 | **M18 Unit mix** | Target shares per apartment type, and how many modules a flat of each type spans. The residential pool is filled one flat at a time against the target, so it can never overspend, and the achieved share is reported beside the one asked for. Counts and areas, no geometry. Config v9 |
 | **M16 Program by floor** | A run of levels given over to something other than housing: its own shopfront glazing, no balconies, its own line in the metrics, and its own tint in diagram mode. Bands of absolute levels, trimmed to be disjoint by the one clamping function. Config v8 |
 | **M13 Tabs as tools** | The open section scopes what the viewport does. Selection and camera stay live everywhere; handles and drags belong to their tab. Clicking drills in — ground and first click to Placement, again to Massing, a face to Facade — and the plot boundary opens Site |
 
 ### In progress
+
+**M21 — freeform massing. Complete.** Draw a polyline; it becomes a building
+whose segments sit at any angle. Decided: **one building, masses at any angle**, over
+the two cheaper readings — an orthogonal-only polyline, or one building per
+segment using the site layer's existing rotation. This reopens §1's footprint
+vocabulary and the axis-aligned-mass rule in `CLAUDE.md`, by decision.
+
+| Stage | | |
+|---|---|---|
+| 1 | **Done** | A mass is a prism over a convex polygon. Faces come from edges, the flush test from coplanarity. Every preset still emits a rectangle, and the result is provably identical — 19 366 assertions against the old cardinal frames and flush formulas |
+| 2 | **Done** | A `freeform` preset with a drawn `spine`. Trace a centreline on the ground, Enter builds it, one mitred mass per leg. Mitring is what keeps the butt-joint invariant: segments meet on a shared edge rather than overlapping, so a junction stays a 1D interval problem and `isFlush` finds it unchanged. Config v11 |
+| 3 | **Done** | GFA by polygon union, roofs by polygon subtraction, the core spine along a wing's real axis, setback by edge inset, and floor plans drawn as outlines. All five read the outline rather than the box, so a drawn plan's numbers hold at any angle. `lib/convex.ts` is the one primitive underneath: clip a convex polygon against a half-plane |
+
+The facade, walls, balconies, openings, IFC walls and windows, and elevation
+drawings needed **nothing**: `Elevation` already carried general `origin`,
+`uDir` and `normal` vectors rather than axis-locked ones, and `projectOnto`
+already dotted onto an arbitrary axis. That was not luck — it is the frame
+those builders were written against in M3.
+
 
 **M14 — IFC export.** The gap in §9 that caps everything else. Decided: **IFC4
 Reference View, written by hand, no dependency** — a STEP physical file is text,
@@ -470,8 +495,12 @@ absence caps the tool's usefulness no matter how good everything else gets.
    NIA is `(GFA − core area) × efficiency`, with the core measured off the
    geometry and the factor — now 0.85 to 0.97, default 0.90 — covering only
    what is still not modelled.
-8. **DXF import**, then **DXF export**, then **plans, elevations and sections**
-   — orthographic cameras over geometry that already exists.
+8. **DXF import**, then **DXF export**. ~~**Plans, elevations and sections**~~ —
+   **the plans and elevations landed in M20**, pulled in front of the DXF work
+   because they needed no parser and so no dependency decision. Sections are
+   still to come, and are analytic rather than a mesh cut: the masses are
+   axis-aligned rectangles, so a cut plane is rectangle arithmetic and never
+   reopens the no-CSG rule.
 
 ### Not planned
 
@@ -505,13 +534,18 @@ absence caps the tool's usefulness no matter how good everything else gets.
 
 **Building**
 
-1. **Roof** — flat + parapet only, or a setback top floor?
+1. ~~**Roof** — flat + parapet only, or a setback top floor?~~ **Answered in
+   M19: both.** Zero setback is the flat top it always was. Still open
+   underneath: whether a setback should differ per face, since a street
+   frontage and a courtyard rarely step back by the same amount.
 2. **Modules per unit** — is a 1-bed one module and a 3-bed two? Worth defining
    before the unit count is trusted.
 3. **Corner condition** — at an L junction, do modules wrap the corner? Today
    geometry decides: the abutted interval is blanked and the other wing runs
    past it.
-4. **Depth** — uniform for all wings, or per-wing?
+4. ~~**Depth** — uniform for all wings, or per-wing?~~ **Answered in M19: per
+   wing**, with zero meaning "the same as wing A" so nothing that existed had
+   to change. Courtyard and stacked expose one wing, so they keep one depth.
 
 **Site**
 

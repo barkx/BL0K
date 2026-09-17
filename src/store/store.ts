@@ -39,10 +39,15 @@ export type Tool =
   | 'program'
   | 'facade'
   | 'units'
+  | 'drawings'
   | 'settings'
 
 interface State {
   site: Site
+  /** Sites this one replaced, oldest first. */
+  past: Site[]
+  /** Sites undone out of the way, newest first. */
+  future: Site[]
   /** Which section is open, and so which editing gestures are live. */
   tool: Tool
   build: SiteBuild
@@ -58,13 +63,17 @@ interface State {
    * What a click on the ground means: nothing special, placing a boundary
    * corner, or dropping one of the two calibration points.
    */
-  plotMode: 'idle' | 'draw' | 'calibrate'
+  plotMode: 'idle' | 'draw' | 'calibrate' | 'spine'
   /** Points collected so far while tracing. */
   plotDraft: Poly
   /** The two points whose real-world distance sets the underlay scale. */
   calibration: Poly
 
   setTool: (tool: Tool) => void
+  undo: () => void
+  redo: () => void
+  startSpineDraw: () => void
+  finishSpineDraw: () => void
   selectBuilding: (id: string | null) => void
   selectElevation: (key: string | null) => void
 
@@ -136,15 +145,57 @@ export const useStore = create<State>((set, get) => {
     })
   }
 
-  /** Commit a new site and schedule the rebuild. */
-  const commit = (site: Site) => {
+  /**
+   * How long two edits of the same kind stay one undo step.
+   *
+   * Without this a slider drag would fill the stack with every intermediate
+   * value and undo would walk back through the drag half a millimetre at a
+   * time, which is undo that nobody can use.
+   */
+  const COALESCE_MS = 600
+  /** Deepest the stack goes. Snapshots share their strings and arrays by
+   * reference — only the top-level object is rebuilt — so the real cost is
+   * small, but an unbounded stack is still a leak. */
+  const HISTORY_LIMIT = 50
+  let lastEdit: { label: string | undefined; at: number } = { label: undefined, at: 0 }
+
+  /**
+   * Commit a new site, remembering the one it replaced.
+   *
+   * Every mutation in the store already funnels through here, and a site is one
+   * immutable object — the same one `serialize` writes whole. So history is a
+   * stack of those objects rather than a log of operations to invert, and undo
+   * cannot drift out of step with the model because there is nothing to keep in
+   * step.
+   *
+   * `label` groups an edit with the one before it: pass the same label while a
+   * slider is moving and the whole drag is one step.
+   */
+  const commit = (site: Site, label?: string) => {
+    const now = Date.now()
+    const merge =
+      label !== undefined && label === lastEdit.label && now - lastEdit.at < COALESCE_MS
+    lastEdit = { label, at: now }
+    if (!merge) {
+      const past = [...get().past, get().site]
+      set({ past: past.length > HISTORY_LIMIT ? past.slice(-HISTORY_LIMIT) : past, future: [] })
+    } else {
+      // Still the same step, but it is no longer a step anybody can redo past.
+      set({ future: [] })
+    }
     set({ site })
     schedule()
   }
 
-  const mapBuilding = (id: string, fn: (b: Placement) => Placement) => {
+  const mapBuilding = (id: string, fn: (b: Placement) => Placement, label?: string) => {
     const site = get().site
-    commit({ ...site, buildings: site.buildings.map((b) => (b.id === id ? fn(b) : b)) })
+    commit({ ...site, buildings: site.buildings.map((b) => (b.id === id ? fn(b) : b)) }, label)
+  }
+
+  /** Keep the selection if that building still exists in the restored site. */
+  const keepSelection = (site: Site) => {
+    const id = get().selectedId
+    return id && site.buildings.some((b) => b.id === id) ? id : (site.buildings[0]?.id ?? null)
   }
 
   const rebuildNow = (site: Site, selectedId: string | null) => {
@@ -164,6 +215,8 @@ export const useStore = create<State>((set, get) => {
     selectedElevation: null,
     fitRequest: 0,
     renderMode: 'white',
+    past: [],
+    future: [],
     plotMode: 'idle',
     plotDraft: [],
     calibration: [],
@@ -183,6 +236,12 @@ export const useStore = create<State>((set, get) => {
         next.calibration = []
       }
       if (was === 'facade') next.selectedElevation = null
+      // A half-drawn centreline belongs to Massing, and a drawing mode you
+      // cannot see is the failure this arrangement exists to avoid.
+      if (was === 'massing' && get().plotMode === 'spine') {
+        next.plotMode = 'idle'
+        next.plotDraft = []
+      }
       set(next)
     },
 
@@ -198,7 +257,9 @@ export const useStore = create<State>((set, get) => {
         // the massing and those numbers point at a path that no longer exists.
         if (clearsCorePlacement(patch)) raw.coreOffsets = raw.coreOffsets.map(() => null)
         return { ...b, raw, params: resolveParams(raw) }
-      })
+      // Keyed on which parameters moved, so a slider drag is one undo step and
+      // moving a different slider starts a new one.
+      }, `set:${id}:${Object.keys(patch).sort().join(',')}`)
     },
 
     /**
@@ -215,7 +276,7 @@ export const useStore = create<State>((set, get) => {
         coreOffsets[index] = t === null ? null : Math.min(1, Math.max(0, t))
         const raw = { ...b.raw, coreOffsets }
         return { ...b, raw, params: resolveParams(raw) }
-      })
+      }, `core:${id}:${index}`)
     },
 
     resetCoreOffsets: () => {
@@ -240,9 +301,9 @@ export const useStore = create<State>((set, get) => {
     },
 
     // Placement changes keep the same `params` object, so no building is rebuilt.
-    move: (id, position) => mapBuilding(id, (b) => ({ ...b, position })),
-    rotate: (id, degrees) => mapBuilding(id, (b) => ({ ...b, rotation: degrees })),
-    rename: (id, name) => mapBuilding(id, (b) => ({ ...b, name })),
+    move: (id, position) => mapBuilding(id, (b) => ({ ...b, position }), `move:${id}`),
+    rotate: (id, degrees) => mapBuilding(id, (b) => ({ ...b, rotation: degrees }), `rotate:${id}`),
+    rename: (id, name) => mapBuilding(id, (b) => ({ ...b, name }), `rename:${id}`),
 
     addBuilding: () => {
       const site = get().site
@@ -299,12 +360,89 @@ export const useStore = create<State>((set, get) => {
       commit({ ...site, plot: draft })
     },
 
+    /**
+     * Step back to the site before the last edit, and forward again.
+     *
+     * A rebuild is forced rather than scheduled: undo is a deliberate act and
+     * should land at once, and the incremental path keys on params identity,
+     * which a restored snapshot satisfies anyway — so buildings that did not
+     * change keep their buffers.
+     *
+     * Any half-drawn boundary or centreline is put away first. Stepping the
+     * model out from under a trace would leave points measured against a site
+     * that no longer exists.
+     */
+    undo: () => {
+      const past = get().past
+      if (past.length === 0) return
+      const site = past[past.length - 1]
+      lastEdit = { label: undefined, at: 0 }
+      set({
+        past: past.slice(0, -1),
+        future: [get().site, ...get().future],
+        plotMode: 'idle',
+        plotDraft: [],
+      })
+      rebuildNow(site, keepSelection(site))
+    },
+
+    redo: () => {
+      const future = get().future
+      if (future.length === 0) return
+      const site = future[0]
+      lastEdit = { label: undefined, at: 0 }
+      set({
+        past: [...get().past, get().site],
+        future: future.slice(1),
+        plotMode: 'idle',
+        plotDraft: [],
+      })
+      rebuildNow(site, keepSelection(site))
+    },
+
+    // --- tracing a building's centreline -------------------------------------
+    startSpineDraw: () =>
+      set({ plotMode: 'spine', plotDraft: [], calibration: [] }),
+
+    /**
+     * Turn the drawn centreline into the selected building's plan.
+     *
+     * The draft is in site metres and a building's plan is in its own frame, so
+     * the points are re-expressed about their own centre and the placement is
+     * moved to meet them. Rotation goes to zero for the same reason: a drawn
+     * plan carries its own angles, and a placement rotation on top would turn
+     * the building away from the line the user just traced.
+     */
+    finishSpineDraw: () => {
+      const draft = get().plotDraft
+      const id = get().selectedId
+      // One point is not a centreline; keep drawing rather than commit.
+      if (draft.length < 2 || !id) return
+      const cx = (Math.min(...draft.map((p) => p.x)) + Math.max(...draft.map((p) => p.x))) / 2
+      const cz = (Math.min(...draft.map((p) => p.z)) + Math.max(...draft.map((p) => p.z))) / 2
+      const spine = draft.map((p) => ({ x: p.x - cx, z: p.z - cz }))
+      set({ plotMode: 'idle', plotDraft: [] })
+      mapBuilding(id, (b) => {
+        const raw = { ...b.raw, preset: 'freeform' as const, spine }
+        // The plan changed shape entirely, so a shaft placed by hand on the old
+        // perimeter is pointing at a track that no longer exists.
+        raw.coreOffsets = raw.coreOffsets.map(() => null)
+        return {
+          ...b,
+          position: { x: cx, z: cz },
+          rotation: 0,
+          raw,
+          params: resolveParams(raw),
+        }
+      })
+    },
+
     // --- editing the existing boundary ---------------------------------------
     movePlotVertex: (index, point) => {
       const site = get().site
       if (index < 0 || index >= site.plot.length) return
       const plot = site.plot.map((p, i) => (i === index ? point : p))
-      commit({ ...site, plot })
+      commit({ ...site, plot }, `plot:${index}`)
     },
 
     insertPlotVertex: (index, point) => {

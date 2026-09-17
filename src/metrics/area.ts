@@ -1,8 +1,8 @@
-import { footprintsAt, levels, topLevel, type Mass } from '../geometry/masses'
+import { levels, shapesAt, topLevel, type Mass } from '../geometry/masses'
 import type { Elevation } from '../geometry/elevations'
 import type { FacadeModel } from '../geometry/facade'
 import type { BuiltCores } from '../geometry/core'
-import { unionArea } from '../lib/rect'
+import { unionArea } from '../lib/convex'
 import type { Params } from '../store/params'
 import { useAt, type Use } from '../store/program'
 
@@ -37,12 +37,13 @@ export function computeAreas(
   cores: BuiltCores,
   p: Params,
 ): AreaMetrics {
-  // A naive sum double-counts the corner where two wings meet, so take the
-  // union of footprints level by level.
+  // A naive sum double-counts wherever two masses overlap, so take the union
+  // level by level — of the real outlines, not their bounding boxes, or a
+  // mitred wing would claim the square it was cut out of.
   let gfaGross = 0
   const gfaByUse: Record<Use, number> = { residential: 0, retail: 0, office: 0, amenity: 0 }
   for (const level of levels(masses)) {
-    const area = unionArea(footprintsAt(masses, level))
+    const area = unionArea(shapesAt(masses, level))
     gfaGross += area
     gfaByUse[useAt(p.program, level)] += area
   }
@@ -55,7 +56,7 @@ export function computeAreas(
   // Core area is real floor area, so it stays in GFA and comes out of NIA. The
   // factor then covers only what is not modelled: internal walls, risers, plant.
   const nia = Math.max(0, gfa - cores.area) * p.efficiency
-  const footprintArea = unionArea(footprintsAt(masses, 0))
+  const footprintArea = unionArea(shapesAt(masses, 0))
   const facadeArea = elevations.reduce((s, e) => s + e.exteriorArea, 0)
   const glazedArea = facade.glazedArea
   const top = topLevel(masses)

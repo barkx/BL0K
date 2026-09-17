@@ -246,7 +246,7 @@ What stays visible in every tab is the geometry itself — the plot outline, the
 underlay, the buildings. Only the *handles* hide. Losing the boundary you are
 designing against would be losing context, not clutter.
 
-The sidebar is an icon rail with seven sections, and the rest of this chapter
+The sidebar is an icon rail with eight sections, and the rest of this chapter
 follows them in order:
 
 | Section | Holds |
@@ -256,7 +256,8 @@ follows them in order:
 | **Massing** | Footprint preset and wings; floors, floor height, parapet; core |
 | **Program** | Which floors are not housing, and how they are glazed |
 | **Facade** | Module, windows, balconies |
-| **Units** | The unit estimate, and the net-area factor |
+| **Units** | The unit estimate, the mix, and the net-area factor |
+| **Drawings** | Site plan, a plan of any level, and each elevation, as SVG |
 | **Settings** | Render mode and image, save, load, export, reset |
 
 Program sits between Massing and Facade because that is the order the decisions
@@ -265,6 +266,27 @@ know what it is before it can be clothed.
 
 Under 900 px the whole sidebar becomes a bottom sheet and the rail lays out
 horizontally.
+
+## Undo
+
+**Ctrl+Z** steps back, **Ctrl+Shift+Z** forward, in every tab, and there are
+buttons under Settings for when you would rather see them. Fifty steps deep.
+
+It stores **snapshots of the whole site**, not operations to invert. Every
+mutation in the app already funnels through one `commit()`, and a site is
+already the single immutable object that save/load writes whole — so there is
+nothing to invert and therefore nothing that can fall out of step with the
+model. Snapshots share their strings and arrays by reference, so the underlay
+image is not copied fifty times.
+
+Consecutive edits of the same kind, within about half a second, count as one
+step. Without that a slider drag would fill the stack with every intermediate
+value and undo would walk back through it half a millimetre at a time. Move a
+different slider and a new step begins.
+
+A half-drawn boundary or centreline is put away before stepping: moving the
+model out from under a trace would leave points measured against a site that no
+longer exists.
 
 ## The viewport
 
@@ -275,7 +297,11 @@ horizontally.
   itself when you switch preset, and never mid-drag. There is no Fit button:
   the gesture is on the thing it frames.
 - **Click an elevation** — selects that face and opens the override panel
-  (top right). Click it again, or the ×, to deselect. Roof clicks are ignored.
+  (top right). Click it again, or the ×, to deselect. Roof clicks are ignored,
+  and so are faces another wing is pressed against — a buried wall has no
+  facade to override. Which face you hit is measured against the real
+  elevations rather than guessed from a bounding box, so it works on a drawn
+  plan whose walls sit at any angle.
 - **Drag a core** — in the Massing tab, on a building that is already selected,
   press a shaft and drag it along its track. Pressing a shaft from another tab
   goes to Massing and starts the drag in the same gesture. On an unselected
@@ -440,6 +466,62 @@ them. Overrides are saved and loaded with the config.
 - **Courtyard width** 12–60 m (`Courtyard` only) — clear width of the void.
   Wing A is forced up to `2 × depth + 8` so the ring can close.
 - **Mass offset** 0–20 m (`Stacked` only) — how far each mass steps back.
+- **Freeform** — *experimental*, and kept in its own row under the six presets
+  rather than beside them. Trace a centreline on the ground and the building
+  follows it,
+  one bar per leg at whatever angle you drew. Same three keys as the boundary:
+  click to place, Enter builds it, Backspace undoes, Esc cancels.
+
+  Corners are **mitred**, not overlapped. Thickening a polyline the obvious way
+  — a rectangle per leg — leaves the two rectangles overlapping in a wedge at
+  every corner, which double-counts floor area, puts two coplanar faces in the
+  same place for the depth sorter to fight over, and turns a junction from
+  "which interval of this face is buried" into a two-dimensional question.
+  Mitring cuts both bars on the bisector instead, so they meet on one shared
+  edge — the same butt joint the presets have always used. A mitred bar is a
+  trapezoid rather than a rectangle, which is the whole reason a mass carries a
+  polygon.
+
+  A hairpin turn sends the true mitre towards infinity, so it is clamped: a very
+  sharp corner leaves a small visible notch rather than a spike a kilometre
+  long. A centreline that crosses itself is flagged, the way a self-intersecting
+  plot boundary is.
+
+  Area, the roof, the core spine, the top setback and the floor-plan drawing all
+  read the **real outline**, so the numbers hold at any angle — a mitred wing is
+  measured as the trapezoid it is, not as the box around it. The one primitive
+  behind all of that is clipping a convex polygon against a half-plane
+  (`lib/convex.ts`), which gives intersection, difference and inset; every mass
+  is convex, so they compose.
+- **Wing B / C depth** 0–24 m — each wing's own depth, shown only for the wings
+  the preset uses. **Zero means "the same as wing A"**, so a scheme that never
+  touches them is the uniform-depth building it always was.
+- **Roof** — **Flat** or **Setback top**. Flat is what every building opens with
+  and what every earlier file describes; a setback is asked for, never arrived
+  at. The choice is read straight off the setback distance rather than kept as a
+  flag of its own, so sliding it back to zero returns the building to a flat top
+  and the control follows.
+- **Setback** 0–8 m, over **1–5 floors**, shown only once Setback top is chosen
+  — steps the top floors in from every face that is not a junction.
+
+  Each mass that reaches the top of the building splits in two: the bulk keeps
+  its id and loses its top *n* levels, and a new mass takes those levels at an
+  inset footprint. That is exactly the shape `stacked` already builds — a mass
+  at a higher `baseFloor` with a smaller rectangle — so elevations, metrics,
+  clash tests and every export handle it without knowing setbacks exist.
+  `buildRoof` gives the floor below a terrace and a parapet for free, because a
+  mass's roof was already its footprint minus whatever stands on it.
+
+  **A shared face never moves.** The presets are butt-jointed so that a junction
+  stays a clean 1D interval on one elevation; insetting a face two wings share
+  would pull them apart and open a gap down the joint. Which faces are free is
+  worked out geometrically from the masses rather than per preset, so a
+  courtyard steps back from the void as well as the street, and its ring still
+  closes.
+
+  A wing too narrow to give the full inset away keeps 4 m of plan and gives away
+  what it can. Reduced rather than refused, so dragging the slider degrades
+  instead of snapping at an invisible threshold.
 - **Parapet** 0–1.5 m — upstand around exposed roof edges only, so a mass with
   another sitting on it does not get a parapet buried in the wall above.
 
@@ -577,6 +659,41 @@ stays a `project.md` §1 non-goal.
   net, per building. Cores come off first and are derived from geometry; this
   factor covers what is still not modelled — internal walls, risers, plant. It
   is what turns GFA into NIA in the metrics panel and the CSV.
+
+## Drawings
+
+Plans and elevations, drawn from the model rather than captured from the screen.
+A screenshot is whatever the camera was doing; these are a function of the
+scheme, so they come out the same twice and you can measure them.
+
+| Drawing | Of | Shows |
+|---|---|---|
+| **Site plan** | the whole site | plot boundary, every footprint at ground, cores, names, north |
+| **Floor plan** | one building, one level | the outline it occupies, cores still passing through, the module rhythm ticked on every exterior face |
+| **Elevation** | one building, one face | the silhouette run by run, floor lines, every opening, balconies — projecting solid, loggias dashed |
+
+**The scale is real.** The sheet is sized in millimetres and drawn in
+millimetres, so one metre is `1000 / scale` mm and printing at 100% gives a
+drawing you can put a rule on. A scale bar rides along anyway, because the
+printed ratio only holds if nobody resized the page. Line weights are fixed in
+millimetres rather than metres, so they read the same at 1:100 and at 1:1000.
+
+Written by hand like the CSV and the IFC, for the same reason: SVG is text, so
+it needs no dependency and works offline. The preview in the panel is the very
+same string the download writes — there is no second renderer to fall out of
+step with the file.
+
+**Two things are deliberately absent.**
+
+*Rooms.* A plan here is a plan of the **massing**: outline, core, module rhythm,
+openings. Apartment layouts, corridors, stairs and lifts are `project.md` §1
+non-goals, and a drawing is the easiest place to imply them by accident — so it
+does not draw a line where a wall might one day go.
+
+*Imported OpenStreetMap context.* It is in the viewport to trace over, and it is
+excluded from every metric, every clash test and every export. A drawing is an
+export. That is the ODbL licence as much as the design: OSM geometry inside a
+drawing handed to a client carries obligations with it.
 
 ## Settings
 
@@ -760,15 +877,28 @@ building had to be built from something else, the slider says so underneath.
 
 These were answered to keep moving; all are cheap to revisit.
 
-1. **Roof** — flat + parapet only, as the spec's default. No setback top floor.
+1. **Roof** — **answered in M19: both.** Flat and parapet is still what every
+   building opens with, and is what `topSetback = 0` means; a setback is behind
+   an explicit choice in the Roof block. It steps the top floors in from
+   every *free* face. A face shared with another wing never moves, because
+   pulling it in would open a gap down a butt joint. A wing too narrow to give
+   the full inset away on an axis gives away what it can, rather than
+   collapsing or snapping back at a threshold nobody can see.
 2. **Modules per unit** — a parameter (default 1), and the unit count is
    labelled an estimate in the UI. The mapping still wants defining before the
    number is trusted.
 3. **Corner condition** — resolved by geometry rather than a rule: the abutted
    interval is blanked, and the other wing runs its full length past the
    junction. No wing "wraps" the corner.
-4. **Depth** — uniform across wings. The parameter is scalar; per-wing depth
-   would mean widening it to an array, not restructuring anything.
+4. **Depth** — **answered in M19: per wing.** Wing A's depth is also the
+   default for the others, and `depthB` / `depthC` override it, with zero
+   meaning "the same as A". A wing's depth slider appears exactly where its
+   length slider does, so courtyard and stacked — which expose only wing A —
+   still have one depth. The clamps that used to read one number now read the
+   wing they are actually about: a U's spine clears `dB + dC + 4`, a T's clears
+   `dB + 4`, and a loggia and a core are both limited by the *shallowest* wing
+   rather than by wing A. With the depths uniform every one of those reduces to
+   the number it was before.
 5. **Site** — a drawn plot polygon, not a `siteArea` number. Area, coverage,
    plot ratio, the off-plot test and the setback check all read the polygon.
 6. **Setbacks** — both a minimum to the boundary and a minimum between

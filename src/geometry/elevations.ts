@@ -1,4 +1,4 @@
-import { footprint, type Mass } from './masses'
+import { facesOf, type Face, type Mass } from './masses'
 import type { Dir } from '../store/params'
 import { EPS, same } from '../lib/clamp'
 import { overlaps, subtractSpans, type Span } from '../lib/rect'
@@ -44,25 +44,68 @@ export interface Elevation {
   exteriorArea: number
 }
 
-interface Frame {
-  origin: { x: number; z: number }
-  uDir: { x: number; z: number }
-  normal: { x: number; z: number }
-  length: number
+const CARDINALS: { dir: Dir; x: number; z: number }[] = [
+  { dir: 'N', x: 0, z: -1 },
+  { dir: 'E', x: 1, z: 0 },
+  { dir: 'S', x: 0, z: 1 },
+  { dir: 'W', x: -1, z: 0 },
+]
+
+/**
+ * The compass point a face most nearly looks towards.
+ *
+ * A polygon can have any number of faces, so `Dir` stops being an identity and
+ * becomes a label — but it stays, because a per-elevation override, a balcony
+ * seed and the face picker in the UI are all keyed on which way a wall faces,
+ * and "roughly north" is still the useful thing to say about one.
+ */
+function dirOf(normal: { x: number; z: number }): Dir {
+  let best = CARDINALS[0]
+  let bestDot = -Infinity
+  for (const c of CARDINALS) {
+    const dot = normal.x * c.x + normal.z * c.z
+    if (dot > bestDot) {
+      bestDot = dot
+      best = c
+    }
+  }
+  return best.dir
 }
 
-function frameFor(m: Mass, dir: Dir): Frame {
-  const r = footprint(m)
-  switch (dir) {
-    case 'N':
-      return { origin: { x: r.x1, z: r.z0 }, uDir: { x: -1, z: 0 }, normal: { x: 0, z: -1 }, length: r.x1 - r.x0 }
-    case 'S':
-      return { origin: { x: r.x0, z: r.z1 }, uDir: { x: 1, z: 0 }, normal: { x: 0, z: 1 }, length: r.x1 - r.x0 }
-    case 'E':
-      return { origin: { x: r.x1, z: r.z1 }, uDir: { x: 0, z: -1 }, normal: { x: 1, z: 0 }, length: r.z1 - r.z0 }
-    case 'W':
-      return { origin: { x: r.x0, z: r.z0 }, uDir: { x: 0, z: 1 }, normal: { x: -1, z: 0 }, length: r.z1 - r.z0 }
-  }
+/**
+ * Faces in the order the four hand-written frames used to come out: N, E, S, W
+ * for a rectangle, and edge order within a compass point for anything else.
+ *
+ * The order is worth preserving exactly. It decides the order of the elevations
+ * array, which decides the order modules are generated in, which a determinism
+ * check compares literally.
+ */
+function orderedFaces(m: Mass): { face: Face; dir: Dir }[] {
+  const labelled = facesOf(m).map((face) => ({ face, dir: dirOf(face.normal) }))
+  return labelled.sort(
+    (a, b) =>
+      CARDINALS.findIndex((c) => c.dir === a.dir) - CARDINALS.findIndex((c) => c.dir === b.dir) ||
+      a.face.index - b.face.index,
+  )
+}
+
+/**
+ * Elevation keys, unique but unchanged wherever they can be.
+ *
+ * A rectangle has one face per compass point, so its keys stay `massId:N` and
+ * every per-elevation override in a file written before masses could be angled
+ * still finds its face. Only where two faces share a compass point does a key
+ * gain an index, which cannot happen to a scheme that did not have one.
+ */
+function keysFor(m: Mass, faces: { face: Face; dir: Dir }[]): string[] {
+  const seen = new Map<Dir, number>()
+  const total = new Map<Dir, number>()
+  for (const f of faces) total.set(f.dir, (total.get(f.dir) ?? 0) + 1)
+  return faces.map((f) => {
+    const n = seen.get(f.dir) ?? 0
+    seen.set(f.dir, n + 1)
+    return (total.get(f.dir) ?? 0) > 1 ? `${m.id}:${f.dir}${n + 1}` : `${m.id}:${f.dir}`
+  })
 }
 
 /** (u, v) in the elevation frame to world, optionally pushed `out` along the normal. */
@@ -74,28 +117,34 @@ export function toWorld(e: Elevation, u: number, v: number, out = 0): [number, n
   ]
 }
 
-/** Where does another mass sit, measured along this elevation's u axis? */
-function projectOnto(e: Frame, m: Mass): Span {
-  const r = footprint(m)
-  const along = (x: number, z: number) => (x - e.origin.x) * e.uDir.x + (z - e.origin.z) * e.uDir.z
-  const p = [along(r.x0, r.z0), along(r.x1, r.z0), along(r.x0, r.z1), along(r.x1, r.z1)]
+/** Where does another mass sit, measured along this face's u axis? */
+function projectOnto(f: Face, m: Mass): Span {
+  const along = (x: number, z: number) => (x - f.origin.x) * f.uDir.x + (z - f.origin.z) * f.uDir.z
+  const p = m.shape.map((q) => along(q.x, q.z))
   return { a: Math.min(...p), b: Math.max(...p) }
 }
 
-/** Is `other` pressed flat against this face — same plane, facing back at us? */
-function isFlush(m: Mass, dir: Dir, other: Mass): boolean {
-  const r = footprint(m)
-  const o = footprint(other)
-  switch (dir) {
-    case 'N':
-      return same(o.z1, r.z0) && overlaps(o.x0, o.x1, r.x0, r.x1)
-    case 'S':
-      return same(o.z0, r.z1) && overlaps(o.x0, o.x1, r.x0, r.x1)
-    case 'E':
-      return same(o.x0, r.x1) && overlaps(o.z0, o.z1, r.z0, r.z1)
-    case 'W':
-      return same(o.x1, r.x0) && overlaps(o.z0, o.z1, r.z0, r.z1)
+/**
+ * Is `other` pressed flat against this face — same plane, facing back at us?
+ *
+ * Asked of faces rather than of bounding boxes, which is what lets a mass sit
+ * at any angle: two walls abut when one lies in the other's plane and looks the
+ * opposite way, and that is true whatever compass point either of them is near.
+ * For an axis-aligned pair it decides exactly what the four hand-written cases
+ * decided, because a flush north face *is* a south face in the same plane.
+ */
+function isFlush(f: Face, other: Mass): boolean {
+  for (const g of facesOf(other)) {
+    // Facing back at us, within a hair — an exactly opposite pair dots to -1.
+    if (f.normal.x * g.normal.x + f.normal.z * g.normal.z > -1 + 1e-6) continue
+    // In our plane: the offset between the two origins has no component along
+    // our normal.
+    const off = (g.origin.x - f.origin.x) * f.normal.x + (g.origin.z - f.origin.z) * f.normal.z
+    if (!same(off, 0)) continue
+    const span = projectOnto(f, other)
+    if (overlaps(span.a, span.b, 0, f.length)) return true
   }
+  return false
 }
 
 const levelsOverlap = (a: Mass, b: Mass) =>
@@ -105,9 +154,11 @@ export function buildElevations(masses: Mass[], floorHeight: number): Elevation[
   const out: Elevation[] = []
 
   for (const m of masses) {
-    for (const dir of DIRS) {
-      const f = frameFor(m, dir)
-      const blockers = masses.filter((o) => o.id !== m.id && isFlush(m, dir, o) && levelsOverlap(m, o))
+    const faces = orderedFaces(m)
+    const keys = keysFor(m, faces)
+    for (let fi = 0; fi < faces.length; fi++) {
+      const { face: f, dir } = faces[fi]
+      const blockers = masses.filter((o) => o.id !== m.id && isFlush(f, o) && levelsOverlap(m, o))
 
       const openByFloor: Span[][] = []
       let exteriorArea = 0
@@ -123,7 +174,7 @@ export function buildElevations(masses: Mass[], floorHeight: number): Elevation[
       }
 
       out.push({
-        key: `${m.id}:${dir}`,
+        key: keys[fi],
         massId: m.id,
         dir,
         origin: f.origin,

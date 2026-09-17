@@ -1,8 +1,10 @@
 import { clamp } from '../lib/clamp'
 import type { ProgramBand } from './program'
+import type { Poly } from '../lib/poly'
 import { NO_MIX, UNIT_TYPES, type UnitMix } from './unitMix'
+import { PRESET_WINGS } from './presets'
 
-export type Preset = 'bar' | 'L' | 'T' | 'U' | 'courtyard' | 'stacked'
+export type Preset = 'bar' | 'L' | 'T' | 'U' | 'courtyard' | 'stacked' | 'freeform'
 export type Dir = 'N' | 'E' | 'S' | 'W'
 export type BalconyType = 'none' | 'projecting' | 'loggia' | 'mixed'
 export type BalconyPattern = 'every' | 'alternate' | 'checkerboard' | 'random'
@@ -22,12 +24,40 @@ export interface Params {
   preset: Preset
   floors: number
   floorHeight: number
+  /** Depth of wing A, and the default depth of every other wing. */
   buildingDepth: number
+  /**
+   * Depth of wings B and C. **Zero means "the same as wing A"**, which is what
+   * every scheme opens with and what every file written before per-wing depth
+   * described — the same bargain the site rules make with a limit nobody set.
+   * Only the presets that expose a wing's length expose its depth.
+   */
+  depthB: number
+  depthC: number
   wingLengthA: number
   wingLengthB: number
   wingLengthC: number
   courtyardWidth: number
   massOffset: number
+  /**
+   * Drawn centreline for the `freeform` preset, in the building's own local
+   * frame. Empty until something is drawn, which is why `freeform` falls back
+   * to a bar rather than to nothing.
+   */
+  spine: Poly
+  /**
+   * How far the top floors step in from every *free* face, in metres.
+   *
+   * **Zero is off, and off is what every scheme opens with** — a setback is
+   * something you ask for, never something a building arrives with. It is also
+   * the only state the roof control has: there is no separate "has a setback"
+   * flag to fall out of step with the number. A face shared with another
+   * wing is never inset — moving it would pull the two wings apart and open a
+   * gap along a junction that the whole butt-jointed layout exists to avoid.
+   */
+  topSetback: number
+  /** Levels the setback covers, counted down from the top. */
+  topSetbackFloors: number
   roofParapet: number
 
   // facade
@@ -88,11 +118,16 @@ export const DEFAULTS: Params = {
   floors: 8,
   floorHeight: 3.0,
   buildingDepth: 13,
+  depthB: 0,
+  depthC: 0,
   wingLengthA: 40,
   wingLengthB: 40,
   wingLengthC: 40,
   courtyardWidth: 25,
   massOffset: 0,
+  spine: [],
+  topSetback: 0,
+  topSetbackFloors: 1,
   roofParapet: 0.9,
 
   moduleWidth: 6.0,
@@ -144,12 +179,16 @@ export interface Range {
 const RANGES = {
   floors: { min: 2, max: 30, step: 1, label: 'Floors' },
   floorHeight: { min: 2.6, max: 4.0, step: 0.05, label: 'Floor height', unit: 'm', hint: 'Floor to floor' },
-  buildingDepth: { min: 9, max: 24, step: 0.5, label: 'Wing depth', unit: 'm' },
+  buildingDepth: { min: 9, max: 24, step: 0.5, label: 'Wing A depth', unit: 'm' },
+  depthB: { min: 0, max: 24, step: 0.5, label: 'Wing B depth', unit: 'm', hint: '0 = same as wing A' },
+  depthC: { min: 0, max: 24, step: 0.5, label: 'Wing C depth', unit: 'm', hint: '0 = same as wing A' },
   wingLengthA: { min: 12, max: 90, step: 0.5, label: 'Wing A', unit: 'm' },
   wingLengthB: { min: 12, max: 90, step: 0.5, label: 'Wing B', unit: 'm' },
   wingLengthC: { min: 12, max: 90, step: 0.5, label: 'Wing C', unit: 'm' },
   courtyardWidth: { min: 12, max: 60, step: 0.5, label: 'Courtyard width', unit: 'm' },
   massOffset: { min: 0, max: 20, step: 0.5, label: 'Mass offset', unit: 'm' },
+  topSetback: { min: 0, max: 8, step: 0.5, label: 'Setback', unit: 'm', hint: 'In from every face that is not a junction. Zero is a flat top again.' },
+  topSetbackFloors: { min: 1, max: 5, step: 1, label: 'Setback floors', hint: 'Counted down from the top' },
   roofParapet: { min: 0, max: 1.5, step: 0.05, label: 'Parapet', unit: 'm' },
 
   moduleWidth: { min: 3.0, max: 9.0, step: 0.1, label: 'Module width', unit: 'm', hint: 'One apartment module' },
@@ -201,7 +240,14 @@ const RETRACKING: (keyof Params)[] = [
   'wingLengthC',
   'courtyardWidth',
   'buildingDepth',
+  'depthB',
+  'depthC',
   'massOffset',
+  'spine',
+  // A setback rebuilds the top of every wing, so a shaft placed by hand on a
+  // perimeter track is pointing at a path that no longer exists.
+  'topSetback',
+  'topSetbackFloors',
 ]
 
 export function clearsCorePlacement(patch: Partial<Params>): boolean {
@@ -209,8 +255,40 @@ export function clearsCorePlacement(patch: Partial<Params>): boolean {
 }
 
 /** Minimum masonry above a window head, and beside one. */
+/** What picking "Setback top" starts you at, before you move the slider. */
+export const DEFAULT_TOP_SETBACK = 3
+
 export const HEAD_MIN = 0.25
 export const PIER_MIN = 0.3
+
+/**
+ * The depth of each wing, with zero on B or C meaning "the same as A".
+ *
+ * One function so the clamps and the preset builder cannot drift: every rule
+ * that used to read `buildingDepth` now reads whichever wing it is actually
+ * about, and with the defaults in place each one reduces to exactly the number
+ * it was before.
+ */
+export function wingDepths(p: Params): { A: number; B: number; C: number } {
+  const a = p.buildingDepth
+  return {
+    A: a,
+    B: p.depthB > 0 ? p.depthB : a,
+    C: p.depthC > 0 ? p.depthC : a,
+  }
+}
+
+/**
+ * The shallowest wing this preset actually builds.
+ *
+ * A loggia is carved out of the wing it sits on and a core has to stand inside
+ * one, so both are limited by the tightest wing in the building rather than by
+ * an average or by wing A alone.
+ */
+export function minWingDepth(p: Params): number {
+  const d = wingDepths(p)
+  return Math.min(...PRESET_WINGS[p.preset].map((w) => d[w]))
+}
 
 /**
  * Bands, made disjoint, ordered and fitted to the building they belong to.
@@ -279,16 +357,32 @@ export function resolveParams(raw: Params): Params {
   p.windowsPerModule = Math.round(clamp(p.windowsPerModule, 1, 3))
   p.randomSeed = Math.round(p.randomSeed)
 
-  // A courtyard needs enough length to wrap a void of any size.
+  // Zero is off, so it has to skip the range clamp that would raise it to the
+  // minimum depth and silently turn "same as wing A" into a number.
+  // A drawn plan is points, not a slider, so the only sane clamp is to throw
+  // away what is not a finite pair and to collapse a point landing on top of
+  // its neighbour — a zero-length leg has no direction to offset along.
+  p.spine = (Array.isArray(p.spine) ? p.spine : [])
+    .filter((q) => q && Number.isFinite(q.x) && Number.isFinite(q.z))
+    .map((q) => ({ x: q.x, z: q.z }))
+    .filter((q, i, all) => i === 0 || Math.hypot(q.x - all[i - 1].x, q.z - all[i - 1].z) > 1e-6)
+
+  p.depthB = p.depthB > 0 ? clamp(p.depthB, RANGE.buildingDepth.min, RANGE.buildingDepth.max) : 0
+  p.depthC = p.depthC > 0 ? clamp(p.depthC, RANGE.buildingDepth.min, RANGE.buildingDepth.max) : 0
+  const depth = wingDepths(p)
+
+  // A courtyard needs enough length to wrap a void of any size. It exposes only
+  // wing A, so one depth is all it has.
   if (p.preset === 'courtyard') {
-    p.wingLengthA = Math.max(p.wingLengthA, 2 * p.buildingDepth + 8)
+    p.wingLengthA = Math.max(p.wingLengthA, 2 * depth.A + 8)
   }
   // U and T wings hang off a spine that must be wider than the wings are deep.
+  // With the depths uniform these are the numbers they always were.
   if (p.preset === 'U') {
-    p.wingLengthA = Math.max(p.wingLengthA, 2 * p.buildingDepth + 4)
+    p.wingLengthA = Math.max(p.wingLengthA, depth.B + depth.C + 4)
   }
   if (p.preset === 'T') {
-    p.wingLengthA = Math.max(p.wingLengthA, p.buildingDepth + 4)
+    p.wingLengthA = Math.max(p.wingLengthA, depth.B + 4)
   }
 
   // Vertical fit: window head needs masonry above it, so the sill gives way first.
@@ -304,14 +398,16 @@ export function resolveParams(raw: Params): Params {
   const maxWindow = (p.moduleWidth - (p.windowsPerModule + 1) * PIER_MIN) / p.windowsPerModule
   p.windowWidth = clamp(p.windowWidth, RANGE.windowWidth.min, Math.max(RANGE.windowWidth.min, maxWindow))
 
-  // A loggia is carved out of the wing, so it cannot eat more than half its depth.
-  p.balconyDepth = clamp(p.balconyDepth, RANGE.balconyDepth.min, Math.max(RANGE.balconyDepth.min, p.buildingDepth / 2 - 1))
+  // A loggia is carved out of the wing, so it cannot eat more than half its
+  // depth — and it has to hold on the shallowest wing, not the deepest.
+  const shallowest = minWingDepth(p)
+  p.balconyDepth = clamp(p.balconyDepth, RANGE.balconyDepth.min, Math.max(RANGE.balconyDepth.min, shallowest / 2 - 1))
 
   // A core has to live inside the wing it sits in, with wall either side. The
   // builder shrinks it further when a particular wing is short, because only it
   // knows the mass sizes — this is the part that can be settled from params.
   p.coreCount = Math.round(p.coreCount)
-  p.coreDepth = clamp(p.coreDepth, RANGE.coreDepth.min, Math.max(RANGE.coreDepth.min, p.buildingDepth - 1))
+  p.coreDepth = clamp(p.coreDepth, RANGE.coreDepth.min, Math.max(RANGE.coreDepth.min, shallowest - 1))
   // One offset per core, always: shorter means a new core has nowhere to sit,
   // longer means a stale entry decides where a core goes when the count grows.
   p.coreOffsets = Array.from({ length: p.coreCount }, (_, i) => {
@@ -321,6 +417,8 @@ export function resolveParams(raw: Params): Params {
 
   p.reveal = Math.min(p.reveal, 0.4)
   p.balconyStartFloor = clamp(Math.round(p.balconyStartFloor), 0, Math.max(0, p.floors - 1))
+  // Never more setback floors than the building has.
+  p.topSetbackFloors = clamp(Math.round(p.topSetbackFloors), 1, Math.max(1, p.floors))
 
   // Program bands. Clamped here rather than at the inputs like everything else,
   // and for a sharper reason than consistency: the Floors slider can pull the

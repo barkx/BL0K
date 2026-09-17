@@ -42,6 +42,16 @@ export const IconProgram = () => (
   </svg>
 )
 
+/** A sheet with a drawing on it and a title strip below. */
+export const IconDrawings = () => (
+  <svg {...base}>
+    <rect x="3.5" y="4" width="17" height="16" rx="1" />
+    <path d="M3.5 16.5h17" />
+    <path d="M7 7.5h6v6H7z" />
+    <path d="M15 7.5v6" />
+  </svg>
+)
+
 /** Two stacked masses. */
 export const IconMassing = () => (
   <svg {...base}>

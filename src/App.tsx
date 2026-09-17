@@ -14,9 +14,12 @@ function useDrawShortcuts() {
   const finishPlotDraw = useStore((s) => s.finishPlotDraw)
   const cancelPlotDraw = useStore((s) => s.cancelPlotDraw)
   const undoDraftPoint = useStore((s) => s.undoDraftPoint)
+  const finishSpineDraw = useStore((s) => s.finishSpineDraw)
 
   useEffect(() => {
-    if (plotMode !== 'draw') return
+    // The boundary and a building's centreline are traced with the same three
+    // keys; only what Enter commits to differs.
+    if (plotMode !== 'draw' && plotMode !== 'spine') return
     const onKey = (event: KeyboardEvent) => {
       // Never steal keys from a field the user is typing in.
       const el = event.target as HTMLElement | null
@@ -24,7 +27,8 @@ function useDrawShortcuts() {
 
       if (event.key === 'Enter') {
         event.preventDefault()
-        finishPlotDraw()
+        if (plotMode === 'spine') finishSpineDraw()
+        else finishPlotDraw()
       } else if (event.key === 'Escape') {
         event.preventDefault()
         cancelPlotDraw()
@@ -35,7 +39,33 @@ function useDrawShortcuts() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [plotMode, finishPlotDraw, cancelPlotDraw, undoDraftPoint])
+  }, [plotMode, finishPlotDraw, finishSpineDraw, cancelPlotDraw, undoDraftPoint])
+}
+
+/**
+ * Undo and redo, on the keys every other tool uses.
+ *
+ * Kept out of the tracing handler above because it is live in every mode: the
+ * one thing you want after a mistake is the same key wherever you made it.
+ * A field with a cursor in it keeps its own undo — stealing that would break
+ * typing a number.
+ */
+function useHistoryKeys() {
+  const undo = useStore((s) => s.undo)
+  const redo = useStore((s) => s.redo)
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'z') return
+      const el = event.target as HTMLElement | null
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
+      event.preventDefault()
+      if (event.shiftKey) redo()
+      else undo()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [undo, redo])
 }
 
 /** Dropping an image anywhere on the viewport loads it as the underlay. */
@@ -90,6 +120,7 @@ function useImageDrop() {
 
 const DRAWING: Record<string, string> = {
   draw: 'Click to place a corner · Enter or the red corner closes it · Backspace undoes · Esc cancels',
+  spine: 'Click to trace the building · Enter builds it · Backspace undoes · Esc cancels',
   calibrate: 'Click two points whose real distance you know, then enter that distance',
 }
 
@@ -107,6 +138,7 @@ const BY_TOOL: Record<Tool, string> = {
   program: 'Switch to Diagram in Settings to see the programme on the model',
   facade: 'Click a face to override it · click it again to clear',
   units: 'Click a building to select it',
+  drawings: 'Click a building to select it — the site plan draws them all',
   settings: 'Click a building to select it',
 }
 
@@ -118,6 +150,7 @@ export default function App() {
   const tool = useStore((s) => s.tool)
   const { handlers, dropping, error, clearError } = useImageDrop()
   useDrawShortcuts()
+  useHistoryKeys()
 
   return (
     <div className={collapsed ? 'app collapsed' : 'app'}>

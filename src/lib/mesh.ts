@@ -177,6 +177,30 @@ export class MeshBuilder {
 }
 
 /** A horizontal rectangle at height `y`, facing up or down. */
+/**
+ * A flat convex outline at height `y`, as a triangle fan from its first point.
+ *
+ * A fan is only valid on a convex polygon, which every mass outline and every
+ * piece a convex difference produces is — so the roof of a mitred wing draws as
+ * the shape it actually is rather than as the box around it.
+ */
+export function horizontalPoly(
+  b: MeshBuilder,
+  poly: { x: number; z: number }[],
+  y: number,
+  up: boolean,
+) {
+  const n: [number, number, number] = up ? [0, 1, 0] : [0, -1, 0]
+  for (let i = 1; i + 1 < poly.length; i++) {
+    const a = poly[0]
+    const c = poly[i]
+    const d = poly[i + 1]
+    // Wound to face the way the normal says, whichever way the outline runs.
+    if (up) b.tri([a.x, y, a.z], [c.x, y, c.z], [d.x, y, d.z], n)
+    else b.tri([a.x, y, a.z], [d.x, y, d.z], [c.x, y, c.z], n)
+  }
+}
+
 export function horizontalQuad(
   b: MeshBuilder,
   x0: number,

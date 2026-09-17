@@ -24,6 +24,12 @@ import { NO_MIX, UNIT_TYPES, type UnitMix } from '../store/unitMix'
  *     optional underlay image carried inline as a data URL.
  * v4: the site carries `rules` — the plot's planning limits. A v3 file has no
  *     rules, so it loads with every rule off, which is what it meant.
+ * v11: a building can carry a drawn `spine` — the centreline of the `freeform`
+ *      preset. A file without one has no drawn plan, which is what it meant.
+ * v10: wings B and C can carry their own depth, and the top floors can step
+ *      in from the free faces. Both are zero in a file that predates them,
+ *      which means "the same as wing A" and "no setback" — the shape the file
+ *      described.
  * v9: buildings carry `unitMix` — a target share and a module span per
  *     apartment type. Every share zero means no mix, which is what a file
  *     without one described, so it loads with the single-divisor estimate it
@@ -45,7 +51,7 @@ import { NO_MIX, UNIT_TYPES, type UnitMix } from '../store/unitMix'
  * The `app` field is informational only — the loader never reads it — so files
  * written under either earlier name, 3DBlock or BL0K, still load unchanged.
  */
-export const CONFIG_VERSION = 9
+export const CONFIG_VERSION = 11
 
 export interface SavedConfig {
   version: number

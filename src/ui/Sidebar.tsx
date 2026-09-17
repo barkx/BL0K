@@ -3,7 +3,10 @@ import { Slider } from './Slider'
 import { Block, Chips, Select } from './Field'
 import { useSelectedParams, useStore, type Tool } from '../store/store'
 import { PRESET_LABELS, PRESET_WINGS } from '../store/presets'
+import { DEFAULT_TOP_SETBACK } from '../store/params'
+import { spineCrosses } from '../geometry/spine'
 import type {
+  Params,
   BalconyPattern,
   BalconyType,
   BalustradeKind,
@@ -25,7 +28,9 @@ import {
 import { UnderlayPanel } from './UnderlayPanel'
 import { ProgramPanel } from './ProgramPanel'
 import { UnitMixPanel } from './UnitMixPanel'
+import { DrawingsPanel } from './DrawingsPanel'
 import {
+  IconDrawings,
   IconFacade,
   IconMassing,
   IconPlacement,
@@ -35,10 +40,17 @@ import {
   IconUnits,
 } from './Icons'
 
-const PRESETS = Object.entries(PRESET_LABELS).map(([value, label]) => ({
-  value: value as Preset,
-  label,
-}))
+/**
+ * The six shapes, without the drawn one.
+ *
+ * Freeform sits below on its own rather than as a seventh chip. It is not
+ * another footprint of the same standing: it reaches parts of the app that
+ * still measure a bounding box, so it belongs behind a label that says as much
+ * rather than beside six settled options.
+ */
+const PRESETS = Object.entries(PRESET_LABELS)
+  .filter(([value]) => value !== 'freeform')
+  .map(([value, label]) => ({ value: value as Preset, label }))
 
 const BALCONY_TYPES: { value: BalconyType; label: string }[] = [
   { value: 'none', label: 'None' },
@@ -65,6 +77,20 @@ const CORE_PLACEMENTS: { value: CorePlacement; label: string }[] = [
   { value: 'centre', label: 'In the centre' },
 ]
 
+/**
+ * The roof is flat unless somebody asks otherwise, so the setback is behind a
+ * choice rather than sitting in the panel as though every building had one.
+ *
+ * Which chip is lit is read straight off `topSetback` instead of a flag of its
+ * own: two pieces of state for one fact is two pieces of state that can
+ * disagree, and dragging the slider back to zero would then leave a building
+ * with "Setback top" selected and a flat roof.
+ */
+const ROOF_KINDS: { value: 'flat' | 'setback'; label: string }[] = [
+  { value: 'flat', label: 'Flat' },
+  { value: 'setback', label: 'Setback top' },
+]
+
 const MODES: { value: RenderMode; label: string }[] = [
   { value: 'white', label: 'White' },
   { value: 'pbr', label: 'PBR' },
@@ -84,6 +110,105 @@ function saveImage() {
   canvas.toBlob((blob) => {
     if (blob) download(`urbgen-${stamp()}.png`, blob, 'image/png')
   }, 'image/png')
+}
+
+/**
+ * Freeform, kept deliberately apart from the presets.
+ *
+ * Kept apart from the presets because it is the newest and least worn-in way to
+ * shape a building, not because the numbers are suspect: since stage 3 the
+ * area, roof, core track, setback and floor plan all read the real outline
+ * rather than the box around it.
+ */
+function FreeformChoice() {
+  const p = useSelectedParams()
+  const set = useStore((s) => s.set)
+  const on = p.preset === 'freeform'
+
+  return (
+    <>
+      <div className="field">
+        <div className="row">
+          <label>Experimental</label>
+        </div>
+        <div className="chips">
+          <button
+            type="button"
+            aria-pressed={on}
+            onClick={() => set({ preset: on ? 'bar' : 'freeform' })}
+          >
+            Freeform
+          </button>
+        </div>
+        {!on && (
+          <div className="hint">
+            Draw the plan yourself instead of picking a shape. Wings meet at any
+            angle.
+          </div>
+        )}
+      </div>
+      {on && (
+        <>
+          <SpineControls />
+          <div className="field">
+            <div className="hint">
+              Area, roof, core track, setback and the floor-plan drawing all
+              follow the real outline, so the numbers hold at any angle. Still
+              marked experimental because it is the newest way to shape a
+              building and the least worn in.
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  )
+}
+
+/**
+ * Tracing a building's plan.
+ *
+ * The centreline is drawn on the ground with the same three keys the boundary
+ * uses, because it is the same gesture and a second vocabulary for it would be
+ * one to learn for nothing.
+ */
+function SpineControls() {
+  const plotMode = useStore((s) => s.plotMode)
+  const startSpineDraw = useStore((s) => s.startSpineDraw)
+  const cancelPlotDraw = useStore((s) => s.cancelPlotDraw)
+  const draft = useStore((s) => s.plotDraft)
+  const p = useSelectedParams()
+  const drawing = plotMode === 'spine'
+  const legs = Math.max(0, p.spine.length - 1)
+
+  return (
+    <>
+      <div className="stack">
+        <button className="ghost" onClick={drawing ? cancelPlotDraw : startSpineDraw}>
+          {drawing ? 'Cancel' : p.spine.length > 0 ? 'Draw it again' : 'Draw a plan'}
+        </button>
+        <div className="hint">
+          {drawing
+            ? `${draft.length} point${draft.length === 1 ? '' : 's'} — Enter builds it, Backspace undoes, Esc cancels.`
+            : legs > 0
+              ? `${legs} leg${legs === 1 ? '' : 's'}, each the depth below. Corners are mitred, so the wings meet cleanly at any angle.`
+              : 'Trace a centreline on the ground and the building follows it. Until then this is a plain bar.'}
+        </div>
+      </div>
+      {!drawing && spineWarning(p.spine)}
+    </>
+  )
+}
+
+function spineWarning(spine: Params['spine']) {
+  if (spine.length < 2 || !spineCrosses(spine)) return null
+  return (
+    <div className="field">
+      <div className="hint snap">
+        The centreline crosses itself, so two wings occupy the same ground. The
+        area and the junctions are both unreliable until it is redrawn.
+      </div>
+    </div>
+  )
 }
 
 function NoSelection() {
@@ -188,6 +313,10 @@ function SettingsPanel() {
 
   const mode = useStore((s) => s.renderMode)
   const setRenderMode = useStore((s) => s.setRenderMode)
+  const undo = useStore((s) => s.undo)
+  const redo = useStore((s) => s.redo)
+  const past = useStore((s) => s.past.length)
+  const future = useStore((s) => s.future.length)
 
   return (
     <>
@@ -200,6 +329,24 @@ function SettingsPanel() {
           <div className="hint">
             The viewport as it stands, at its size on screen. Double-click the
             ground to frame the whole site.
+          </div>
+        </div>
+      </Block>
+
+      <Block title="History">
+        <div className="stack">
+          <div className="pair">
+            <button className="ghost" onClick={undo} disabled={past === 0}>
+              Undo
+            </button>
+            <button className="ghost" onClick={redo} disabled={future === 0}>
+              Redo
+            </button>
+          </div>
+          <div className="hint">
+            {past === 0 && future === 0
+              ? 'Nothing to undo yet. Ctrl+Z steps back, Ctrl+Shift+Z forward — in every tab.'
+              : `${past} step${past === 1 ? '' : 's'} back, ${future} forward. Ctrl+Z and Ctrl+Shift+Z.`}
           </div>
         </div>
       </Block>
@@ -323,6 +470,9 @@ const SECTIONS: { id: Tool; label: string; icon: () => JSX.Element }[] = [
   { id: 'program', label: 'Program', icon: IconProgram },
   { id: 'facade', label: 'Facade', icon: IconFacade },
   { id: 'units', label: 'Units', icon: IconUnits },
+  // After Units and before Settings: drawings are what you take away once the
+  // scheme is decided, and Settings is housekeeping rather than a step.
+  { id: 'drawings', label: 'Drawings', icon: IconDrawings },
   { id: 'settings', label: 'Settings', icon: IconSettings },
 ]
 
@@ -397,6 +547,7 @@ export function Sidebar() {
               <>
                 <Block title="Footprint">
                   <Chips value={p.preset} options={PRESETS} onChange={(v) => set({ preset: v })} />
+                  <FreeformChoice />
                   {wings.includes('A') && (
                     <Slider
                       name="wingLengthA"
@@ -411,12 +562,36 @@ export function Sidebar() {
                   {p.preset === 'stacked' && (
                     <Slider name="massOffset" note="Each mass steps back by this much." />
                   )}
-                  <Slider name="buildingDepth" note="Uniform across wings." />
+                  <Slider
+                    name="buildingDepth"
+                    note={
+                      wings.length > 1
+                        ? 'Wing A, and the default for the others.'
+                        : undefined
+                    }
+                  />
+                  {wings.includes('B') && <Slider name="depthB" />}
+                  {wings.includes('C') && <Slider name="depthC" />}
                 </Block>
                 <Block title="Height">
                   <Slider name="floors" />
                   <Slider name="floorHeight" />
+                </Block>
+                <Block title="Roof">
                   <Slider name="roofParapet" />
+                  <Chips
+                    value={p.topSetback > 0 ? 'setback' : 'flat'}
+                    options={ROOF_KINDS}
+                    onChange={(v) =>
+                      set({ topSetback: v === 'setback' ? DEFAULT_TOP_SETBACK : 0 })
+                    }
+                  />
+                  {p.topSetback > 0 && (
+                    <>
+                      <Slider name="topSetback" />
+                      <Slider name="topSetbackFloors" />
+                    </>
+                  )}
                 </Block>
                 <Block title="Core">
                   <Slider
@@ -511,6 +686,8 @@ export function Sidebar() {
             ) : (
               <NoSelection />
             ))}
+
+          {active === 'drawings' && <DrawingsPanel />}
 
           {active === 'settings' && <SettingsPanel />}
         </div>

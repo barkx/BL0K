@@ -3,10 +3,8 @@ import { DoubleSide, Euler, InstancedMesh, Material, Matrix4, Quaternion, Vector
 import type { ThreeEvent } from '@react-three/fiber'
 import type { MaterialSet } from './materials'
 import type { Instance } from '../geometry/balcony'
-import type { Dir } from '../store/params'
-import { footprint, type Mass } from '../geometry/masses'
 import { MeshBuilder } from '../lib/mesh'
-import { DIRS, type Elevation } from '../geometry/elevations'
+import type { Elevation } from '../geometry/elevations'
 import type { PlacedBuilding } from '../site/build'
 import type { SiteDrag } from './useSiteDrag'
 import type { CoreDrag } from './useCoreDrag'
@@ -67,15 +65,45 @@ function Instanced({
  * or a loggia cheek, whose normal points along the elevation rather than out
  * of it.
  */
-function dirAtPoint(mass: Mass, x: number, z: number): Dir {
-  const r = footprint(mass)
-  const distance: Record<Dir, number> = {
-    N: Math.abs(z - r.z0),
-    S: Math.abs(z - r.z1),
-    W: Math.abs(x - r.x0),
-    E: Math.abs(x - r.x1),
+/**
+ * Which elevation was clicked, asked of the elevations themselves.
+ *
+ * This used to guess: take the mass's bounding box, find the nearest of its
+ * four edges, and rebuild the key as `massId:N`. That worked only while every
+ * mass was an axis-aligned rectangle. A mitred wing has faces at any angle and
+ * can have two near the same compass point, so the guess named a face that
+ * sometimes did not exist and the Facade rung selected nothing.
+ *
+ * Measuring against the real faces fixes it for every shape, and removes the
+ * second place elevation keys were being invented — `buildElevations` is now
+ * the only one, so the two can no longer disagree.
+ *
+ * Buried faces are skipped. A face another wing is pressed against has no
+ * facade to override, and offering it was never useful.
+ */
+function faceAtPoint(
+  elevations: Elevation[],
+  massId: string,
+  x: number,
+  z: number,
+): string | null {
+  let best: string | null = null
+  let bestDistance = Infinity
+  for (const e of elevations) {
+    if (e.massId !== massId || e.abutting) continue
+    const dx = x - e.origin.x
+    const dz = z - e.origin.z
+    // Only faces the point actually falls along, with a little slack for the
+    // wall thickness the app does not model.
+    const u = dx * e.uDir.x + dz * e.uDir.z
+    if (u < -0.5 || u > e.length + 0.5) continue
+    const away = Math.abs(dx * e.normal.x + dz * e.normal.z)
+    if (away < bestDistance) {
+      bestDistance = away
+      best = e.key
+    }
   }
-  return DIRS.reduce((best, d) => (distance[d] < distance[best] ? d : best), DIRS[0])
+  return best
 }
 
 /** Pixels of travel that turn a press into an orbit rather than a click. */
@@ -246,12 +274,14 @@ export function Building({
       return
     }
 
-    const mass = masses.get(massId)
-    if (!mass) return
+    if (!masses.has(massId)) return
     if (event.face && Math.abs(event.face.normal.y) > 0.8) return
-    // The hit point is in world space; the AABB test needs the building's frame.
+    // The hit point is in world space; the faces are in the building's frame.
     const local = event.object.worldToLocal(event.point.clone())
-    const key = `${massId}:${dirAtPoint(mass, local.x, local.z)}`
+    const key = faceAtPoint(building.elevations, massId, local.x, local.z)
+    // No face owns this point — a sliver, or a wall that is entirely buried.
+    // Drilling into Facade with nothing selected would look broken, so stay.
+    if (!key) return
 
     if (tool === 'facade') {
       // Already at the bottom: further clicks just move between faces.

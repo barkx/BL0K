@@ -2,7 +2,7 @@ import type { BufferGeometry } from 'three'
 import { MeshBuilder, horizontalQuad } from '../lib/mesh'
 import { EPS } from '../lib/clamp'
 import { rectArea, type Rect, type Span } from '../lib/rect'
-import { footprint, type Mass } from './masses'
+import { facesOf, footprint, type Mass } from './masses'
 import type { Elevation } from './elevations'
 import type { Params } from '../store/params'
 
@@ -116,18 +116,54 @@ function perimeterTrack(elevations: Elevation[], ground: Set<string>): TrackSegm
   return out
 }
 
-/** The spine of each ground-level wing, along its longer plan axis. */
+/**
+ * The spine of a wing: the line along its longest face, through its middle,
+ * trimmed to the outline.
+ *
+ * Reading the direction off the longest face rather than off a bounding box is
+ * what carries this to a mitred wing, whose box says nothing useful about which
+ * way it runs. On a rectangle the longest face is the long side, so this is the
+ * same line the old longer-axis test produced.
+ */
+function spineOf(m: Mass): { from: { x: number; z: number }; to: { x: number; z: number } } | null {
+  const faces = facesOf(m)
+  if (faces.length === 0) return null
+  const longest = faces.reduce((best, f) => (f.length > best.length ? f : best), faces[0])
+  const dir = longest.uDir
+  const centre = {
+    x: m.shape.reduce((s, q) => s + q.x, 0) / m.shape.length,
+    z: m.shape.reduce((s, q) => s + q.z, 0) / m.shape.length,
+  }
+
+  // How far the line may run each way before it leaves the outline.
+  let lo = -Infinity
+  let hi = Infinity
+  for (const f of faces) {
+    const denom = dir.x * f.normal.x + dir.z * f.normal.z
+    const away = (centre.x - f.origin.x) * f.normal.x + (centre.z - f.origin.z) * f.normal.z
+    if (Math.abs(denom) < 1e-9) {
+      if (away > 1e-9) return null
+      continue
+    }
+    const t = -away / denom
+    if (denom > 0) hi = Math.min(hi, t)
+    else lo = Math.max(lo, t)
+  }
+  if (!(hi > lo)) return null
+  return {
+    from: { x: centre.x + dir.x * lo, z: centre.z + dir.z * lo },
+    to: { x: centre.x + dir.x * hi, z: centre.z + dir.z * hi },
+  }
+}
+
+/** The spine of each ground-level wing. */
 function centreTrack(ground: Mass[]): TrackSegment[] {
   const out: TrackSegment[] = []
   let start = 0
   for (const m of ground) {
-    const r = footprint(m)
-    const alongX = r.x1 - r.x0 >= r.z1 - r.z0
-    const from = alongX
-      ? { x: r.x0, z: (r.z0 + r.z1) / 2 }
-      : { x: (r.x0 + r.x1) / 2, z: r.z0 }
-    const to = alongX ? { x: r.x1, z: from.z } : { x: from.x, z: r.z1 }
-    const s = segment(null, from, to, { x: 0, z: 0 }, start)
+    const line = spineOf(m)
+    if (!line) continue
+    const s = segment(null, line.from, line.to, { x: 0, z: 0 }, start)
     if (s.length <= MIN_SIDE) continue
     out.push(s)
     start += s.length

@@ -778,3 +778,21 @@ table.mix td {
   color: var(--ink);
 }
 table.mix td small { color: var(--ink-faint); }
+
+/* --- drawings ----------------------------------------------------------- */
+
+/* The preview is the exported SVG itself, shrunk to the panel. A light rule
+   and a white ground, because a drawing is on paper and the panel is not. */
+.drawing-preview {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 4px;
+  overflow: hidden;
+}
+.drawing-preview svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 260px;
+}
