@@ -348,3 +348,17 @@ prose alone, drawn figures, app screenshots, and icons. Each of the first three
 was cut for a different reason — thin, inaccurate, and unreadable at column
 width respectively. If a fifth is proposed, that history is the argument to
 answer.
+
+**Fourth pass: every figure out.** The exported elevation and the three drawing
+sheets were cut too, and with them the drawings chapter — a chapter whose claim
+was a picture has nothing left once the picture goes. Its substance moved into
+the Drawings line of the tabs list, which now carries the true-scale claim, and
+the formats stay in the FAQ.
+
+**The page now has no images in `main` at all.** What survives is the hero
+block, and it survives because it is generated rather than captured: it cannot
+drift from the app the way a screenshot does, and it cannot misrepresent it the
+way a drawing did. That is worth remembering before proposing imagery again —
+five approaches have been tried and only the generated one has lasted.
+
+Four chapters, 1 314 words.
