@@ -3,6 +3,7 @@ import { int, m, m2, pct } from '../lib/units'
 import { round } from '../lib/clamp'
 import { RULE_KIND, RULE_LABEL, RULE_SENSE, type Breach } from '../site/rules'
 import { PUBLIC_USES, USE_LABEL } from '../store/program'
+import { UNIT_LABEL, UNIT_TYPES, type UnitType } from '../store/unitMix'
 
 /**
  * A line per public programme, and none at all when the scheme is all housing.
@@ -18,6 +19,46 @@ function ProgrammeRows({ gfaByUse }: { gfaByUse: Record<string, number> }) {
       {rows.map((use) => (
         <ProgrammeRow key={use} label={USE_LABEL[use]} area={gfaByUse[use]} />
       ))}
+    </>
+  )
+}
+
+/**
+ * The mix under the total, and nothing at all when no building carries one.
+ *
+ * `untyped` only appears when some blocks have a mix and others do not, which
+ * is the one case where the breakdown would otherwise fail to add up to the
+ * number above it.
+ */
+function MixRows({
+  byType,
+  untyped,
+  total,
+}: {
+  byType: Record<UnitType, number>
+  untyped: number
+  total: number
+}) {
+  const rows = UNIT_TYPES.filter((t) => byType[t] > 0)
+  if (rows.length === 0) return null
+  return (
+    <>
+      {rows.map((t) => (
+        <span key={t} style={{ display: 'contents' }}>
+          <dt>{UNIT_LABEL[t]}</dt>
+          <dd>
+            {int(byType[t])} <small>{pct(total > 0 ? byType[t] / total : 0)}</small>
+          </dd>
+        </span>
+      ))}
+      {untyped > 0 && (
+        <>
+          <dt>No mix set</dt>
+          <dd>
+            {int(untyped)} <small>units</small>
+          </dd>
+        </>
+      )}
     </>
   )
 }
@@ -103,6 +144,8 @@ export function MetricsPanel() {
         <dd>
           {int(k.units)} <small>est.</small>
         </dd>
+
+        <MixRows byType={k.unitsByType} untyped={k.unitsUntyped} total={k.units} />
 
         <dt>Tallest</dt>
         <dd>{m(k.maxHeight)}</dd>

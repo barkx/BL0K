@@ -26,6 +26,7 @@ current as the app changes, and record any deviation in `README.md`.
 | Balconies | Projecting slabs, recessed loggias, and per-elevation config |
 | Render modes | Toggle: white model / PBR / diagram |
 | Metrics | GFA, NIA, facade area, unit estimate, footprint, coverage, plot ratio |
+| Unit mix | Target shares per apartment type, filled greedily against the target. Counts and areas only — never which flat sits in which bay |
 | Site rules | Setback, separation, height cap, FAR and coverage limits; zero is off |
 | Interaction | A tab is a tool: it scopes the viewport's handles and drags. Selection is always live |
 | Program | A floor can be residential, retail, office or amenity. Bands of levels, not a value per floor. Drives glazing and the metrics, never the massing |
@@ -361,6 +362,7 @@ Do these cheaply now so the deferred features are not rewrites:
 | **M12 Core** | A shaft of stairs, lift and risers as massing: count, size, overrun, and a perimeter or centre track it is shared along and can be dragged on. A perimeter shaft blanks the facade it meets — no windows, no units behind a lift. NIA becomes `(GFA − core) × efficiency`. Config v5. Reopens part of a §1 non-goal, by decision |
 
 | **M15 Location and context** | A site carries latitude, longitude and true north, which georeferences the IFC. A map picker with search to choose it, and OpenStreetMap surroundings fetched from Overpass and drawn as linework to trace over — at true scale and true north, which is the hand-calibration step gone. Config v7 |
+| **M18 Unit mix** | Target shares per apartment type, and how many modules a flat of each type spans. The residential pool is filled one flat at a time against the target, so it can never overspend, and the achieved share is reported beside the one asked for. Counts and areas, no geometry. Config v9 |
 | **M16 Program by floor** | A run of levels given over to something other than housing: its own shopfront glazing, no balconies, its own line in the metrics, and its own tint in diagram mode. Bands of absolute levels, trimmed to be disjoint by the one clamping function. Config v8 |
 | **M13 Tabs as tools** | The open section scopes what the viewport does. Selection and camera stay live everywhere; handles and drags belong to their tab. Clicking drills in — ground and first click to Placement, again to Massing, a face to Facade — and the plot boundary opens Site |
 
@@ -454,9 +456,11 @@ absence caps the tool's usefulness no matter how good everything else gets.
    Nominatim both need no key, so the no-credentials rule held. The gap it was
    meant to close — a site arriving as a hand-calibrated image — is closed:
    surroundings arrive already at true scale and true north.
-4. **Unit mix to target ratios.** Modules are already addressable as
-   `(elevation, floor, index)` — that address was kept for exactly this. Turns
-   the crude estimate into a real number.
+4. ~~**Unit mix to target ratios.**~~ **Done in M18.** The address the modules
+   carried — `(elevation, floor, index)`, and since M16 a `use` — was kept for
+   exactly this, and M16 is what made the residential pool exact rather than
+   approximate. Still a single-aspect assumption underneath: a flat is *n*
+   modules of facade, not a plan.
 5. ~~**Site rules: setback, height cap, FAR and coverage limits.**~~ **Done in
    M11**, and they did land in the same panel with the same warning style.
    Separation between buildings came with them, which answers §10 question 5.

@@ -24,6 +24,7 @@ import {
 } from './SitePanel'
 import { UnderlayPanel } from './UnderlayPanel'
 import { ProgramPanel } from './ProgramPanel'
+import { UnitMixPanel } from './UnitMixPanel'
 import {
   IconFacade,
   IconMassing,
@@ -496,9 +497,10 @@ export function Sidebar() {
                 <Block title="Estimate">
                   <Slider
                     name="modulesPerUnit"
-                    note="Feeds the unit estimate only. Real counts arrive with floorplans."
+                    note="The single divisor, used while no mix is set below."
                   />
                 </Block>
+                <UnitMixPanel />
                 <Block title="Net area">
                   <Slider
                     name="efficiency"

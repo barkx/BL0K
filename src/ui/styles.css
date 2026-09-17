@@ -749,3 +749,32 @@ select:focus-visible { outline: none; border-color: var(--blueprint); background
 @media (max-width: 700px) {
   .picker-map { height: 240px; }
 }
+
+/* --- unit mix ----------------------------------------------------------- */
+
+/* Two numbers share the row one usually gets, so both give up some width. */
+.field .value input[type="number"].narrow { width: 44px; }
+
+/* The achieved mix, beside the one that was asked for. A table because it is
+   one: four columns that have to line up down the page to be read at all. */
+table.mix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+table.mix th {
+  text-align: right;
+  font-weight: 500;
+  color: var(--ink-faint);
+  padding: 0 0 4px;
+  border-bottom: 1px solid var(--rule);
+}
+table.mix th:first-child,
+table.mix td:first-child { text-align: left; }
+table.mix td {
+  text-align: right;
+  padding: 3px 0;
+  color: var(--ink);
+}
+table.mix td small { color: var(--ink-faint); }

@@ -13,6 +13,7 @@ import {
 import { checkRules, type Breach } from './rules'
 import type { Placement, Site } from './types'
 import type { Use } from '../store/program'
+import { UNIT_TYPES, type UnitType } from '../store/unitMix'
 
 export interface SiteMetrics {
   buildings: number
@@ -25,6 +26,14 @@ export interface SiteMetrics {
   /** Sum of per-building NIA, each GFA less its cores, times its own factor. */
   nia: number
   units: number
+  /** Units by type, summed over the buildings that carry a mix. */
+  unitsByType: Record<UnitType, number>
+  /**
+   * Units from buildings with no mix set. Kept separate rather than folded in,
+   * because a site where only some blocks have a mix would otherwise report a
+   * breakdown that quietly fails to add up to the total.
+   */
+  unitsUntyped: number
   facadeArea: number
   balconyArea: number
   loggiaLoss: number
@@ -88,6 +97,8 @@ export function computeSiteMetrics(
   let coreArea = 0
   let nia = 0
   let units = 0
+  const unitsByType: Record<UnitType, number> = { studio: 0, oneBed: 0, twoBed: 0, threeBed: 0 }
+  let unitsUntyped = 0
   let facadeArea = 0
   let balconyArea = 0
   let loggiaLoss = 0
@@ -102,6 +113,12 @@ export function computeSiteMetrics(
     coreArea += building.metrics.coreArea
     nia += building.metrics.nia
     units += building.metrics.units
+    const mix = building.metrics.mix
+    if (mix) {
+      for (const t of UNIT_TYPES) unitsByType[t] += mix.byType[t].units
+    } else {
+      unitsUntyped += building.metrics.units
+    }
     facadeArea += building.metrics.facadeArea
     balconyArea += building.metrics.balconyArea
     loggiaLoss += building.metrics.loggiaLoss
@@ -157,6 +174,8 @@ export function computeSiteMetrics(
     coreArea,
     nia,
     units,
+    unitsByType,
+    unitsUntyped,
     facadeArea,
     balconyArea,
     loggiaLoss,

@@ -1,5 +1,6 @@
 import { clamp } from '../lib/clamp'
 import type { ProgramBand } from './program'
+import { NO_MIX, UNIT_TYPES, type UnitMix } from './unitMix'
 
 export type Preset = 'bar' | 'L' | 'T' | 'U' | 'courtyard' | 'stacked'
 export type Dir = 'N' | 'E' | 'S' | 'W'
@@ -68,7 +69,14 @@ export interface Params {
   program: ProgramBand[]
 
   // metrics inputs
+  /** The divisor behind the single-type estimate, used when no mix is set. */
   modulesPerUnit: number
+  /**
+   * Target apartment mix. Every share zero means no mix, and the estimate falls
+   * back to `modulesPerUnit` — which is what a scheme opens with and what every
+   * file written before the mix existed described.
+   */
+  unitMix: UnitMix
   /** Net internal area as a share of GFA *after* the cores are taken out. */
   efficiency: number
 
@@ -116,6 +124,7 @@ export const DEFAULTS: Params = {
 
   program: [],
   modulesPerUnit: 1,
+  unitMix: NO_MIX,
   // What is left after the core is already deducted: internal walls, risers
   // and plant. Still a factor, not a measurement.
   efficiency: 0.9,
@@ -319,6 +328,20 @@ export function resolveParams(raw: Params): Params {
   // Program tab, so a band has to be re-settled against the floor count on
   // every resolve, not only when it is edited.
   p.program = resolveProgram(p.program, p.floors, headroom)
+
+  // A type spans the same quantity the single divisor does, so it takes the
+  // same bounds. Shares are percentages and are normalised where they are
+  // spent, not here: rewriting 30/45/30 to sum to 100 would overwrite numbers
+  // the user typed while they were still typing them.
+  const mix = { ...NO_MIX }
+  for (const t of UNIT_TYPES) {
+    const spec = p.unitMix?.[t] ?? NO_MIX[t]
+    mix[t] = {
+      modules: clamp(spec.modules, RANGE.modulesPerUnit.min, RANGE.modulesPerUnit.max),
+      share: clamp(spec.share, 0, 100),
+    }
+  }
+  p.unitMix = mix
 
   return p
 }

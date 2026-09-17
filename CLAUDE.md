@@ -208,7 +208,18 @@ Refuse:
 
 ## 6. Project State
 
-- **M1–M13, M15–M16 complete**, see `project.md` §8.
+- **M1–M13, M15–M16, M18 complete**, see `project.md` §8.
+  - **M18, unit mix**: `store/unitMix.ts`. A target share per apartment type
+    plus the modules one flat of that type spans; every share zero means no mix
+    and the estimate falls back to `modulesPerUnit`, which is also the
+    v8-file migration. `allocateUnits` fills the residential pool **one flat at
+    a time**, taking the type furthest below its target among those that still
+    fit — chosen over a closed form because it cannot overspend the pool, and
+    the leftover is reported rather than hidden. Deterministic. Shares are
+    normalised where they are spent, not in `resolveParams`, so typing 30/45/30
+    does not rewrite itself under the cursor. Area per type is pro rata by
+    modules taken; anything finer is a floorplan. Counts and areas only — no
+    geometry changed, and `moduleWidth` is untouched by design. Config v9.
   - **M16, program by floor**: a `ProgramBand` is a run of *absolute* levels
     given over to retail, office or amenity — `store/program.ts`. Bands, not a
     use per floor, and the list holds only the non-residential runs, so an empty
@@ -283,7 +294,7 @@ Refuse:
   Massing, Program, Facade (balconies live here), Units, Settings. Program sits
   between Massing and Facade because that is the order the decisions happen in.
   Rules sit in Site;
-  the core sits in Massing; the efficiency factor sits in Units. The top bar is
+  the core sits in Massing; the efficiency factor and the unit mix sit in Units. The top bar is
   deliberately bare — render mode and the PNG snapshot are in Settings, and
   double-clicking the ground frames the site, so there is no Fit button. Inside
   a panel, sections are flat `Block`s, not nested accordions. Roads and parking are

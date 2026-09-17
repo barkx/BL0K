@@ -2,6 +2,7 @@ import { round } from '../lib/clamp'
 import { RULE_KIND, RULE_LABEL, RULE_ORDER, RULE_SENSE, type RuleKey } from '../site/rules'
 import type { SiteBuild } from '../site/build'
 import { PUBLIC_USES, USE_LABEL, type Use } from '../store/program'
+import { UNIT_LABEL, UNIT_TYPES } from '../store/unitMix'
 import type { Site } from '../site/types'
 
 /**
@@ -65,6 +66,12 @@ export function siteCsv(site: Site, build: SiteBuild, when = new Date()): string
   lines.push(row(['Balcony area (m2)', k.balconyArea]))
   lines.push(row(['Loggia deduction (m2)', k.loggiaLoss]))
   lines.push(row(['Units (estimate)', k.units]))
+  // Always written, zeros included, for the same reason the programme split is:
+  // a column that appears only on some schemes cannot be compared across them.
+  for (const t of UNIT_TYPES) {
+    lines.push(row([`Units ${UNIT_LABEL[t].toLowerCase()}`, k.unitsByType[t]]))
+  }
+  lines.push(row(['Units with no mix set', k.unitsUntyped]))
   lines.push(row(['Tallest (m)', k.maxHeight]))
   lines.push('')
 

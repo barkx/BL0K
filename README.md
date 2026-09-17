@@ -531,8 +531,48 @@ keeps the value you asked for; the building uses the resolved one.
 
 ## Units
 
-- **Modules per unit** 1–3 — divides the module count into the unit estimate.
-  Nothing else uses it. Site area is not a parameter; it comes from the plot.
+- **Modules per unit** 1–3 — divides the module count into the unit estimate,
+  while no mix is set below. Nothing else uses it. Site area is not a parameter;
+  it comes from the plot.
+
+### The unit mix
+
+One divisor over every module gives a count, not a brief. A brief says 30%
+one-bed, 45% two-bed, 25% three-bed — so each type carries a **target share of
+the unit count** and the **modules one flat of that type spans**. A share of
+zero is a type the scheme does not have, the same bargain the site rules make
+with a limit nobody set, and every share zero means no mix at all: the estimate
+falls back to the single divisor, which is what a scheme opens with and what
+every file written before this described.
+
+Shares need not add up to 100. They are normalised where they are spent, not
+where they are typed — rewriting 30/45/30 to sum to 100 would overwrite numbers
+while somebody was still entering them — and the panel says so when they do not.
+
+**How the pool is filled.** One flat at a time: among the types that still fit
+in the modules left, take the one whose achieved share would sit furthest below
+its target, ties going to the type declared first. Stop when nothing fits.
+
+Chosen over solving for the counts directly, which is the obvious way and the
+wrong one here. `units = modules / average` has to round per type, rounding can
+claim a module the building does not have, and catching that afterwards needs a
+correction pass whose result is harder to predict than the loop's. Filling one
+at a time cannot overspend, because the budget only ever falls. What is left at
+the end — fewer modules than the cheapest type wants — is reported rather than
+hidden, the same bargain the module fit already makes with its snapped width.
+
+The panel shows the achieved share **beside the target**, because a mix with no
+target next to it is a number you cannot argue with, and a target nobody can
+meet is a wish. Area per type is shared out in proportion to the modules each
+type took. It is not typed in per flat, and deliberately: the app knows how wide
+a module is and how deep the building is, but not where a party wall falls, and
+a typed-in area per type would be a floorplan wearing a number's clothes.
+
+Only residential modules are in the pool, so a retail band from **Program**
+takes its floors out of the mix before it is filled.
+
+The mix is counts and areas. Which flat sits in which bay is a floorplan, and
+stays a `project.md` §1 non-goal.
 - **Efficiency** 0.85–0.97, default 0.90 — the share of *core-free* GFA that is
   net, per building. Cores come off first and are derived from geometry; this
   factor covers what is still not modelled — internal walls, risers, plant. It

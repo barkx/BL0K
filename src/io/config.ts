@@ -15,6 +15,7 @@ import {
   type Underlay,
 } from '../site/types'
 import { PUBLIC_USES, type ProgramBand } from '../store/program'
+import { NO_MIX, UNIT_TYPES, type UnitMix } from '../store/unitMix'
 
 /**
  * v1: params at the top level.
@@ -23,6 +24,10 @@ import { PUBLIC_USES, type ProgramBand } from '../store/program'
  *     optional underlay image carried inline as a data URL.
  * v4: the site carries `rules` — the plot's planning limits. A v3 file has no
  *     rules, so it loads with every rule off, which is what it meant.
+ * v9: buildings carry `unitMix` — a target share and a module span per
+ *     apartment type. Every share zero means no mix, which is what a file
+ *     without one described, so it loads with the single-divisor estimate it
+ *     always had.
  * v8: buildings carry `program` — the runs of levels given over to something
  *     other than housing. A file without it is a building of flats, which is
  *     exactly what it described, so no bands is both the migration and the
@@ -40,7 +45,7 @@ import { PUBLIC_USES, type ProgramBand } from '../store/program'
  * The `app` field is informational only — the loader never reads it — so files
  * written under either earlier name, 3DBlock or BL0K, still load unchanged.
  */
-export const CONFIG_VERSION = 8
+export const CONFIG_VERSION = 9
 
 export interface SavedConfig {
   version: number
@@ -100,6 +105,18 @@ function readParams(incoming: unknown): { params: Params; filled: number } {
           (PUBLIC_USES as string[]).includes((b as ProgramBand).use),
       )
     : []
+  // A type whose numbers did not survive the trip would be clamped into a
+  // share of the scheme nobody asked for, so anything unreadable falls back to
+  // that type's default rather than to whatever the file happened to contain.
+  const mix = { ...NO_MIX }
+  for (const t of UNIT_TYPES) {
+    const spec = (source.unitMix as UnitMix | undefined)?.[t]
+    mix[t] =
+      spec && Number.isFinite(spec.modules) && Number.isFinite(spec.share)
+        ? { modules: spec.modules, share: spec.share }
+        : NO_MIX[t]
+  }
+  params.unitMix = mix
   return { params: resolveParams(params), filled }
 }
 
