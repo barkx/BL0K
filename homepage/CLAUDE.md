@@ -700,3 +700,45 @@ plainly: the comments are the only thing that has been removed from the code,
 and they were removed to meet a number. If the targets are ever revisited — for
 instance to measure compressed, where the whole page is 15 KB of CSS and 13 KB
 of JavaScript — the commentary is the thing to bring back first.**
+
+## 19. A checking script, 17 September 2026
+
+`tools/check.mjs`. §4 said "serve the folder and look at it", which stopped
+scaling once the page had four scenes and a byte budget. The script is what §5
+means by "verify, then write down how" — the checks that caught real bugs this
+week, kept rather than rewritten each time.
+
+```bash
+npx serve homepage                  # or python -m http.server 8777
+node tools/check.mjs 8777
+node tools/check.mjs 8777 --save    # accept a deliberate change to the drawings
+```
+
+It runs headless Chrome twice, with and without scripting, and checks: the two
+byte budgets; one `h1` and no heading-level jump; no dead in-page link; alt text
+and explicit dimensions on every image; the five claims §5 requires, present
+somewhere on the page; the tabs opening one at a time on a press and never on a
+timer; no horizontal overflow at seven widths from 1280 down to 320; and with
+scripting off, the figures hidden, the hero on its fallback and all eight
+parameter lists open.
+
+**The drawing hash is the one worth understanding.** It renders every drawing
+`block.js` can produce — 605 of them over a grid of preset, floors, module,
+depth, plot and site layout — and compares a sha256 of the lot against
+`tools/drawings.sha256`. It is the check to run around any change to the
+geometry that is *meant* to change nothing. It already caught a refactor that
+deleted `iso` and `n` along with the palettes it was supposed to remove (§18).
+A deliberate change to a drawing fails it; `--save` is how you say you meant it.
+
+Lives in `tools/`, which `.vercelignore` excludes, so it costs the page nothing
+and does not count against §7.
+
+**One check fails today and should**: HTML + CSS is 41.4 KB against §7's 40 KB.
+That is the decision §18 left open, and the script will keep saying so until it
+is made.
+
+**A false negative worth remembering.** The claims check first read
+`document.body.innerText` and reported the IFC claim missing. `innerText` is
+what is *rendered*, and the FAQ answers sit inside collapsed `<details>`. It
+reads `main`'s `textContent` now — scoped to `main` so the JSON-LD mirror in
+the head cannot answer for the visible page.
