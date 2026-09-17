@@ -12,3 +12,7 @@ README.md
 CLAUDE.md
 tools/
 
+# An inbound handover from the app's agent: what changed there, what is stale
+# here, and the assets to fix it. Internal, like the three files above — and
+# urbgen.com/from-app/WHATS-NEW.md would hand a visitor the roadmap.
+from-app/

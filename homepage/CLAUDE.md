@@ -277,3 +277,40 @@ looked right. Worth doing that comparison first whenever a sort is replaced.
 
 `block.js` is 6.1 KB against the 6 KB target, so the comment was trimmed rather
 than the budget moved a second time.
+
+## 11. Handover from the app, 17 September 2026
+
+The app's agent left `from-app/` — `WHATS-NEW.md`, `CORRECTIONS.md`,
+`SHOT-LIST.md`, a generated `facts.json`, and four real exported drawings. It is
+internal and `.vercelignore` excludes it. **Read `facts.json` before republishing
+any number**: it is generated from the app's `RANGE` table and by building a
+real scheme, so it is the one file in there that cannot have drifted.
+
+**Two claims had gone from true to false without anyone touching this page.**
+
+- *"There is no IFC export."* The app now writes IFC4 — storeys, slabs, walls,
+  windows as real openings, balconies, georeferencing — and lacks only cores,
+  the plot, property sets and a detail switch. It was in three places including
+  the JSON-LD, which is the answer a search engine shows.
+- *"Nothing it does needs a server."* Two features reach the network on an
+  explicit press: Nominatim to search for a place, Overpass to import
+  surroundings. A bounding box goes out, never the user's work.
+
+Both were fixed in the visible FAQ **and** in the JSON-LD mirror, which is
+exactly the failure the mirror was built to make impossible to forget.
+
+**What was verified rather than assumed.** Every facade range on the page and
+every figure in the metrics table still matches `facts.json` exactly — the
+reference scheme is unchanged at 9 900 / 8 320 / 7 184 / 338 / 224. The
+correction list also flagged "building depth as one value"; the page never said
+that, so nothing to do.
+
+**A new chapter, `What you get out`**, carries the four exported sheets. These
+are the app's own output, so they meet the bar the drawn figures failed on 12
+September. Their aspect ratios differ per sheet and **the declared dimensions
+must come from each file's `viewBox`** — declaring one size for all four put
+three of them at the wrong ratio, which is the layout shift §7 forbids. Same
+bug as the screenshots in September; caught the same way, by reading the file.
+
+**Sheet numbers now come from a CSS counter.** They were typed by hand and had
+already drifted — the FAQ read `07` in a six-chapter page.

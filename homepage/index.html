@@ -70,7 +70,7 @@
       "name": "Does it work offline?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Once the page has loaded, yes — the app keeps working with the network gone, because nothing it does needs a server."
+        "text": "Once the page has loaded, yes — with two exceptions, and both only happen when you press for them: searching for a place, and importing surroundings to trace over. Those use Nominatim and OpenStreetMap's Overpass, neither of which needs an account or a key, and what goes out is a bounding box rather than anything you have drawn. Everything else works with the connection unplugged, including every export."
       }
     },
     {
@@ -78,7 +78,7 @@
       "name": "What can I export?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "glTF for the geometry, including the whole site with its buildings named; CSV for the metrics table; JSON for the scheme itself, which reopens with everything as you left it. There is no IFC export yet."
+        "text": "glTF for the geometry, IFC4 for a BIM model, measured drawings as SVG, the metrics as CSV, a PNG of the view, and JSON for the scheme itself, which reopens with everything as you left it."
       }
     },
     {
@@ -119,6 +119,7 @@
       <a href="#does">What it does</a>
       <a href="#facade">Facade</a>
       <a href="#metrics">Metrics</a>
+      <a href="#out">Exports</a>
       <a href="#next">Next</a>
       <a href="#faq">Questions</a>
     </nav>
@@ -139,7 +140,7 @@
       </p>
       <p class="cta"><a class="btn" href="https://app.urbgen.com">Open the app</a></p>
       <ul class="creds" role="list">
-        <li><strong>Free, and no account.</strong> Nothing is uploaded, and it keeps working offline once loaded.</li>
+        <li><strong>Free, and no account.</strong> Nothing you draw is uploaded, and it keeps working offline once loaded.</li>
         <li><strong>The same inputs give the same building.</strong> Every random choice runs through a seeded generator, so two options differ only where you changed them.</li>
       </ul>
     </div>
@@ -160,7 +161,7 @@
 
   <!-- 01 What it does --------------------------------------------------- -->
   <section class="sheet" aria-labelledby="does">
-    <p class="n" aria-hidden="true">01</p>
+    <p class="n" aria-hidden="true"></p>
     <div class="col">
       <h2 id="does">What it does</h2>
       <p class="lead">
@@ -174,12 +175,20 @@
           <p>
             Bar, L, T, U, courtyard, stacked. Each is built from masses with their
             own size, floor count and base level, so a preset is a starting point
-            rather than a template you are stuck inside.
+            rather than a template you are stuck inside. Wings carry their own
+            depths, and the top floors can step in from every face that is not a
+            junction.
           </p>
           <p>
             Where two wings meet, the junction is found floor by floor. The
             internal elevation goes blank instead of being drawn twice, and the
             overlap is counted once in the area.
+          </p>
+          <p>
+            There is also a freeform option — trace a centreline and the building
+            follows it at any angle, corners mitred. The app labels it
+            experimental and so does this page: it is the newest way to shape a
+            building and the least worn in.
           </p>
         </article>
 
@@ -192,7 +201,23 @@
           </p>
           <p>
             Place as many buildings on it as you like, rotate and drag them, and
-            every metric and planning check follows as you move.
+            every metric and planning check follows as you move. The boundary
+            setback can be one figure for the whole plot or a different one per
+            edge — and zero on an edge is a real answer, meaning a party boundary
+            a building may sit right on.
+          </p>
+        </article>
+
+        <article class="say reveal">
+          <h3>Several schemes, not one at a time</h3>
+          <p>
+            Keep design options side by side in the same session: switch between
+            them, duplicate one as the start of a variation, rename or discard.
+            Each carries its own undo, fifty steps deep.
+          </p>
+          <p>
+            Every option is saved with the file, so a comparison survives the round
+            trip rather than living only in the session you made it in.
           </p>
         </article>
       </div>
@@ -201,7 +226,7 @@
 
   <!-- 02 The facade ----------------------------------------------------- -->
   <section class="sheet tint" aria-labelledby="facade">
-    <p class="n" aria-hidden="true">02</p>
+    <p class="n" aria-hidden="true"></p>
     <div class="col">
       <h2 id="facade">The facade, and what you can change</h2>
       <p class="lead">
@@ -267,7 +292,7 @@
 
   <!-- 03 Metrics -------------------------------------------------------- -->
   <section class="sheet" aria-labelledby="metrics">
-    <p class="n" aria-hidden="true">03</p>
+    <p class="n" aria-hidden="true"></p>
     <div class="col">
       <h2 id="metrics">Metrics that show their working</h2>
       <p class="lead">
@@ -320,7 +345,7 @@
           <tr>
             <th scope="row">Units</th>
             <td class="num">224 <span class="est">est.</span></td>
-            <td>An <strong>estimate</strong>, from the module width and the floor area. It is not a laid-out plan, and the app labels it as an estimate wherever it appears.</td>
+            <td>An <strong>estimate</strong>, from the module width and the floor area — or from a target mix of studios, one, two and three beds, which reports the share achieved beside the share asked for. It is not a laid-out plan, and the app labels it an estimate wherever it appears.</td>
           </tr>
           <tr>
             <th scope="row">Tallest</th>
@@ -332,6 +357,12 @@
 
       <div class="prose">
         <p>
+          Floors can be given over to retail, office or amenity rather than
+          housing, and then GFA is reported per use and the unit estimate counts
+          only the residential floors — before that, a retail ground floor was
+          quietly counted as flats.
+        </p>
+        <p>
           In the same pass, five planning limits — setback, separation, height cap,
           floor area ratio and coverage — are checked and reported with both
           numbers: the limit you set, and what the scheme does. A limit left at
@@ -342,9 +373,78 @@
     </div>
   </section>
 
+  <!-- 04 What you get out ----------------------------------------------- -->
+  <section class="sheet tint" aria-labelledby="out">
+    <p class="n" aria-hidden="true"></p>
+    <div class="col">
+      <h2 id="out">What you get out</h2>
+      <p class="lead">
+        Six formats, all written by the app itself rather than by a library, so
+        every one of them works with the connection unplugged.
+      </p>
+
+      <p class="stmt">
+        The drawings below are not mock-ups. They are the exporter's own output,
+        unretouched — sized in millimetres and drawn in millimetres, so printing
+        at 100% gives a sheet you can put a scale rule on.
+      </p>
+
+      <div class="sheets">
+        <figure class="fig plate reveal">
+          <img src="/assets/drawings/site-plan.svg" width="244" height="220" loading="lazy" decoding="async"
+               alt="A site plan: the plot boundary, every building footprint at ground level with its cores, names and a north point.">
+          <figcaption>Site plan — boundary, footprints, cores, north.</figcaption>
+        </figure>
+        <figure class="fig plate reveal">
+          <img src="/assets/drawings/floor-plan.svg" width="254" height="275" loading="lazy" decoding="async"
+               alt="A floor plan of one level: the outline the building occupies, cores passing through it, and the module rhythm ticked along each exterior face.">
+          <figcaption>Floor plan — outline, cores, module rhythm.</figcaption>
+        </figure>
+        <figure class="fig plate reveal">
+          <img src="/assets/drawings/elevation.svg" width="254" height="164" loading="lazy" decoding="async"
+               alt="An elevation of one face: the silhouette run by run, floor lines, every opening, projecting balconies drawn solid and loggias dashed.">
+          <figcaption>Elevation — openings, floor lines, balconies.</figcaption>
+        </figure>
+        <figure class="fig plate reveal">
+          <img src="/assets/drawings/section.svg" width="244" height="124" loading="lazy" decoding="async"
+               alt="A section through the site: every mass the cut line passes through, at its real height, with floor lines and the ground.">
+          <figcaption>Section — what the cut line passes through.</figcaption>
+        </figure>
+      </div>
+
+      <dl class="specs reveal">
+        <div>
+          <dt>IFC4</dt>
+          <dd class="num">.ifc</dd>
+          <dd class="what">Storeys, floor and roof slabs, exterior walls, every window as a real opening the receiving application cuts itself, balconies and enclosed loggias, and georeferencing. Cores, the plot boundary and property sets are not in it yet, and it has not been through a Revit or ArchiCAD import.</dd>
+        </div>
+        <div>
+          <dt>Drawings</dt>
+          <dd class="num">.svg</dd>
+          <dd class="what">Site plan, floor plan, elevation and section, at a true printed scale with a scale bar. Of the massing: no speculative room layouts, and no imported map context, which is the OpenStreetMap licence as much as a choice.</dd>
+        </div>
+        <div>
+          <dt>Geometry</dt>
+          <dd class="num">.glb</dd>
+          <dd class="what">The whole site as glTF, with each building named. A visualisation format — good for a render, not for continuing a project.</dd>
+        </div>
+        <div>
+          <dt>Metrics</dt>
+          <dd class="num">.csv</dd>
+          <dd class="what">Site totals, a row per building, every planning rule with its result, and the warnings.</dd>
+        </div>
+        <div>
+          <dt>The scheme</dt>
+          <dd class="num">.json</dd>
+          <dd class="what">Everything you drew, reopening as you left it — including every design option, so a comparison survives the round trip.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
   <!-- 05 What comes next ------------------------------------------------ -->
   <section class="sheet dense" aria-labelledby="next">
-    <p class="n" aria-hidden="true">05</p>
+    <p class="n" aria-hidden="true"></p>
     <div class="col">
       <h2 id="next">What is being built next</h2>
       <p class="lead">
@@ -354,12 +454,14 @@
 
       <ol class="queue" role="list">
         <li class="reveal">
-          <h3>IFC export</h3>
+          <h3>Finishing the IFC file</h3>
           <p>
-            There is no IFC export today. Geometry comes out as glTF, which is a
-            visualisation format: you can look at it, but you cannot pick a project
-            up from it in Revit or ArchiCAD. IFC is what turns a study into the
-            first step of a real job, and it is the next thing being built.
+            What it carries today is above. What it does not carry yet: cores, the
+            plot boundary, property sets to take the metrics across with the
+            geometry, and a switch between a massing model and a full one for file
+            size. It has also not been through a Revit or ArchiCAD import, and
+            writing a valid file and opening cleanly in someone else's software are
+            different bars.
           </p>
         </li>
         <li class="reveal">
@@ -384,13 +486,13 @@
 
   <!-- 07 Questions ------------------------------------------------------ -->
   <section class="sheet dense" aria-labelledby="faq">
-    <p class="n" aria-hidden="true">07</p>
+    <p class="n" aria-hidden="true"></p>
     <div class="col narrow">
       <h2 id="faq">Questions</h2>
       <details><summary>Do I need an account?</summary><p>No. There is no sign-up, no login and no trial. Open the page and it is there.</p></details>
       <details><summary>Where does my data go?</summary><p>Nowhere. There is no backend to send it to. Everything is computed in your browser, and a scheme is saved by downloading a JSON file to your machine. The site you are reading sets no cookies and makes no third-party requests.</p></details>
-      <details><summary>Does it work offline?</summary><p>Once the page has loaded, yes — the app keeps working with the network gone, because nothing it does needs a server.</p></details>
-      <details><summary>What can I export?</summary><p>glTF for the geometry, CSV for the metrics, and JSON for the scheme itself, which reopens with everything as you left it. There is no IFC export yet — it is the next thing being built.</p></details>
+      <details><summary>Does it work offline?</summary><p>Once the page has loaded, yes — with two exceptions, and both only happen when you press for them: searching for a place, and importing surroundings to trace over. Those use Nominatim and OpenStreetMap's Overpass, neither of which needs an account or a key, and what goes out is a bounding box rather than anything you have drawn. Everything else works with the connection unplugged, including every export.</p></details>
+      <details><summary>What can I export?</summary><p>glTF for the geometry, IFC4 for a BIM model, measured drawings as SVG, the metrics as CSV, a PNG of the view, and JSON for the scheme itself, which reopens with everything as you left it.</p></details>
       <details><summary>Is it really free?</summary><p>Yes, and there is no pricing page to read. It is a static page with no running cost behind it beyond hosting.</p></details>
       <details><summary>Is there AI in it?</summary><p>No. It is parametric: you set the numbers and the geometry follows from them, the same way every time. The name is short for urban generator, and that is as far as the word goes — nothing here learns, predicts or invents.</p></details>
     </div>

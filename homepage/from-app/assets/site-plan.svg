@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="244mm" height="220mm" viewBox="0 0 244 220">
+  <rect width="244" height="220" fill="#ffffff"/>
+  <polygon points="12,12 232,12 232,192 12,192" fill="none" stroke="#22303d" stroke-width="0.18" stroke-dasharray="3 1.5"/>
+  <polygon points="76,55 168,55 168,81 76,81" fill="none" stroke="#22303d" stroke-width="0.35"/>
+  <polygon points="76,81 102,81 102,149 76,149" fill="none" stroke="#22303d" stroke-width="0.35"/>
+  <polygon points="115.50,55 128.50,55 128.50,68 115.50,68" fill="none" stroke="#22303d" stroke-width="0.09"/>
+  <text x="122" y="102" font-family="Helvetica, Arial, sans-serif" font-size="2.60" fill="#22303d" text-anchor="middle">Block A</text>
+  <line x1="226" y1="22" x2="226" y2="16" stroke="#22303d" stroke-width="0.18"/>
+  <text x="226" y="14.50" font-family="Helvetica, Arial, sans-serif" font-size="2.40" fill="#22303d" text-anchor="middle">N</text>
+  <line x1="12" y1="204" x2="232" y2="204" stroke="#22303d" stroke-width="0.09"/>
+  <text x="12" y="209" font-family="Helvetica, Arial, sans-serif" font-size="3.20" fill="#22303d" text-anchor="start">Site plan</text>
+  <text x="12" y="213.50" font-family="Helvetica, Arial, sans-serif" font-size="2.20" fill="#8a97a4" text-anchor="start">1 building · 7533 m² GFA · plot 9900 m²</text>
+  <rect x="212" y="208" width="10" height="1.40" fill="#22303d" stroke="#22303d" stroke-width="0.09"/>
+  <rect x="222" y="208" width="10" height="1.40" fill="none" stroke="#22303d" stroke-width="0.09"/>
+  <text x="212" y="213" font-family="Helvetica, Arial, sans-serif" font-size="2.20" fill="#8a97a4" text-anchor="start">0</text>
+  <text x="232" y="213" font-family="Helvetica, Arial, sans-serif" font-size="2.20" fill="#8a97a4" text-anchor="end">10 m</text>
+  <text x="232" y="217" font-family="Helvetica, Arial, sans-serif" font-size="2.60" fill="#22303d" text-anchor="end">1:500</text>
+</svg>

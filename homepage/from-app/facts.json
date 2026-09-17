@@ -1,0 +1,282 @@
+{
+  "generated": "2026-09-17",
+  "configVersion": 12,
+  "presets": [
+    "Bar",
+    "L-shape",
+    "T-shape",
+    "U-shape",
+    "Courtyard",
+    "Stacked",
+    "Freeform"
+  ],
+  "programmeUses": [
+    "Residential",
+    "Retail",
+    "Office",
+    "Amenity"
+  ],
+  "unitTypes": [
+    "Studio",
+    "1 bed",
+    "2 bed",
+    "3 bed"
+  ],
+  "drawings": [
+    "Site plan",
+    "Floor plan",
+    "Elevation",
+    "Section"
+  ],
+  "exports": [
+    "glTF (.glb)",
+    "IFC4 (.ifc)",
+    "Metrics (.csv)",
+    "Drawings (.svg)",
+    "Image (.png)",
+    "Site config (.json)"
+  ],
+  "referenceScheme": {
+    "what": "the app's default scheme, exactly as it opens",
+    "preset": "L-shape",
+    "plotArea": 9900,
+    "floors": 8,
+    "height": 24.9,
+    "gfa": 8320,
+    "nia": 7183.8,
+    "coreArea": 338,
+    "units": 224,
+    "footprint": 1040,
+    "coverage": 10.5,
+    "far": 0.84,
+    "facadeArea": 4464,
+    "glazedPercent": 33.7,
+    "triangles": 6762
+  },
+  "ranges": {
+    "floors": {
+      "label": "Floors",
+      "min": 2,
+      "max": 30,
+      "step": 1,
+      "unit": null,
+      "default": 8
+    },
+    "floorHeight": {
+      "label": "Floor height",
+      "min": 2.6,
+      "max": 4,
+      "step": 0.05,
+      "unit": "m",
+      "default": 3
+    },
+    "buildingDepth": {
+      "label": "Wing A depth",
+      "min": 9,
+      "max": 24,
+      "step": 0.5,
+      "unit": "m",
+      "default": 13
+    },
+    "depthB": {
+      "label": "Wing B depth",
+      "min": 0,
+      "max": 24,
+      "step": 0.5,
+      "unit": "m",
+      "default": 0
+    },
+    "depthC": {
+      "label": "Wing C depth",
+      "min": 0,
+      "max": 24,
+      "step": 0.5,
+      "unit": "m",
+      "default": 0
+    },
+    "wingLengthA": {
+      "label": "Wing A",
+      "min": 12,
+      "max": 90,
+      "step": 0.5,
+      "unit": "m",
+      "default": 40
+    },
+    "wingLengthB": {
+      "label": "Wing B",
+      "min": 12,
+      "max": 90,
+      "step": 0.5,
+      "unit": "m",
+      "default": 40
+    },
+    "wingLengthC": {
+      "label": "Wing C",
+      "min": 12,
+      "max": 90,
+      "step": 0.5,
+      "unit": "m",
+      "default": 40
+    },
+    "courtyardWidth": {
+      "label": "Courtyard width",
+      "min": 12,
+      "max": 60,
+      "step": 0.5,
+      "unit": "m",
+      "default": 25
+    },
+    "massOffset": {
+      "label": "Mass offset",
+      "min": 0,
+      "max": 20,
+      "step": 0.5,
+      "unit": "m",
+      "default": 0
+    },
+    "topSetback": {
+      "label": "Setback",
+      "min": 0,
+      "max": 8,
+      "step": 0.5,
+      "unit": "m",
+      "default": 0
+    },
+    "topSetbackFloors": {
+      "label": "Setback floors",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "unit": null,
+      "default": 1
+    },
+    "roofParapet": {
+      "label": "Parapet",
+      "min": 0,
+      "max": 1.5,
+      "step": 0.05,
+      "unit": "m",
+      "default": 0.9
+    },
+    "moduleWidth": {
+      "label": "Module width",
+      "min": 3,
+      "max": 9,
+      "step": 0.1,
+      "unit": "m",
+      "default": 6
+    },
+    "windowsPerModule": {
+      "label": "Windows per module",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "unit": null,
+      "default": 2
+    },
+    "windowWidth": {
+      "label": "Window width",
+      "min": 0.6,
+      "max": 3.5,
+      "step": 0.05,
+      "unit": "m",
+      "default": 1.6
+    },
+    "windowHeight": {
+      "label": "Window height",
+      "min": 1.2,
+      "max": 2.8,
+      "step": 0.05,
+      "unit": "m",
+      "default": 2.1
+    },
+    "sillHeight": {
+      "label": "Sill height",
+      "min": 0,
+      "max": 1.2,
+      "step": 0.05,
+      "unit": "m",
+      "default": 0.65
+    },
+    "reveal": {
+      "label": "Reveal",
+      "min": 0,
+      "max": 0.4,
+      "step": 0.01,
+      "unit": "m",
+      "default": 0.1
+    },
+    "balconyDepth": {
+      "label": "Balcony depth",
+      "min": 1.2,
+      "max": 2.5,
+      "step": 0.05,
+      "unit": "m",
+      "default": 1.8
+    },
+    "balconyWidthRatio": {
+      "label": "Balcony width",
+      "min": 0.4,
+      "max": 1,
+      "step": 0.01,
+      "unit": null,
+      "default": 0.8
+    },
+    "balconyStartFloor": {
+      "label": "Start floor",
+      "min": 0,
+      "max": 29,
+      "step": 1,
+      "unit": null,
+      "default": 1
+    },
+    "coreCount": {
+      "label": "Cores",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "unit": null,
+      "default": 1
+    },
+    "coreWidth": {
+      "label": "Core width",
+      "min": 2,
+      "max": 10,
+      "step": 0.1,
+      "unit": "m",
+      "default": 6.5
+    },
+    "coreDepth": {
+      "label": "Core depth",
+      "min": 2,
+      "max": 10,
+      "step": 0.1,
+      "unit": "m",
+      "default": 6.5
+    },
+    "coreOverrun": {
+      "label": "Overrun",
+      "min": 0,
+      "max": 3.5,
+      "step": 0.1,
+      "unit": "m",
+      "default": 1.6
+    },
+    "modulesPerUnit": {
+      "label": "Modules per unit",
+      "min": 1,
+      "max": 3,
+      "step": 0.5,
+      "unit": null,
+      "default": 1
+    },
+    "efficiency": {
+      "label": "Efficiency",
+      "min": 0.85,
+      "max": 0.97,
+      "step": 0.01,
+      "unit": null,
+      "default": 0.9
+    }
+  }
+}

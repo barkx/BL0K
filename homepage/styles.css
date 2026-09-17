@@ -284,6 +284,12 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
   border-bottom: 1px solid var(--rule);
 }
 .sheet.tint { background: var(--panel); }
+
+/* Sheet numbers come from a counter, never from the markup: they had already
+   drifted once, with the FAQ reading 07 in a six-chapter page. */
+body { counter-reset: sheet; }
+.sheet { counter-increment: sheet; }
+.sheet > .n::before { content: counter(sheet, decimal-leading-zero); }
 .sheet.dense { padding-block: clamp(36px, 5vw, 68px); }
 .sheet > .n {
   position: sticky;
@@ -308,6 +314,39 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
 @media (max-width: 700px) {
   .sheet { grid-template-columns: 1fr; gap: 6px; }
   .sheet > .n { position: static; }
+}
+
+/* ---------- drawing plates ---------- */
+
+/* These are the app's own exported sheets. A drawing sheet is white by
+   definition, so unlike the line drawings they do not multiply onto the page —
+   they sit on it, framed, the way a print would. */
+.sheets {
+  display: grid;
+  gap: clamp(16px, 2.2vw, 26px);
+  margin: 0 0 clamp(26px, 3.4vw, 44px);
+}
+@media (min-width: 720px) { .sheets { grid-template-columns: 1fr 1fr; } }
+
+.fig.plate { margin: 0; }
+.fig.plate img {
+  width: 100%;
+  /* Four sheet formats at four aspect ratios made a ragged grid. Cap the
+     height and contain: the sheet is white and so is the box, so the
+     letterboxing is invisible and the plates line up. */
+  height: clamp(220px, 26vw, 330px);
+  object-fit: contain;
+  object-position: center;
+  mix-blend-mode: normal;
+  background: #fff;
+  border: 1px solid var(--rule);
+}
+.fig.plate figcaption {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--rule);
 }
 
 /* ---------- text pairs ---------- */

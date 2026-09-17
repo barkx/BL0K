@@ -131,13 +131,19 @@ two-row layouts.
    each row saying what the number is made of, plus the planning limits checked
    in the same pass. **Marked up, not a screenshot** — a picture of numbers
    cannot be read by a screen reader, selected, or checked.
-5. **What is being built next.** In the order the work is pointed at: IFC
-   export, DXF import, roads and parking. No dates — §5 forbids a roadmap
+5. **What you get out.** Added 17 September 2026, when the app's agent handed
+   over four real exported drawings. Six formats, and the four drawing sheets
+   shown as **the exporter's own unretouched output** — which is the only kind
+   of graphic this page will carry after the drawn figures came out for not
+   matching the app. The IFC row states what the file holds and what it does
+   not, including that it has never been through a Revit or ArchiCAD import.
+6. **What is being built next.** In the order the work is pointed at: finishing
+   the IFC file, DXF import, roads and parking. No dates — §5 forbids a roadmap
    stated as a promise, so the section says plainly that these are not
    commitments.
-6. **FAQ.** Six, answering what the positioning provokes: account, data,
+7. **FAQ.** Six, answering what the positioning provokes: account, data,
    offline, export, price, AI.
-7. **Footer.** Portrait, name, role — *Architect | BIM Specialist* — and three
+8. **Footer.** Portrait, name, role — *Architect | BIM Specialist* — and three
    social links: LinkedIn, YouTube, Facebook. Then a fine-print line holding the
    URBGEN mark, the privacy statement and the year. Nothing else.
 
@@ -167,7 +173,17 @@ two-row layouts.
 **Cutting chapters is not licence to cut claims.** Everything §5 requires still
 appears: free, no account, nothing uploaded; the unit count labelled an
 estimate on the row where it appears; runs in the browser and keeps working
-offline; and IFC export stated as absent, in both §4.5 and the FAQ.
+offline; and, **since 17 September 2026**, IFC export stated as *partial*
+rather than absent — what the file carries, what it does not, and that it has
+not been import-tested — in both the exports chapter and the FAQ. The page said
+"there is no IFC export" until the app's agent handed over a correction; it had
+been true when written and quietly stopped being so.
+
+**"Works offline" now carries a qualification** and must keep it. Searching for
+a place and importing surroundings reach Nominatim and Overpass, on an explicit
+press, sending a bounding box and nothing the user drew. Everything else, every
+export included, still works unplugged. The claim is not weakened by saying so
+and is weakened by being caught overstating.
 
 ---
 
@@ -333,8 +349,9 @@ is too big — split it.
 2. **Analytics at all?** Nothing at launch. If the question becomes "is anyone
    using this", a cookieless first-party counter is the only acceptable answer,
    and the privacy claim in §5 has to be re-read before it goes in.
-3. ~~**Does the roadmap appear publicly?**~~ **Answered, 12 September 2026:**
-   the page states that IFC export does not exist and promises nothing. §5
+3. ~~**Does the roadmap appear publicly?**~~ **Answered 12 September 2026,
+   revised 17 September:** the page states what IFC export carries today and
+   what it does not, and promises nothing about the rest. §5
    forbids a roadmap stated as a promise, and "coming" commits a date this
    project does not have. Revisit only if a date becomes real.
 4. **A licence, and is the app's source public?** The repo is currently private

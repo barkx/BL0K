@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="244mm" height="124mm" viewBox="0 0 244 124">
+  <rect width="244" height="124" fill="#ffffff"/>
+  <line x1="12" y1="96" x2="232" y2="96" stroke="#22303d" stroke-width="0.35"/>
+  <line x1="12" y1="96" x2="232" y2="96" stroke="#22303d" stroke-width="0.09" stroke-dasharray="2 2"/>
+  <rect x="16" y="12" width="68" height="84" fill="none" stroke="#22303d" stroke-width="0.35"/>
+  <line x1="16" y1="90" x2="84" y2="90" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="16" y1="84" x2="84" y2="84" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="16" y1="78" x2="84" y2="78" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="16" y1="72" x2="84" y2="72" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="16" y1="66" x2="84" y2="66" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="16" y1="60" x2="84" y2="60" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="16" y1="54" x2="84" y2="54" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="16" y1="48" x2="84" y2="48" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="16" y1="42" x2="84" y2="42" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="16" y1="36" x2="84" y2="36" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="16" y1="30" x2="84" y2="30" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="16" y1="24" x2="84" y2="24" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="16" y1="18" x2="84" y2="18" stroke="#22303d" stroke-width="0.09"/>
+  <rect x="94" y="48" width="56" height="48" fill="none" stroke="#22303d" stroke-width="0.35"/>
+  <line x1="94" y1="90" x2="150" y2="90" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="94" y1="84" x2="150" y2="84" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="94" y1="78" x2="150" y2="78" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="94" y1="72" x2="150" y2="72" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="94" y1="66" x2="150" y2="66" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="94" y1="60" x2="150" y2="60" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="94" y1="54" x2="150" y2="54" stroke="#22303d" stroke-width="0.09"/>
+  <rect x="168" y="72" width="44" height="24" fill="none" stroke="#22303d" stroke-width="0.35"/>
+  <line x1="168" y1="90" x2="212" y2="90" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="168" y1="84" x2="212" y2="84" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="168" y1="78" x2="212" y2="78" stroke="#22303d" stroke-width="0.09"/>
+  <line x1="12" y1="108" x2="232" y2="108" stroke="#22303d" stroke-width="0.09"/>
+  <text x="12" y="113" font-family="Helvetica, Arial, sans-serif" font-size="3.20" fill="#22303d" text-anchor="start">Site section</text>
+  <text x="12" y="117.50" font-family="Helvetica, Arial, sans-serif" font-size="2.20" fill="#8a97a4" text-anchor="start">section looking north · through the centre · 3 cuts · tallest 42 m</text>
+  <rect x="212" y="112" width="10" height="1.40" fill="#22303d" stroke="#22303d" stroke-width="0.09"/>
+  <rect x="222" y="112" width="10" height="1.40" fill="none" stroke="#22303d" stroke-width="0.09"/>
+  <text x="212" y="117" font-family="Helvetica, Arial, sans-serif" font-size="2.20" fill="#8a97a4" text-anchor="start">0</text>
+  <text x="232" y="117" font-family="Helvetica, Arial, sans-serif" font-size="2.20" fill="#8a97a4" text-anchor="end">10 m</text>
+  <text x="232" y="121" font-family="Helvetica, Arial, sans-serif" font-size="2.60" fill="#22303d" text-anchor="end">1:500</text>
+</svg>
