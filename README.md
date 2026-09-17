@@ -146,6 +146,7 @@ which is ignored.
 | `store/` | Params, ranges, `resolveParams`, presets, the Zustand store |
 | `site/` | Plot and placed buildings, site derivation, site metrics, site rules |
 | `lib/poly.ts` | Plan polygon maths: area, containment, self-intersection, overlap, distance |
+| `lib/convex.ts` | Convex polygon algebra: intersection, difference, inset, union area |
 | `geometry/` | Masses, elevation frames, facade model, walls, roof, balconies, edges |
 | `metrics/` | Area and unit-count derivation |
 | `scene/` | R3F components, material sets per render mode, lighting |
@@ -162,9 +163,13 @@ which is ignored.
 - Clamp in exactly one place per kind of data: `resolveParams()` in
   `store/params.ts` for building parameters, `resolveRules()` in
   `site/types.ts` for the site rules. See Deviations.
-- No CSG. Openings and loggias are built as panels around the void.
-- Buildings stay axis-aligned in their own frame; placement is the site layer's
-  job. `geometry/` must never learn about rotation.
+- No CSG. Openings and loggias are built as panels around the void, and a
+  section is interval arithmetic rather than a mesh cut.
+- A mass is a prism over a **convex polygon**, not a rectangle — a mitred wing
+  is a trapezoid. Keep outlines convex and consistently wound; `facesOf` reads
+  the winding to point normals outward.
+- Buildings are built in their own frame; placing and rotating the whole
+  building is the site layer's job, and `geometry/` never learns about it.
 
 ### Verifying a change
 
@@ -267,12 +272,50 @@ know what it is before it can be clothed.
 Under 900 px the whole sidebar becomes a bottom sheet and the rail lays out
 horizontally.
 
+## Design options
+
+One menu in the top bar, showing which scheme is on screen. Switch between
+options, duplicate the current one as a starting point for a variation, start an
+empty one, rename, delete.
+
+Each row carries **a picture of that option**, taken from the viewport. One is
+taken of the option you leave and another of the one you arrive at, and
+switching never moves the camera — so two options seen one after the other are
+photographed from the same place and can be put side by side. Orbit, and the
+next visit refreshes them. Opening the menu re-takes the picture of whatever is
+on screen, so the one you are looking at is never the stale one in the list.
+
+Pictures live in memory only. They are derived from the model rather than
+authored, so they are not written into a saved scheme: a file should carry what
+somebody drew, not a render of it, and pixels go stale the moment a slider
+moves. An option loaded from a file simply has no picture until it is visited.
+
+**An option is a whole site**, not a diff against one — the same object save and
+load already write. So duplicating costs nothing (sites are immutable, and a
+copy shares its buildings until either side is edited), switching cannot
+half-apply, and there is no merge to get wrong.
+
+**Each option carries its own undo.** Undo means "take back what I just did to
+*this* scheme"; one shared stack would step one option's site into another's,
+which is not an edit anybody made.
+
+Saving writes **every** option and which one was open, so a comparison survives
+the round trip. A file holding a single option writes no `options` key at all,
+so it looks exactly as it always did.
+
+The top bar was deliberately bare, and mostly still is — render mode and the
+image snapshot are in Settings, and framing moved onto the ground itself. The
+option menu earns the exception because which scheme you are looking at is true
+of the whole window rather than of any one panel; put it in a tab and the answer
+is hidden whenever you are on a different tab.
+
 ## Undo
 
 **Ctrl+Z** steps back, **Ctrl+Shift+Z** forward, in every tab, and there are
 buttons under Settings for when you would rather see them. Fifty steps deep.
 
-It stores **snapshots of the whole site**, not operations to invert. Every
+Undo is **per design option** — see above. It stores **snapshots of the whole
+site**, not operations to invert. Every
 mutation in the app already funnels through one `commit()`, and a site is
 already the single immutable object that save/load writes whole — so there is
 nothing to invert and therefore nothing that can fall out of step with the
@@ -671,6 +714,21 @@ scheme, so they come out the same twice and you can measure them.
 | **Site plan** | the whole site | plot boundary, every footprint at ground, cores, names, north |
 | **Floor plan** | one building, one level | the outline it occupies, cores still passing through, the module rhythm ticked on every exterior face |
 | **Elevation** | one building, one face | the silhouette run by run, floor lines, every opening, balconies — projecting solid, loggias dashed |
+| **Section** | the whole site, one cut | every mass the line passes through, at its real height, with its floor lines and the ground |
+
+A **section** is cut by a line across the site, running east–west or north–south
+and offset from the middle. It shows what the line passes through and nothing
+else: a section that also drew the elevation beyond would need depth sorting and
+a decision about how far back to look, and a massing cut is more useful honest
+than busy. Two blocks of different heights read against each other and against
+the ground, which is the one thing a plan and an elevation cannot show.
+
+It needs no CSG and no mesh cutting. A convex polygon is the intersection of its
+edges' half-planes, so the part of a line inside it is the intersection of the
+intervals each half-plane allows — the same arithmetic `lib/convex.ts` already
+does in plan, turned on its side. A rotated block is therefore cut where it
+actually is: a 20 × 10 bar cut at 45° through its centre gives a 14.14 m chord,
+limited by its depth rather than its length.
 
 **The scale is real.** The sheet is sized in millimetres and drawn in
 millimetres, so one metre is `1000 / scale` mm and printing at 100% gives a
@@ -902,9 +960,16 @@ These were answered to keep moving; all are cheap to revisit.
 5. **Site** — a drawn plot polygon, not a `siteArea` number. Area, coverage,
    plot ratio, the off-plot test and the setback check all read the polygon.
 6. **Setbacks** — both a minimum to the boundary and a minimum between
-   buildings, checked in the same pass as clashes. Still open underneath: a
-   setback that varies per plot edge, since a street frontage and a party
-   boundary rarely take the same number.
+   buildings, checked in the same pass as clashes. The residual is **answered**:
+   a setback may vary per plot edge. Each edge either follows the
+   boundary-wide figure or carries its own, and **zero on an edge is a real
+   answer** — a party boundary a building may sit right on, which is a different
+   thing from having said nothing about it. That is why an edge holds `null`
+   rather than a number when nothing has been said. Entries follow their edges
+   when a corner is added or removed, and are cleared when the boundary is
+   redrawn, because a new outline's edges are ones nobody has spoken about yet.
+   A building short of several edges reports one breach, against the edge it
+   falls furthest short of — it has made one mistake.
 7. **Cores** — a rectangular shaft, shared between wings by length. Open
    underneath: whether a core should be placed by hand rather than derived,
    and whether one core per N units should drive the count instead of a

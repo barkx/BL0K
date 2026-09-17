@@ -58,6 +58,20 @@ export interface Underlay {
 export interface SiteRules {
   /** Minimum distance from any building footprint to the plot boundary, m. */
   setback: number
+  /**
+   * A setback of its own for individual plot edges, indexed as the plot's edges
+   * are: edge `i` runs from corner `i` to corner `i + 1`.
+   *
+   * `null` means "follow the boundary-wide `setback`", which is what every edge
+   * is until somebody says otherwise — and it is why this cannot simply be a
+   * number, since zero has to be sayable and has to mean *no* setback on that
+   * edge rather than the default. Same bargain `coreOffsets` makes with a
+   * hand-placed shaft.
+   *
+   * Entries past the end of the plot are ignored rather than trimmed: a
+   * boundary being redrawn should not quietly discard limits somebody typed.
+   */
+  setbackByEdge: (number | null)[]
   /** Minimum distance between two buildings, m. */
   separation: number
   /** Maximum building height, m, measured to the top of the parapet. */
@@ -70,6 +84,7 @@ export interface SiteRules {
 
 export const NO_RULES: SiteRules = {
   setback: 0,
+  setbackByEdge: [],
   separation: 0,
   heightCap: 0,
   farCap: 0,
@@ -86,6 +101,9 @@ export function resolveRules(raw: SiteRules): SiteRules {
     Number.isFinite(v) ? Math.min(max, Math.max(0, v)) : 0
   return {
     setback: positive(raw.setback, 100),
+    setbackByEdge: (Array.isArray(raw.setbackByEdge) ? raw.setbackByEdge : []).map((v) =>
+      typeof v === 'number' && Number.isFinite(v) ? positive(v, 100) : null,
+    ),
     separation: positive(raw.separation, 200),
     heightCap: positive(raw.heightCap, 300),
     farCap: positive(raw.farCap, 20),

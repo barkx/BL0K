@@ -332,8 +332,52 @@ function RuleField({ id, label, unit, step, hint, value, onChange }: RuleFieldPr
  * no warnings it did not earn; what each one checks is spelled out because a
  * number alone does not say whether it is measured in plan or in section.
  */
+/**
+ * A setback for one plot edge, or nothing to follow the boundary-wide figure.
+ *
+ * Blank rather than zero for "follow": zero has to stay sayable, because a
+ * party boundary a building may sit right on is a real thing and is not the
+ * same as having said nothing.
+ */
+function EdgeSetback({
+  index,
+  value,
+  fallback,
+  onChange,
+}: {
+  index: number
+  value: number | null
+  fallback: number
+  onChange: (v: number | null) => void
+}) {
+  return (
+    <div className="row edge-row">
+      <label htmlFor={`edge-${index}`}>Edge {index + 1}</label>
+      <span className="value">
+        <input
+          id={`edge-${index}`}
+          type="number"
+          min={0}
+          max={100}
+          step={0.5}
+          placeholder={String(fallback)}
+          value={value === null ? '' : value}
+          onChange={(e) => {
+            const raw = e.target.value.trim()
+            if (raw === '') return onChange(null)
+            const v = Number(raw)
+            if (Number.isFinite(v)) onChange(v)
+          }}
+        />
+        <span className="unit">m</span>
+      </span>
+    </div>
+  )
+}
+
 export function RuleControls() {
   const rules = useStore((s) => s.site.rules)
+  const plot = useStore((s) => s.site.plot)
   const setRules = useStore((s) => s.setRules)
   const breaches = useStore((s) => s.build.metrics.breaches)
   const armed = anyRuleSet(rules)
@@ -349,6 +393,29 @@ export function RuleControls() {
         value={rules.setback}
         onChange={(setback) => setRules({ setback })}
       />
+      {plot.length >= 3 && (
+        <div className="field">
+          <div className="hint">
+            Per edge, if a frontage and a party boundary take different numbers.
+            Leave one blank to follow the figure above; type 0 for an edge a
+            building may sit on.
+          </div>
+          {plot.map((_, i) => (
+            <EdgeSetback
+              key={i}
+              index={i}
+              value={rules.setbackByEdge[i] ?? null}
+              fallback={rules.setback}
+              onChange={(v) => {
+                const next = [...rules.setbackByEdge]
+                while (next.length < plot.length) next.push(null)
+                next[i] = v
+                setRules({ setbackByEdge: next })
+              }}
+            />
+          ))}
+        </div>
+      )}
       <RuleField
         id="separation"
         label="Separation"

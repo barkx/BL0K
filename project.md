@@ -28,6 +28,7 @@ current as the app changes, and record any deviation in `README.md`.
 | Render modes | Toggle: white model / PBR / diagram |
 | Metrics | GFA, NIA, facade area, unit estimate, footprint, coverage, plot ratio. Areas from the real outline, never a bounding box |
 | History | Undo and redo over whole-site snapshots, coalesced so a drag is one step |
+| Options | Several design options in one session, each a whole site with its own history. One menu in the top bar |
 | Unit mix | Target shares per apartment type, filled greedily against the target. Counts and areas only — never which flat sits in which bay |
 | Site rules | Setback, separation, height cap, FAR and coverage limits; zero is off |
 | Interaction | A tab is a tool: it scopes the viewport's handles and drags. Selection is always live |
@@ -365,6 +366,8 @@ Do these cheaply now so the deferred features are not rewrites:
 | **M12 Core** | A shaft of stairs, lift and risers as massing: count, size, overrun, and a perimeter or centre track it is shared along and can be dragged on. A perimeter shaft blanks the facade it meets — no windows, no units behind a lift. NIA becomes `(GFA − core) × efficiency`. Config v5. Reopens part of a §1 non-goal, by decision |
 
 | **M15 Location and context** | A site carries latitude, longitude and true north, which georeferences the IFC. A map picker with search to choose it, and OpenStreetMap surroundings fetched from Overpass and drawn as linework to trace over — at true scale and true north, which is the hand-calibration step gone. Config v7 |
+| **M24 Per-edge setbacks and sections** | A setback per plot edge, `null` following the boundary-wide figure and zero meaning an edge a building may sit on. And sections: a cut line across the site, drawn from the intervals it crosses — interval arithmetic on convex outlines, so no CSG |
+| **M23 Design options** | Several schemes side by side: switch, duplicate, start an empty one, rename, delete, each with a thumbnail taken from the live view so two options compare directly. An option is a whole site rather than a diff, so duplicating costs nothing and switching cannot half-apply. Each carries its own undo. One button in the top bar — which reopens the bare-toolbar decision, by decision. Config v12 saves every option |
 | **M22 Undo** | Undo and redo across every edit, on Ctrl+Z and Ctrl+Shift+Z. Snapshots of the whole site rather than invertible operations, because every mutation already funnels through one `commit` and a site is already one immutable object. Consecutive edits of the same kind coalesce, so a slider drag is one step |
 | **M20 Drawings** | A Drawings tab: site plan, a plan of any level, and each elevation, written as SVG by hand and sized in millimetres so printing at 100% is true to scale. Plans of the *massing* — outline, core, module rhythm, openings — never room layouts. OSM context is excluded, as it is from every export |
 | **M19 Massing gaps** | Two of §10's open questions answered. A wing carries its own depth, with zero meaning "the same as wing A". The top floors can step in from every face that is not a junction, which splits each topmost mass in two — the same shape `stacked` already builds, so elevations, roofs, metrics and exports needed nothing. Config v10 |
@@ -549,7 +552,8 @@ absence caps the tool's usefulness no matter how good everything else gets.
 
 **Site**
 
-5. ~~**Setbacks**~~ — **answered in M11.** Both: a minimum to the boundary and
+5. ~~**Setbacks**~~ — **answered in M11**, and the residual answered in M24:
+   a setback may now vary per plot edge. Originally: Both: a minimum to the boundary and
    a minimum between buildings, each measured in plan to the outside face and
    checked the way clashes are. Zero means off, so no scheme inherits a limit
    nobody set. Still open underneath it: whether a setback should vary per plot

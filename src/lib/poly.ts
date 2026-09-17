@@ -214,6 +214,25 @@ export function pointSegmentDistance(p: Vec2, a: Vec2, b: Vec2): number {
  * positive, inside or out — a setback is measured to the line, and which side
  * of it you are on is `pointInPolygon`'s question, not this one's.
  */
+/**
+ * Closest approach between a polygon and one line segment.
+ *
+ * Both directions are needed: the nearest point can be a corner of the polygon
+ * measured to the segment, or an end of the segment measured to an edge of the
+ * polygon. Checking only the first is right until a building sits past the end
+ * of the boundary edge it is being measured against, and then it is silently
+ * too generous.
+ */
+export function segmentGap(poly: Poly, a: Vec2, b: Vec2): number {
+  let best = Infinity
+  for (const q of poly) best = Math.min(best, pointSegmentDistance(q, a, b))
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    best = Math.min(best, pointSegmentDistance(a, poly[j], poly[i]))
+    best = Math.min(best, pointSegmentDistance(b, poly[j], poly[i]))
+  }
+  return best
+}
+
 export function distanceToBoundary(p: Vec2, poly: Poly): number {
   let best = Infinity
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {

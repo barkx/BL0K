@@ -42,8 +42,67 @@ export type Tool =
   | 'drawings'
   | 'settings'
 
+/**
+ * One design option: a whole site, and the history behind it.
+ *
+ * A scheme is the thing you compare, so an option is a whole site rather than a
+ * diff against one — the same object `serialize` writes, which is why an option
+ * costs nothing to make and nothing to switch to. Sites are immutable here, so
+ * duplicating one shares its buildings until either side is edited.
+ *
+ * History rides along rather than being global. Undo means "take back what I
+ * just did to *this* option"; a stack shared across options would step one
+ * option's site into another's, which is not an edit anybody made.
+ */
+let optionCounter = 1
+
+/**
+ * The next free letter: Option A, B, C, and on past Z as AA.
+ *
+ * Letters rather than numbers because an option is a scheme you are weighing,
+ * not a step in a sequence, and "B is better than A" is how the conversation
+ * actually goes. Skips names already taken, so deleting B and adding one gives
+ * B back rather than a gap.
+ */
+function nextOptionName(options: { name: string }[]): string {
+  const taken = new Set(options.map((o) => o.name))
+  for (let i = 0; i < 1000; i++) {
+    let n = i
+    let label = ''
+    do {
+      label = String.fromCharCode(65 + (n % 26)) + label
+      n = Math.floor(n / 26) - 1
+    } while (n >= 0)
+    const name = `Option ${label}`
+    if (!taken.has(name)) return name
+  }
+  return `Option ${options.length + 1}`
+}
+
+export interface DesignOption {
+  id: string
+  name: string
+  site: Site
+  past: Site[]
+  future: Site[]
+  /**
+   * A small picture of the viewport when this option was last on screen.
+   *
+   * Held in memory only. It is derived from the model rather than authored, so
+   * it does not belong in a saved scheme — a file should carry what somebody
+   * drew, not a render of it, and pixels that go stale the moment a slider
+   * moves are the wrong thing to keep. Options loaded from a file simply have
+   * none until they are visited.
+   */
+  thumbnail?: string
+}
+
 interface State {
   site: Site
+  /** Every option, including the active one. Its copy goes stale between
+   * switches, and is brought up to date whenever one happens. */
+  options: DesignOption[]
+  activeOption: string
   /** Sites this one replaced, oldest first. */
   past: Site[]
   /** Sites undone out of the way, newest first. */
@@ -70,6 +129,12 @@ interface State {
   calibration: Poly
 
   setTool: (tool: Tool) => void
+  switchOption: (id: string) => void
+  duplicateOption: () => void
+  addOption: () => void
+  renameOption: (id: string, name: string) => void
+  setOptionThumbnail: (id: string, thumbnail: string | null) => void
+  removeOption: (id: string) => void
   undo: () => void
   redo: () => void
   startSpineDraw: () => void
@@ -117,7 +182,7 @@ interface State {
   setRenderMode: (mode: RenderMode) => void
 
   reset: () => void
-  loadSite: (site: Site) => void
+  loadSite: (site: Site, options?: { name: string; site: Site }[], active?: number) => void
   fitView: () => void
 }
 
@@ -158,6 +223,17 @@ export const useStore = create<State>((set, get) => {
    * small, but an unbounded stack is still a leak. */
   const HISTORY_LIMIT = 50
   let lastEdit: { label: string | undefined; at: number } = { label: undefined, at: 0 }
+  /**
+   * Forget what was last edited, so the next commit starts a fresh undo step.
+   *
+   * Needed wherever the ground moves under the history: switching option,
+   * loading, resetting, or stepping through it. Without this, editing the same
+   * slider in two options inside the coalescing window merges them — and the
+   * second option quietly loses a step it should have kept.
+   */
+  const breakEdit = () => {
+    lastEdit = { label: undefined, at: 0 }
+  }
 
   /**
    * Commit a new site, remembering the one it replaced.
@@ -192,6 +268,12 @@ export const useStore = create<State>((set, get) => {
     commit({ ...site, buildings: site.buildings.map((b) => (b.id === id ? fn(b) : b)) }, label)
   }
 
+  /** The active option, brought up to date with what has been edited since. */
+  const syncActive = (s: State): DesignOption[] =>
+    s.options.map((o) =>
+      o.id === s.activeOption ? { ...o, site: s.site, past: s.past, future: s.future } : o,
+    )
+
   /** Keep the selection if that building still exists in the restored site. */
   const keepSelection = (site: Site) => {
     const id = get().selectedId
@@ -209,6 +291,8 @@ export const useStore = create<State>((set, get) => {
 
   return {
     site: initialSite,
+    options: [{ id: 'o1', name: 'Option A', site: initialSite, past: [], future: [] }],
+    activeOption: 'o1',
     build: buildSite(initialSite, null),
     tool: 'site',
     selectedId: initialSite.buildings[0]?.id ?? null,
@@ -341,7 +425,12 @@ export const useStore = create<State>((set, get) => {
 
     setPlotRect: (width, depth) => {
       const site = get().site
-      commit({ ...site, plot: rectanglePoly(width, depth) })
+      // A fresh rectangle is a fresh boundary; its edges carry nothing yet.
+      commit({
+        ...site,
+        plot: rectanglePoly(width, depth),
+        rules: { ...site.rules, setbackByEdge: [] },
+      })
     },
 
     // --- tracing a new boundary ---------------------------------------------
@@ -357,7 +446,101 @@ export const useStore = create<State>((set, get) => {
       if (draft.length < 3) return
       const site = get().site
       set({ plotMode: 'idle', plotDraft: [] })
-      commit({ ...site, plot: draft })
+      // A boundary traced from scratch has edges nobody has spoken about yet,
+      // so per-edge limits go with the boundary they described.
+      commit({ ...site, plot: draft, rules: { ...site.rules, setbackByEdge: [] } })
+    },
+
+    // --- design options -------------------------------------------------------
+
+    /**
+     * Move to another option, carrying this one's work with it.
+     *
+     * The live site and history are written back into the option being left
+     * before the next one is read, because `commit` only ever updates the live
+     * copy — keeping the array in step on every edit would be a second write on
+     * the hot path for something only a switch can observe.
+     */
+    switchOption: (id) => {
+      const s = get()
+      if (id === s.activeOption) return
+      breakEdit()
+      const options = syncActive(s)
+      const target = options.find((o) => o.id === id)
+      if (!target) return
+      set({
+        options,
+        activeOption: id,
+        past: target.past,
+        future: target.future,
+        plotMode: 'idle',
+        plotDraft: [],
+      })
+      rebuildNow(target.site, target.site.buildings[0]?.id ?? null)
+    },
+
+    /** A copy of this option, as a starting point for a variation. */
+    duplicateOption: () => {
+      breakEdit()
+      const s = get()
+      const options = syncActive(s)
+      const id = `o${++optionCounter}`
+      // Sites are immutable, so the copy shares everything until one is edited.
+      options.push({
+        id,
+        name: nextOptionName(options),
+        site: s.site,
+        past: [],
+        future: [],
+        thumbnail: options.find((o) => o.id === s.activeOption)?.thumbnail,
+      })
+      set({ options, activeOption: id, past: [], future: [] })
+    },
+
+    /** An empty site, for an option that starts from nothing. */
+    addOption: () => {
+      breakEdit()
+      const s = get()
+      const options = syncActive(s)
+      const id = `o${++optionCounter}`
+      const site = defaultSite()
+      options.push({ id, name: nextOptionName(options), site, past: [], future: [] })
+      set({ options, activeOption: id, past: [], future: [] })
+      rebuildNow(site, site.buildings[0]?.id ?? null)
+    },
+
+    renameOption: (id, name) =>
+      set({ options: get().options.map((o) => (o.id === id ? { ...o, name } : o)) }),
+
+    /** Taken by the UI, which is the only layer that knows about a canvas. */
+    setOptionThumbnail: (id, thumbnail) => {
+      if (!thumbnail) return
+      set({ options: get().options.map((o) => (o.id === id ? { ...o, thumbnail } : o)) })
+    },
+
+    /**
+     * Drop an option. The last one never goes: a site with no option is a state
+     * the rest of the app has no way to be in.
+     */
+    removeOption: (id) => {
+      breakEdit()
+      const s = get()
+      if (s.options.length < 2) return
+      const options = syncActive(s).filter((o) => o.id !== id)
+      if (id !== s.activeOption) {
+        set({ options })
+        return
+      }
+      const next = options[0]
+      set({
+        options,
+        activeOption: next.id,
+        past: next.past,
+        future: next.future,
+        plotMode: 'idle',
+        plotDraft: [],
+      })
+      rebuildNow(next.site, next.site.buildings[0]?.id ?? null)
     },
 
     /**
@@ -376,7 +559,7 @@ export const useStore = create<State>((set, get) => {
       const past = get().past
       if (past.length === 0) return
       const site = past[past.length - 1]
-      lastEdit = { label: undefined, at: 0 }
+      breakEdit()
       set({
         past: past.slice(0, -1),
         future: [get().site, ...get().future],
@@ -390,7 +573,7 @@ export const useStore = create<State>((set, get) => {
       const future = get().future
       if (future.length === 0) return
       const site = future[0]
-      lastEdit = { label: undefined, at: 0 }
+      breakEdit()
       set({
         past: [...get().past, get().site],
         future: future.slice(1),
@@ -449,14 +632,28 @@ export const useStore = create<State>((set, get) => {
       const site = get().site
       const plot = [...site.plot]
       plot.splice(index + 1, 0, point)
-      commit({ ...site, plot })
+      // Splitting an edge makes two of it. Both halves keep the limit the whole
+      // had, because a corner added mid-edge does not change what that side of
+      // the plot faces.
+      const setbackByEdge = [...site.rules.setbackByEdge]
+      if (setbackByEdge.length > index) {
+        setbackByEdge.splice(index, 0, setbackByEdge[index] ?? null)
+      }
+      commit({ ...site, plot, rules: { ...site.rules, setbackByEdge } })
     },
 
     removePlotVertex: (index) => {
       const site = get().site
       // A polygon needs three corners; refuse to go below that.
       if (site.plot.length <= 3) return
-      commit({ ...site, plot: site.plot.filter((_, i) => i !== index) })
+      // Taking a corner out merges the two edges either side of it into one,
+      // which keeps the limit of the edge that led into it.
+      const setbackByEdge = site.rules.setbackByEdge.filter((_, i) => i !== index)
+      commit({
+        ...site,
+        plot: site.plot.filter((_, i) => i !== index),
+        rules: { ...site.rules, setbackByEdge },
+      })
     },
 
     /**
@@ -484,12 +681,50 @@ export const useStore = create<State>((set, get) => {
       commit({ ...site, context })
     },
 
+    /** Start over: one empty option, and nothing behind it. */
     reset: () => {
+      breakEdit()
       const fresh = defaultSite()
+      set({
+        options: [{ id: `o${++optionCounter}`, name: 'Option A', site: fresh, past: [], future: [] }],
+        activeOption: `o${optionCounter}`,
+        past: [],
+        future: [],
+      })
       rebuildNow(fresh, fresh.buildings[0]?.id ?? null)
     },
 
-    loadSite: (site) => rebuildNow(site, site.buildings[0]?.id ?? null),
+    /**
+     * Replace everything with what a file described.
+     *
+     * A file carrying several options replaces the whole set, not just the one
+     * on screen — loading is opening a scheme, and half-merging somebody else's
+     * options into yours is not something anybody asked for. History goes with
+     * it: nothing before a load is a step you can take back into.
+     */
+    loadSite: (site, options, active = 0) => {
+      breakEdit()
+      const loaded =
+        options && options.length > 0
+          ? options.map((o) => ({
+              id: `o${++optionCounter}`,
+              name: o.name,
+              site: o.site,
+              past: [],
+              future: [],
+            }))
+          : [{ id: `o${++optionCounter}`, name: 'Option A', site, past: [], future: [] }]
+      const open = loaded[active] ?? loaded[0]
+      set({
+        options: loaded,
+        activeOption: open.id,
+        past: [],
+        future: [],
+        plotMode: 'idle',
+        plotDraft: [],
+      })
+      rebuildNow(open.site, open.site.buildings[0]?.id ?? null)
+    },
 
     // --- underlay -----------------------------------------------------------
     setUnderlay: (underlay) => {

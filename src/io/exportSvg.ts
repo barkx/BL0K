@@ -1,7 +1,7 @@
 import { footprint, footprintsAt, levels, shapesAt, topLevel } from '../geometry/masses'
 import type { PlacedBuilding, SiteBuild } from '../site/build'
 import type { Site } from '../site/types'
-import { place, type Vec2 } from '../lib/poly'
+import { place, type Poly, type Vec2 } from '../lib/poly'
 import type { Rect } from '../lib/rect'
 import { bandAt } from '../store/program'
 import { unionArea } from '../lib/convex'
@@ -392,6 +392,164 @@ export function elevationSvg(placed: PlacedBuilding, elevKey: string, o: Drawing
     height - FOOTER,
     o,
     `${placement.name} · elevation ${e.dir} (${e.key}) · ${n(e.length)} m long · ${n(top)} m tall`,
+  )
+  return document_(width, height, s.body())
+}
+
+// ---------------------------------------------------------------------------
+// Sections
+// ---------------------------------------------------------------------------
+
+/**
+ * Where a straight cut crosses one convex outline, as a span along the cut.
+ *
+ * The same arithmetic `lib/convex.ts` does in plan, turned on its side: a
+ * convex polygon is the intersection of its edges' half-planes, so the part of
+ * a line inside it is the intersection of the intervals each half-plane allows.
+ * No CSG, no mesh cutting — a section is rectangle-and-interval work because a
+ * mass is a prism over a convex polygon.
+ */
+function cutSpan(shape: Poly, at: Vec2, dir: Vec2): { t0: number; t1: number } | null {
+  let lo = -Infinity
+  let hi = Infinity
+  const n = shape.length
+  // Winding decides which perpendicular points out; the shoelace sign tells it.
+  let twice = 0
+  for (let i = 0; i < n; i++) {
+    const a = shape[i]
+    const b = shape[(i + 1) % n]
+    twice += a.x * b.z - b.x * a.z
+  }
+  const sign = twice < 0 ? 1 : -1
+  for (let i = 0; i < n; i++) {
+    const a = shape[i]
+    const b = shape[(i + 1) % n]
+    const dx = b.x - a.x
+    const dz = b.z - a.z
+    const len = Math.hypot(dx, dz)
+    if (len < 1e-9) continue
+    const nx = ((-dz / len) * sign)
+    const nz = ((dx / len) * sign)
+    const denom = dir.x * nx + dir.z * nz
+    const away = (at.x - a.x) * nx + (at.z - a.z) * nz
+    if (Math.abs(denom) < 1e-9) {
+      // Parallel to this edge: either wholly inside it or wholly outside.
+      if (away > 1e-9) return null
+      continue
+    }
+    const t = -away / denom
+    if (denom > 0) hi = Math.min(hi, t)
+    else lo = Math.max(lo, t)
+  }
+  return hi - lo > 1e-6 ? { t0: lo, t1: hi } : null
+}
+
+/** A cut across the site: which way it runs, and how far off centre it sits. */
+export interface CutLine {
+  /** `x` runs the cut east–west, `z` north–south. */
+  along: 'x' | 'z'
+  /** Metres from the site's centre, perpendicular to the cut. */
+  offset: number
+}
+
+/**
+ * A section through the whole site.
+ *
+ * Every mass the line crosses is drawn as the piece of it the cut passes
+ * through, at its real height — so two blocks of different heights can be
+ * compared against each other and against the ground in one drawing, which is
+ * the thing a plan and an elevation cannot show.
+ *
+ * Only what the cut passes through is drawn. What stands behind it is left out:
+ * a section that also drew the elevation beyond would need depth sorting and a
+ * decision about how far back to look, and a massing cut is more useful honest
+ * than busy.
+ */
+export function sectionSvg(site: Site, build: SiteBuild, cut: CutLine, o: DrawingOptions): string {
+  const k = 1000 / o.scale
+  const dir: Vec2 = cut.along === 'x' ? { x: 1, z: 0 } : { x: 0, z: 1 }
+  // The cut passes through the site's centre, moved along its own perpendicular.
+  const perp: Vec2 = { x: -dir.z, z: dir.x }
+  const centre = {
+    x: (build.bounds.x0 + build.bounds.x1) / 2,
+    z: (build.bounds.z0 + build.bounds.z1) / 2,
+  }
+  const at: Vec2 = {
+    x: centre.x + perp.x * cut.offset,
+    z: centre.z + perp.z * cut.offset,
+  }
+
+  interface Cut {
+    t0: number
+    t1: number
+    base: number
+    top: number
+    floors: number
+    baseFloor: number
+    floorHeight: number
+    name: string
+  }
+  const cuts: Cut[] = []
+  for (const { placement, building } of build.placed) {
+    const h = placement.params.floorHeight
+    for (const m of building.masses) {
+      // The cut is in site coordinates and a mass is in the building's own, so
+      // the outline is placed before it is crossed.
+      const shape = m.shape.map((q) => place(q, placement.rotation, placement.position))
+      const span = cutSpan(shape, at, dir)
+      if (!span) continue
+      cuts.push({
+        t0: span.t0,
+        t1: span.t1,
+        base: m.baseFloor * h,
+        top: (m.baseFloor + m.floors) * h,
+        floors: m.floors,
+        baseFloor: m.baseFloor,
+        floorHeight: h,
+        name: placement.name,
+      })
+    }
+  }
+
+  // The plot, so the cut reads against the ground it sits on.
+  const plotSpan = site.plot.length >= 3 ? cutSpan(site.plot, at, dir) : null
+
+  const ts = cuts.flatMap((c) => [c.t0, c.t1])
+  if (plotSpan) ts.push(plotSpan.t0, plotSpan.t1)
+  const lo = ts.length ? Math.min(...ts) : -20
+  const hi = ts.length ? Math.max(...ts) : 20
+  const tall = cuts.reduce((n2, c) => Math.max(n2, c.top), 0)
+
+  const width = (hi - lo) * k + MARGIN * 2
+  const height = Math.max(tall, 6) * k + MARGIN * 2 + FOOTER
+  const X = (t: number) => (t - lo) * k + MARGIN
+  const Y = (y: number) => MARGIN + (Math.max(tall, 6) - y) * k
+
+  const s = new Sheet()
+
+  // Ground first, so everything else sits on it.
+  if (plotSpan) {
+    s.line(X(plotSpan.t0), Y(0), X(plotSpan.t1), Y(0), W_OUTLINE)
+  }
+  s.line(MARGIN, Y(0), width - MARGIN, Y(0), W_FINE, '2 2')
+
+  for (const c of cuts) {
+    s.rect(X(c.t0), Y(c.top), (c.t1 - c.t0) * k, (c.top - c.base) * k, W_OUTLINE)
+    // Floor lines inside the cut: what makes it a section rather than a bar.
+    for (let i = 1; i < c.floors; i++) {
+      const y = (c.baseFloor + i) * c.floorHeight
+      s.line(X(c.t0), Y(y), X(c.t1), Y(y), W_FINE)
+    }
+  }
+
+  footer(
+    s,
+    width,
+    height - FOOTER,
+    o,
+    `section ${cut.along === 'x' ? 'looking north' : 'looking east'} · ` +
+      `${cut.offset === 0 ? 'through the centre' : `${n(cut.offset)} m off centre`} · ` +
+      `${cuts.length} cut${cuts.length === 1 ? '' : 's'} · tallest ${n(tall)} m`,
   )
   return document_(width, height, s.body())
 }

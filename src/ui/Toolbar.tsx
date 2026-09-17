@@ -1,12 +1,17 @@
 import { Wordmark } from './Logo'
+import { OptionsMenu } from './OptionsMenu'
 
 /**
- * Deliberately bare: the mark and the sidebar toggle, nothing else.
+ * The mark, the sidebar toggle, and which design option is on screen.
  *
- * Render mode and the image snapshot moved to Settings, and framing the view
- * moved onto the ground itself — double-click it. A toolbar that holds three
- * unrelated controls is a place things accumulate, and the viewport is worth
- * more than the strip above it.
+ * It was bare on purpose, and mostly still is. Render mode and the image
+ * snapshot live in Settings and framing moved onto the ground itself, because a
+ * toolbar holding three unrelated controls is a place things accumulate.
+ *
+ * The option menu earns the exception: which scheme you are looking at is true
+ * of the whole window rather than of any one panel, and putting it in a tab
+ * would mean the answer to "which option is this?" was hidden behind whichever
+ * tab you were not on.
  */
 export function Toolbar({
   collapsed,
@@ -27,6 +32,7 @@ export function Toolbar({
       </button>
       <h1><Wordmark /></h1>
       <span className="spacer" />
+      <OptionsMenu />
     </div>
   )
 }

@@ -241,8 +241,9 @@ Refuse:
   measures a mass, take the outline.
   - **Freeform is presented as experimental**, in its own labelled row under the
     six preset chips rather than as a seventh, with the approximations named in
-    the panel. The default preset is still `L`. Do not promote it until stage 3
-    lands.
+    the panel. The default preset is still `L`. Stage 3 has landed, so the
+    numbers are right at any angle — it stays labelled experimental because the
+    user asked for that, not because anything is approximate.
   - **Elevation keys are derived in exactly one place**, `buildElevations`.
     `Building.tsx` used to rebuild them from the nearest bounding-box edge,
     which named faces that do not exist on a mitred mass; it now asks the
@@ -255,6 +256,44 @@ Refuse:
     infinity. Drawing reuses the boundary's machinery: `plotMode` gained
     `'spine'` and `plotDraft` carries the points, so the same three keys work
     and leaving Massing cancels it.
+- **M24, per-edge setbacks and sections**. (a) `SiteRules.setbackByEdge` is a
+  `(number | null)[]` indexed as the plot's edges are — edge `i` runs corner `i`
+  to `i + 1`. `null` follows the boundary-wide `setback`, and a **zero is a real
+  answer** meaning a party boundary a building may sit on, which is why this
+  cannot be a plain number. `setbackFor(rules, edge)` is the only way to read
+  one. Entries follow their edges when a corner is inserted or removed, and are
+  cleared when a boundary is redrawn or reset — keep that up in
+  `insertPlotVertex` / `removePlotVertex` / `finishPlotDraw` / the rectangle
+  reset if you touch them. `RuleKey` is now spelled out rather than
+  `keyof SiteRules`, because the rules hold a list as well as five numbers.
+  One breach per building, against whichever edge it falls furthest short of.
+  (b) `sectionSvg` cuts the site with a line: `cutSpan` intersects the
+  half-plane intervals of a convex outline, which is `lib/convex.ts`'s trick
+  turned on its side. **No CSG and no mesh cutting** — a section is interval
+  arithmetic because a mass is a prism over a convex polygon. Only what the cut
+  passes through is drawn; what stands behind it is left out on purpose.
+- **M23, design options**: `options: DesignOption[]` and `activeOption` in the
+  store, each option a whole `Site` plus its own `past`/`future`. The active
+  option's copy in the array **goes stale between switches** — `commit` only
+  updates the live `site`, and `syncActive()` brings the array up to date on
+  every switch, duplicate, remove and save. Anything new that reads
+  `options[i].site` for the active option must sync first or it will read the
+  value from the last switch. History is per option on purpose: a shared stack
+  would step one option's site into another's. `breakEdit()` must be called
+  wherever the ground moves under the history — switching, loading, resetting,
+  undoing — or an edit in one option coalesces with the same edit in another and
+  the second silently loses a step. That bug was real and the checks caught it.
+  Each option carries a `thumbnail`, captured by the **UI** (`ui/thumbnail.ts`)
+  and handed to the store — the store has no business touching a canvas. Taken
+  of both sides of a switch, which is what makes them share a camera and so be
+  worth comparing; it works at all only because the `<Canvas>` sets
+  `preserveDrawingBuffer: true`. Thumbnails are **memory only, never saved**:
+  they are derived, and a scheme file should hold what was drawn rather than a
+  render of it.
+  **Reopens the bare-toolbar decision in §6**: the top bar now carries one
+  control, because which option is on screen is true of the whole window rather
+  than of any panel. Config v12 writes every option plus which was open; a file
+  with one option writes no `options` key at all, so nothing older sees a change.
 - **M22, undo**: `past`/`future` stacks of whole `Site` snapshots in the store,
   because every mutation already funnels through one `commit()` and a site is
   already the single immutable object `serialize` writes. There is nothing to
@@ -372,13 +411,16 @@ Refuse:
     a vertical face to Facade with that elevation open. Consequence to know
     about: a click on the ground *inside* the plot leaves the Site tab, because
     the ground is the site surface and returns you to the site scale.
-- **UI**: the sidebar is an icon rail with eight sections — Site, Placement,
+- **UI**: the top bar carries the mark, the sidebar toggle and the design-option
+  menu — and nothing else; it was bare before M23 and the bar is still not a
+  place for controls that belong in a tab. The sidebar is an icon rail with
+  eight sections — Site, Placement,
   Massing, Program, Facade (balconies live here), Units, Drawings, Settings. Program sits
   between Massing and Facade because that is the order the decisions happen in.
   Rules sit in Site;
-  the core sits in Massing; the efficiency factor and the unit mix sit in Units. The top bar is
-  deliberately bare — render mode and the PNG snapshot are in Settings, and
-  double-clicking the ground frames the site, so there is no Fit button. Inside
+  the core sits in Massing; the efficiency factor and the unit mix sit in Units.
+  Render mode and the PNG snapshot are in Settings, and double-clicking the
+  ground frames the site, so there is no Fit button. Inside
   a panel, sections are flat `Block`s, not nested accordions. Roads and parking are
   intended for Placement. Horizontal rail in the bottom sheet under 900 px.
 - **Brand**: URBGEN — short for urban generator, though the tagline stays
@@ -400,10 +442,11 @@ Refuse:
   2.7 MB on a 30-floor courtyard depending on balconies. One thing that has not
   changed: **GlobalIds are derived from `placement.id` alone** so a rename does
   not reissue every element's identity. DXF import sits behind all of it.
-- **Biggest gap, by decision**: no **IFC export**. glTF is a visualisation
-  format — nobody continues a project from it, so today the tool dead-ends
-  rather than feeding Revit or ArchiCAD. Treated as a blocker, not a backlog
-  item. See `project.md` §9.
+- **Biggest gap**: IFC export is **partly** there — stages 1, 2 and 3a, so
+  storeys, slabs, walls, windows as real openings and balconies. Stage 3b (cores,
+  the plot, property sets, a detail switch) is what still stands between this
+  and a file somebody continues a project from. Treated as a blocker, not a
+  backlog item. See `project.md` §9.
 - **Positioning**: deliberately a simpler tool than Forma or Spacio. Do not
   chase simulation breadth or generative AI. Defend facade depth, determinism,
   offline-and-free, and metrics that show their working. `project.md` §9.

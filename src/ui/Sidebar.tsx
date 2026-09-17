@@ -289,6 +289,8 @@ function CoreNote() {
 function SettingsPanel() {
   const site = useStore((s) => s.site)
   const build = useStore((s) => s.build)
+  const options = useStore((s) => s.options)
+  const activeOption = useStore((s) => s.activeOption)
   const loadSite = useStore((s) => s.loadSite)
   const reset = useStore((s) => s.reset)
   const file = useRef<HTMLInputElement>(null)
@@ -298,7 +300,7 @@ function SettingsPanel() {
   const onFile = async (f: File) => {
     try {
       const result = parseConfig(await f.text())
-      loadSite(result.site)
+      loadSite(result.site, result.options ?? undefined, result.activeOption)
       setNote(
         result.future
           ? `Loaded a v${result.version} file from a newer build — unknown settings ignored.`
@@ -357,7 +359,21 @@ function SettingsPanel() {
             <button
               className="ghost"
               onClick={() =>
-                download(`urbgen-site-${stamp()}.json`, serialize(site), 'application/json')
+                download(
+                  `urbgen-site-${stamp()}.json`,
+                  // Every option, so saving a comparison saves the comparison.
+                  // The active option's stored site lags the live one between
+                  // switches, so substitute what is actually on screen.
+                  serialize(
+                    site,
+                    options.map((o) => ({
+                      name: o.name,
+                      site: o.id === activeOption ? site : o.site,
+                    })),
+                    options.findIndex((o) => o.id === activeOption),
+                  ),
+                  'application/json',
+                )
               }
             >
               Save

@@ -7,17 +7,24 @@ import {
   elevationSvg,
   floorPlanSvg,
   planLevels,
+  sectionSvg,
   sitePlanSvg,
   typicalLevel,
   type DrawingOptions,
 } from '../io/exportSvg'
 
-type Kind = 'site' | 'plan' | 'elevation'
+type Kind = 'site' | 'plan' | 'elevation' | 'section'
 
 const KINDS: { value: Kind; label: string }[] = [
   { value: 'site', label: 'Site plan' },
   { value: 'plan', label: 'Floor plan' },
   { value: 'elevation', label: 'Elevation' },
+  { value: 'section', label: 'Section' },
+]
+
+const CUTS: { value: 'x' | 'z'; label: string }[] = [
+  { value: 'x', label: 'Looking north' },
+  { value: 'z', label: 'Looking east' },
 ]
 
 const SCALES = [100, 200, 500, 1000].map((v) => ({ value: String(v), label: `1:${v}` }))
@@ -41,6 +48,8 @@ export function DrawingsPanel() {
   const [scale, setScale] = useState('200')
   const [level, setLevel] = useState<number | null>(null)
   const [elevation, setElevation] = useState<string | null>(null)
+  const [cutAlong, setCutAlong] = useState<'x' | 'z'>('x')
+  const [cutOffset, setCutOffset] = useState(0)
 
   const levelsAvailable = placed ? planLevels(placed) : []
   const elevationsAvailable = placed ? elevationKeys(placed) : []
@@ -58,22 +67,33 @@ export function DrawingsPanel() {
   const svg = useMemo(() => {
     const o: DrawingOptions = { scale: Number(scale), title: 'URBGEN' }
     if (kind === 'site') return sitePlanSvg(site, build, { ...o, title: 'Site plan' })
+    if (kind === 'section') {
+      return sectionSvg(site, build, { along: cutAlong, offset: cutOffset }, { ...o, title: 'Section' })
+    }
     if (!placed) return null
     if (kind === 'plan') {
       return floorPlanSvg(placed, activeLevel, { ...o, title: `Level ${activeLevel}` })
     }
     if (!activeElevation) return null
     return elevationSvg(placed, activeElevation, { ...o, title: 'Elevation' })
-  }, [kind, scale, site, build, placed, activeLevel, activeElevation])
+  }, [kind, scale, site, build, placed, activeLevel, activeElevation, cutAlong, cutOffset])
 
   const name = () => {
     if (kind === 'site') return `urbgen-site-plan-${stamp()}.svg`
+    if (kind === 'section') return `urbgen-section-${cutAlong}-${stamp()}.svg`
     const who = placed?.placement.name.replace(/\s+/g, '-').toLowerCase() ?? 'building'
     if (kind === 'plan') return `urbgen-${who}-level-${activeLevel}-${stamp()}.svg`
     return `urbgen-${who}-elevation-${activeElevation}-${stamp()}.svg`
   }
 
-  const needsBuilding = kind !== 'site' && !placed
+  const needsBuilding = kind !== 'site' && kind !== 'section' && !placed
+  // Half the site's span each way is enough to reach anything on it.
+  const reach = Math.max(
+    20,
+    Math.round(
+      (cutAlong === 'x' ? build.bounds.z1 - build.bounds.z0 : build.bounds.x1 - build.bounds.x0) / 2,
+    ) + 10,
+  )
 
   return (
     <>
@@ -100,6 +120,45 @@ export function DrawingsPanel() {
             options={elevationsAvailable.map((k) => ({ value: k, label: k }))}
             onChange={setElevation}
           />
+        )}
+
+        {kind === 'section' && (
+          <>
+            <Chips value={cutAlong} options={CUTS} onChange={setCutAlong} />
+            <div className="field">
+              <div className="row">
+                <label htmlFor="cut-offset">Offset</label>
+                <span className="value">
+                  <input
+                    id="cut-offset"
+                    type="number"
+                    min={-reach}
+                    max={reach}
+                    step={1}
+                    value={cutOffset}
+                    onChange={(e) => {
+                      const v = Number(e.target.value)
+                      if (Number.isFinite(v)) setCutOffset(v)
+                    }}
+                  />
+                  <span className="unit">m</span>
+                </span>
+              </div>
+              <input
+                type="range"
+                aria-label="Cut offset"
+                min={-reach}
+                max={reach}
+                step={1}
+                value={cutOffset}
+                onChange={(e) => setCutOffset(Number(e.target.value))}
+              />
+              <div className="hint">
+                From the middle of the site, across the cut. Only what the line
+                passes through is drawn.
+              </div>
+            </div>
+          </>
         )}
 
         <Select label="Scale" value={scale} options={SCALES} onChange={setScale} />
@@ -142,7 +201,8 @@ export function DrawingsPanel() {
       <Block title="What is drawn">
         <div className="field">
           <div className="hint">
-            The massing: outlines, cores, the module rhythm and every opening.
+            The massing: outlines, cores, the module rhythm, every opening, and
+            what a cut passes through.
             Rooms, corridors and unit layouts are not modelled and are not
             implied. Imported OpenStreetMap context is left out of every
             drawing — it is there to trace over, and its licence follows it into

@@ -81,7 +81,8 @@ function breachLine(b: Breach): string {
     kind === 'length' ? m(v) : kind === 'share' ? pct(v) : round(v, 2).toFixed(2)
   const who = b.names.length ? `${b.names.join(' and ')}: ` : ''
   const verb = RULE_SENSE[b.rule] === 'minimum' ? 'needs' : 'allows'
-  return `${who}${RULE_LABEL[b.rule].toLowerCase()} ${show(b.actual)}, ${verb} ${show(b.limit)}`
+  const where = b.where ? ` at ${b.where}` : ''
+  return `${who}${RULE_LABEL[b.rule].toLowerCase()}${where} ${show(b.actual)}, ${verb} ${show(b.limit)}`
 }
 
 /**

@@ -24,6 +24,10 @@ import { NO_MIX, UNIT_TYPES, type UnitMix } from '../store/unitMix'
  *     optional underlay image carried inline as a data URL.
  * v4: the site carries `rules` — the plot's planning limits. A v3 file has no
  *     rules, so it loads with every rule off, which is what it meant.
+ * v12: the file carries every **design option**, not only the one on screen.
+ *      `site` stays the active one so the shape of the file is unchanged for
+ *      anything that only wants a scheme; `options` lists them all alongside.
+ *      A file without it is a single option, which is what it described.
  * v11: a building can carry a drawn `spine` — the centreline of the `freeform`
  *      preset. A file without one has no drawn plan, which is what it meant.
  * v10: wings B and C can carry their own depth, and the top floors can step
@@ -51,25 +55,43 @@ import { NO_MIX, UNIT_TYPES, type UnitMix } from '../store/unitMix'
  * The `app` field is informational only — the loader never reads it — so files
  * written under either earlier name, 3DBlock or BL0K, still load unchanged.
  */
-export const CONFIG_VERSION = 11
+export const CONFIG_VERSION = 12
+
+export interface SavedOption {
+  name: string
+  site: Site
+}
 
 export interface SavedConfig {
   version: number
   app: 'urbgen'
+  /** The option that was on screen. Kept at the top level so the file still
+   * reads as one scheme to anything that does not care about options. */
   site: Site
+  options?: SavedOption[]
+  /** Index into `options` of the one that was on screen. */
+  activeOption?: number
 }
 
-export function serialize(site: Site): string {
+export function serialize(site: Site, options?: SavedOption[], active = 0): string {
+  const many = options !== undefined && options.length > 1
   const payload: SavedConfig = {
     version: CONFIG_VERSION,
     app: 'urbgen',
     site,
+    // Only written when there is more than one, so a single-option file looks
+    // exactly as it always did.
+    ...(many ? { options, activeOption: Math.max(0, active) } : {}),
   }
   return JSON.stringify(payload, null, 2)
 }
 
 export interface LoadResult {
   site: Site
+  /** Every option in the file, active one included. Null when it held one. */
+  options: SavedOption[] | null
+  /** Which of them was on screen. */
+  activeOption: number
   version: number
   /** A human note when the file had to be reshaped, else null. */
   migrated: string | null
@@ -173,6 +195,11 @@ function readRules(incoming: unknown): SiteRules {
   const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0)
   return resolveRules({
     setback: num(r.setback),
+    // An entry that is not a number means "follow the boundary-wide setback",
+    // which is also what a file written before per-edge limits says by omission.
+    setbackByEdge: (Array.isArray(r.setbackByEdge) ? r.setbackByEdge : []).map((v) =>
+      typeof v === 'number' && Number.isFinite(v) ? v : null,
+    ),
     separation: num(r.separation),
     heightCap: num(r.heightCap),
     farCap: num(r.farCap),
@@ -248,20 +275,37 @@ export function parseConfig(text: string): LoadResult {
 
   // v3 and later
   if (raw.site && typeof raw.site === 'object') {
-    const site = raw.site as Partial<Site>
-    const buildings = Array.isArray(site.buildings) ? site.buildings : []
-    return {
-      site: {
-        plot: readPlot(site.plot),
+    const read = (s: Partial<Site>): Site => {
+      const buildings = Array.isArray(s.buildings) ? s.buildings : []
+      return {
+        plot: readPlot(s.plot),
         buildings:
           buildings.length > 0
             ? buildings.map(readPlacement)
             : [makePlacement({ name: 'Building A' })],
-        underlay: readUnderlay(site.underlay),
-        rules: readRules(site.rules),
-        geo: readGeo(site.geo),
-        context: readContext(site.context),
-      },
+        underlay: readUnderlay(s.underlay),
+        rules: readRules(s.rules),
+        geo: readGeo(s.geo),
+        context: readContext(s.context),
+      }
+    }
+    // An option whose site will not read is dropped rather than repaired: half
+    // an option is not a scheme anybody drew.
+    const saved = Array.isArray(raw.options) ? (raw.options as Partial<SavedOption>[]) : []
+    const options = saved
+      .filter((o) => o && typeof o === 'object' && o.site && typeof o.site === 'object')
+      .map((o, i) => ({
+        name: typeof o.name === 'string' && o.name.trim() ? o.name : `Option ${i + 1}`,
+        site: read(o.site as Partial<Site>),
+      }))
+    // Which option was open, by index — the top-level `site` is a copy of it,
+    // not the same object, so there is nothing to match it against.
+    const wanted = Number(raw.activeOption)
+    const active = Number.isInteger(wanted) && wanted >= 0 && wanted < options.length ? wanted : 0
+    return {
+      site: read(raw.site as Partial<Site>),
+      options: options.length > 1 ? options : null,
+      activeOption: active,
       version,
       migrated: null,
       future: version > CONFIG_VERSION,
@@ -279,6 +323,8 @@ export function parseConfig(text: string): LoadResult {
       geo: null,
       context: null,
     },
+    options: null,
+    activeOption: 0,
     version,
     migrated:
       `a single building became a one-building site on a default plot` +
