@@ -66,16 +66,27 @@
     return out
   }
 
-  // A plot under the block, so it is not floating.
+  // The plot as the app draws it: a blue line on the viewport with a round
+  // handle at each corner, and a soft shadow under the massing. No filled
+  // plate — in the app the ground simply is the background.
   function ground(ms) {
     var x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9, e = 6
     ms.forEach(function (m) {
       x0 = Math.min(x0, m[0]); z0 = Math.min(z0, m[1])
       x1 = Math.max(x1, m[2]); z1 = Math.max(z1, m[3])
     })
-    return '<path d="' + path([iso(x0 - e, 0, z0 - e), iso(x1 + e, 0, z0 - e),
-      iso(x1 + e, 0, z1 + e), iso(x0 - e, 0, z1 + e)])
-      + '" fill="#e7e4de" stroke="#2c5d8f" stroke-width=".4" stroke-dasharray="1.8 1.4"/>'
+    var c = [[x0 - e, z0 - e], [x1 + e, z0 - e], [x1 + e, z1 + e], [x0 - e, z1 + e]]
+    var shadow = ms.map(function (m) {
+      return path([iso(m[0] - 2, 0, m[1] + 5), iso(m[2] - 2, 0, m[1] + 5),
+                   iso(m[2] - 2, 0, m[3] + 5), iso(m[0] - 2, 0, m[3] + 5)])
+    }).join('')
+    var handles = c.map(function (q) {
+      var t = iso(q[0], 0, q[1])
+      return '<circle cx="' + n(t[0]) + '" cy="' + n(t[1]) + '" r="1.45" fill="#0f5c9a"/>'
+    }).join('')
+    return '<path d="' + shadow + '" fill="#bcbcbb"/><path d="'
+      + path(c.map(function (q) { return iso(q[0], 0, q[1]) }))
+      + '" fill="none" stroke="#2f6ea8" stroke-width=".3"/>' + handles
   }
 
   // Centre, solved not sampled: in this projection the extremes are always the
@@ -103,15 +114,15 @@
       var x0 = m[0], z0 = m[1], x1 = m[2], z1 = m[3]
       var p = function (x, y, z) { return iso(x, y, z) }
       var solid = function (d, fill) {
-        return '<path d="' + d + '" fill="' + fill + '" stroke="#b4aea4" stroke-width=".5"/>'
+        return '<path d="' + d + '" fill="' + fill + '" stroke="#84847f" stroke-width=".35"/>'
       }
-      out += solid(path([p(x0, h, z0), p(x1, h, z0), p(x1, h, z1), p(x0, h, z1)]), '#fff')
-      out += solid(path([p(x1, 0, z0), p(x1, 0, z1), p(x1, h, z1), p(x1, h, z0)]), '#e9e6e1')
-      out += solid(path([p(x0, 0, z1), p(x1, 0, z1), p(x1, h, z1), p(x0, h, z1)]), '#dcd8d1')
+      out += solid(path([p(x0, h, z0), p(x1, h, z0), p(x1, h, z1), p(x0, h, z1)]), '#d6d5d4')
+      out += solid(path([p(x1, 0, z0), p(x1, 0, z1), p(x1, h, z1), p(x1, h, z0)]), '#b0b0af')
+      out += solid(path([p(x0, 0, z1), p(x1, 0, z1), p(x1, h, z1), p(x0, h, z1)]), '#9b9b9a')
       out += '<path d="' + bays(z1 - z0, function (u, v) { return p(x1, v, z0 + u) }, mod, floors)
-           + '" fill="#b9cde0" stroke="#8fa9c2" stroke-width=".18"/>'
+           + '" fill="#8b9094"/>'
       out += '<path d="' + bays(x1 - x0, function (u, v) { return p(x0 + u, v, z1) }, mod, floors)
-           + '" fill="#a8bfd6" stroke="#7f99b3" stroke-width=".18"/>'
+           + '" fill="#7e8388"/>'
     })
     return out
   }
@@ -159,7 +170,7 @@
     label.textContent = s[4] + ' · ' + s[2].toFixed(1) + ' m module'
     if (!rows) return
     rows.innerHTML = [
-      ['Footprint', N(f.foot) + ' m²', 'the wings, added up'],
+      ['Footprint', N(f.foot) + ' m²', 'sum of wings'],
       ['Floors', String(s[1]), 'at ' + FH.toFixed(1) + ' m'],
       ['GFA', N(f.gfa) + ' m²', N(f.foot) + ' × ' + s[1]],
       ['Height', N(f.tall, 1) + ' m', s[1] + ' × ' + FH.toFixed(1)]

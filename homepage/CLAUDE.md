@@ -390,3 +390,32 @@ reported 3.96 and 49.5%. True of the drawing, misleading about the tool.
 stale `block.js` and then a stale `index.html`, so a working feature looked
 broken twice. Busting the page URL fixes the markup; the script needs fetching
 and re-evaluating. Read §8 before debugging anything here that looks wrong.
+
+## 13. The hero dressed as the app, 17 September 2026
+
+The block and its figures now read as the app's own viewport rather than as a
+drawing-office diagram.
+
+**Colours were sampled, not chosen.** `sample2.mjs` in the scratchpad reads
+pixels out of `from-app/assets/ui/ui-01-whole-app-crop.png`: the viewport is
+`#cacac9`, roofs land near `#d2d1d1`, walls between `#9a` and `#b8`, the panel
+is `#f7f6f4` and a plot handle is `#0f5c9a`. Matching by eye would have got the
+viewport badly wrong — it is a mid grey, and every instinct here said pale.
+
+What changed: the ground plate is gone, because in the app the ground simply is
+the background; the plot is a thin blue line with a round handle at each corner;
+there is a soft shadow under the massing; the windows are cool grey rather than
+blue, since the app's white mode has no blue glass; the caption became the pill
+the app floats at the top of its viewport; and the figures became the app's
+metrics panel — card bottom-left, label, value, and the working set as the small
+qualifier the app puts beside a number.
+
+**Two things to know if this is touched.** Sampling needs the page on the
+server's own origin — `about:blank` fails CORS and reports
+`EncodingError: The source image cannot be decoded`, which reads like a corrupt
+file and is not. And a 200 KB base64 literal in `Runtime.evaluate` throws a
+bare `SyntaxError`; pass a URL instead.
+
+**Known inconsistency:** the no-JavaScript fallback is still `hero.svg`, drawn
+in the old beige-and-blue palette. Seen only with scripting off, and left rather
+than churning the generator for a path almost nobody takes.

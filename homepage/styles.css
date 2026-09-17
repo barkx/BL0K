@@ -237,16 +237,17 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
 /* ---------- the interactive block ---------- */
 
 .toy {
+  position: relative;
   display: grid;
-  gap: 18px;
-  background:
-    repeating-linear-gradient(to right, var(--rule-soft) 0 1px, transparent 1px 40px),
-    repeating-linear-gradient(to bottom, var(--rule-soft) 0 1px, transparent 1px 40px),
-    var(--panel);
+  gap: 0;
+  /* #cacac9, sampled from the app's viewport, not chosen. */
+  background: linear-gradient(#cfcfce, #c7c7c6);
   border: 1px solid var(--rule);
   border-radius: 3px;
-  padding: clamp(16px, 2.4vw, 28px);
+  padding: clamp(14px, 2vw, 22px);
+  overflow: hidden;
 }
+
 .toy-stage { display: grid; place-items: center; min-height: 0; }
 #toy { display: none; width: 100%; max-height: 56vh; overflow: visible; }
 .js #toy { display: block; }
@@ -254,48 +255,71 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
 /* The stand-in is a drawing now, and drawings take no frame. */
 .toy-fallback { width: 100%; mix-blend-mode: multiply; }
 
-/* The figures the block computes for itself. Hidden without the script, like
-   the caption, because without it there is nothing to compute them from. */
+/* The app's metrics panel, rebuilt: #f7f6f4 card, label left, value right, and
+   the working set as the small qualifier the app puts beside its numbers.
+   Hidden without the script, because without it there is nothing computing. */
 .toy-figures { display: none; margin: 0; }
-.js .toy-figures { display: grid; gap: 0; }
+.js .toy-figures {
+  display: grid;
+  gap: 0;
+  position: absolute;
+  left: clamp(14px, 2vw, 22px);
+  bottom: clamp(14px, 2vw, 22px);
+  width: min(300px, 74%);
+  background: #f7f6f4;
+  border: 1px solid #dcdbd7;
+  border-radius: 3px;
+  padding: 10px 12px;
+}
 .toy-figures > div {
   display: grid;
   grid-template-columns: 1fr auto;
-  column-gap: 14px;
+  column-gap: 10px;
   align-items: baseline;
-  padding: 7px 0;
-  border-top: 1px solid var(--rule-soft);
+  padding: 4px 0;
 }
-.toy-figures dt { font-size: 13.5px; color: var(--ink-soft); }
-.toy-figures .v { margin: 0; font-size: 14.5px; font-weight: 550; color: var(--ink); text-align: right; }
-.toy-figures .w {
-  grid-column: 1 / -1;
-  margin: 1px 0 0;
+.toy-figures > div + div { border-top: 1px solid #ebe9e5; }
+.toy-figures dt { font-size: 12px; color: var(--ink-soft); }
+.toy-figures .v {
+  margin: 0;
+  white-space: nowrap;
   font-size: 12.5px;
-  color: var(--blueprint);
+  font-weight: 550;
+  color: var(--ink);
+  text-align: right;
   font-variant-numeric: tabular-nums;
 }
-
-.toy-meta {
+.toy-figures .w {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0 0 0 0;
+  font-size: 10.5px;
+  color: var(--ink-faint, #8a9099);
   display: none;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  justify-content: space-between;
-  align-items: baseline;
-  font-size: 13.5px;
-  color: var(--ink-soft);
-  border-top: 1px solid var(--rule-soft);
-  padding-top: 12px;
-  margin: 0;
-  max-width: none;
 }
-.js .toy-meta { display: flex; }
-.toy-h { color: var(--ink); }
+@media (min-width: 560px) {
+  .toy-figures > div { grid-template-columns: 1fr auto auto; }
+  .toy-figures .w { display: block; grid-column: 3; grid-row: 1; text-align: right; min-width: 5.6em; white-space: nowrap; }
+}
 
-/* The block fades between schemes rather than snapping. Under reduced motion
-   it does not change at all — see the rotation guard in block.js. */
-#toy { transition: opacity .34s ease; }
-@media (prefers-reduced-motion: reduce) { #toy { transition: none; } }
+/* The pill the app floats at the top of its viewport. */
+.toy-hint { display: none; margin: 0; }
+.js .toy-hint {
+  display: block;
+  position: absolute;
+  top: clamp(14px, 2vw, 22px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  max-width: calc(100% - 2 * clamp(14px, 2vw, 22px));
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* ---------- sheets ---------- */
 
