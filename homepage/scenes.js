@@ -191,16 +191,23 @@
   if (tabs && tabs.querySelector('.tab-params')) (function () {
     // The parameter lists are in the markup, so with scripting off every tab is
     // simply open and the chapter reads as a list. The script collapses them
-    // and opens one at a time; clicking or focusing a tab takes it over.
+    // and opens one on a press, and only on a press: it used to step through
+    // them on a timer, which closed the list you were reading.
+    //
     // Direct children only: querySelectorAll('li') also returns the parameter
     // items nested inside each tab, so the open class landed inside a tab
     // rather than on one.
     var items = [].slice.call(tabs.children)
-    var at = 0, held = false
+    var at = 0
 
     function open(i) {
       at = i
-      items.forEach(function (li, k) { li.classList.toggle('on', k === i) })
+      items.forEach(function (li, k) {
+        var on = k === i
+        li.classList.toggle('on', on)
+        var b = li.querySelector('.tab-open')
+        if (b) b.setAttribute('aria-expanded', on ? 'true' : 'false')
+      })
     }
 
     items.forEach(function (li, i) {
@@ -213,61 +220,116 @@
       b.textContent = h.textContent
       h.textContent = ''
       h.appendChild(b)
-      b.addEventListener('click', function () { held = true; open(i) })
-      b.addEventListener('focus', function () { held = true; open(i) })
+      // A press toggles: pressing the open one closes it. No focus handler —
+      // that would reopen the whole list for anyone tabbing through, which is
+      // the timer again by another name. Enter and Space fire click anyway.
+      b.addEventListener('click', function () { open(at === i ? -1 : i) })
     })
 
+    document.documentElement.classList.add('js-tabs')
     tabs.classList.add('stepped')
     open(0)
-    if (still.matches) return
-    var last = 0
-    loop(function (ms) {
-      if (held) return
-      var i = Math.floor(ms / 2600) % items.length
-      if (i !== last) { last = i; open(i) }
-    })
   })()
 
   /* --------------------------------------------------------------- options */
 
   var opts = document.getElementById('options-scene')
   if (opts && window.URBGEN) (function () {
-    // A is fixed; B walks a set of variants. Both blocks come from block.js so
-    // there is one projection in the page, not two.
-    var A = { preset: 'L', floors: 8, mod: 6, depth: 13, name: 'Option A' }
+    /*
+      An option in the app is a whole site — a boundary with buildings on it —
+      so that is what this compares. A is fixed; B walks a set of layouts, all
+      on the same 110 x 90 m plot: the app's default, and the same 9 900 m² the
+      metrics chapter divides by, which is what makes coverage and plot ratio
+      worth printing beside the drawings.
+
+      Buildings are [x, z, width, depth, floors] in metres from the plot's
+      corner, orthogonal to it and set back from it — the depth sort in
+      block.js is the axis-aligned test, and a turned box needs a different one.
+    */
+    var PLOT = [110, 90]
+
+    var A = {
+      say: 'three bars, five floors',
+      alt: 'Three parallel five-storey bars across the plot, evenly spaced.',
+      b: [[20, 12, 70, 12, 5], [20, 39, 70, 12, 5], [20, 66, 70, 12, 5]]
+    }
     var B = [
-      { preset: 'L', floors: 14, mod: 6, depth: 13, note: 'six more floors' },
-      { preset: 'U', floors: 10, mod: 6, depth: 12, note: 'a U, ten floors' },
-      { preset: 'court', floors: 9, mod: 6, depth: 12, note: 'a courtyard' },
-      { preset: 'bar', floors: 20, mod: 6, depth: 14, note: 'a single bar, twenty floors' }
+      {
+        say: 'a perimeter block around a court',
+        alt: 'Four five-storey bars around the edge of the plot, enclosing a courtyard sixty by forty metres.',
+        b: [[12, 12, 86, 13, 5], [12, 65, 86, 13, 5], [12, 25, 13, 40, 5], [85, 25, 13, 40, 5]]
+      },
+      {
+        say: 'two towers behind a low bar',
+        alt: 'A three-storey bar along the front of the plot with two twelve-storey towers standing behind it.',
+        b: [[14, 64, 82, 14, 3], [22, 24, 24, 24, 12], [64, 24, 24, 24, 12]]
+      },
+      {
+        say: 'two L-blocks, pinwheeled',
+        alt: 'Two six-storey L-shaped blocks set diagonally opposite each other, each opening onto the middle of the plot.',
+        b: [[12, 12, 48, 13, 6], [12, 25, 13, 33, 6], [50, 65, 48, 13, 6], [85, 32, 13, 33, 6]]
+      },
+      {
+        say: 'one long slab, one point block',
+        alt: 'An eight-storey slab across the back of the plot with a ten-storey point block standing in front of it.',
+        b: [[14, 14, 82, 13, 8], [40, 50, 30, 24, 10]]
+      }
     ]
+
     var svgA = document.getElementById('opt-a'), svgB = document.getElementById('opt-b')
-    var ga = document.getElementById('opt-a-gfa'), gb = document.getElementById('opt-b-gfa')
-    var diff = document.getElementById('opt-diff'), note = document.getElementById('opt-note')
+    var nameA = document.getElementById('opt-a-say'), nameB = document.getElementById('opt-b-say')
     var chips = document.getElementById('opt-chips')
+    var diff = document.getElementById('opt-diff')
 
     var N2 = function (v) {
-      return v.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+      return v.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
     }
-    function put(el, r) { el.setAttribute('viewBox', r.viewBox); el.innerHTML = r.svg }
+    function fig(id, v) {
+      var el = document.getElementById(id)
+      if (el) el.textContent = v
+    }
 
-    var ra = window.URBGEN.block(A.preset, A.floors, A.mod, A.depth)
-    put(svgA, ra)
-    ga.textContent = N2(ra.gfa) + ' m²'
+    // Draw every layout up front and fit ONE box to all of them. A scheme
+    // fitted to its own frame would be drawn larger for being smaller, which
+    // is the opposite of a comparison.
+    var ra = window.URBGEN.site(PLOT, A.b)
+    var rb = B.map(function (o) { return window.URBGEN.site(PLOT, o.b) })
+    var frame = window.URBGEN.frame(
+      [ra.extent].concat(rb.map(function (r) { return r.extent })), 3)
+
+    function put(el, r, alt) {
+      el.setAttribute('viewBox', frame)
+      el.innerHTML = r.svg
+      el.setAttribute('aria-label', alt)
+    }
+
+    put(svgA, ra, A.alt)
+    if (nameA) nameA.textContent = A.say
+    fig('opt-a-gfa', N2(ra.gfa) + ' m²')
+    fig('opt-a-cov', ra.cover.toFixed(1) + '%')
+    fig('opt-a-far', ra.far.toFixed(2))
 
     var shown = -1
-    var big = metrics.querySelector('.metric-big')
+
     function showB(i) {
       shown = i
-      var b = B[i], r = window.URBGEN.block(b.preset, b.floors, b.mod, b.depth)
-      put(svgB, r)
-      gb.textContent = N2(r.gfa) + ' m²'
+      var o = B[i], r = rb[i]
+      put(svgB, r, o.alt)
+      if (nameB) nameB.textContent = o.say
+      fig('opt-b-gfa', N2(r.gfa) + ' m²')
+      fig('opt-b-cov', r.cover.toFixed(1) + '%')
+      fig('opt-b-far', r.far.toFixed(2))
+      // Two of these layouts land within a few dozen square metres of each
+      // other, which is the chapter's point rather than a rounding accident —
+      // so a difference under one per cent gets a decimal instead of a 0%.
       var d = r.gfa - ra.gfa
-      var pct = Math.round(100 * d / ra.gfa)
-      diff.textContent = (d >= 0 ? '+' : '−') + N2(Math.abs(d)) + ' m² · ' +
-        (d >= 0 ? '+' : '−') + Math.abs(pct) + '%'
-      diff.className = 'opt-diff ' + (d >= 0 ? 'up' : 'down')
-      note.textContent = b.note
+      var pc = 100 * d / ra.gfa
+      var pct = Math.abs(pc) < 1 ? Math.abs(pc).toFixed(1) : String(Math.round(Math.abs(pc)))
+      if (diff) {
+        diff.textContent = (d >= 0 ? '+' : '−') + N2(Math.abs(d)) + ' m² GFA · ' +
+          (d >= 0 ? '+' : '−') + pct + '%'
+        diff.className = 'opt-diff ' + (d >= 0 ? 'up' : 'down')
+      }
       if (chips) [].forEach.call(chips.children, function (c, k) {
         c.classList.toggle('on', k === i + 1)
       })
@@ -277,7 +339,7 @@
     showB(0)
     if (still.matches) return
     loop(function (ms) {
-      var i = Math.floor(ms / 3200) % B.length
+      var i = Math.floor(ms / 3600) % B.length
       if (i !== shown) showB(i)
     })
   })()

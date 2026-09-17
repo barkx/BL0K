@@ -472,3 +472,68 @@ Worth the trouble: at 1 040 m² on 9 900 m², the building covers 10.5% of the
 drawn plot, so the coverage figure can be read off the picture beside it. A
 block drawn at any other size would have quietly contradicted every number in
 the chapter.
+
+## 15. Three fixes, 17 September 2026
+
+**The tabs open on a press, and only on a press.** They stepped through
+themselves every 2 600 ms, which closed the list you were reading. The timer is
+gone; a press toggles, and pressing the open one closes it. The `focus` handler
+went with the timer — it would have reopened the whole list for anyone tabbing
+through, which is the timer again under another name — and `aria-expanded` is
+now actually updated, having been written once as `false` and never touched.
+A hint line appears only under `.js-tabs`, since with scripting off every list
+already stands open. Checked: open at load, unchanged after six seconds, a press
+opens exactly one, a second press closes it, focus alone opens nothing, and with
+scripting off all eight lists are open and `.stepped` is never set.
+
+**Two glitches in the hero, and they were unrelated.**
+
+1. `build()` set the hero's `viewBox` as a side effect of drawing *anything*,
+   so every tick of the options scene and the metrics scene's one call reframed
+   the hero — measured at up to 14 units horizontally and 26 vertically, held
+   for 3.2 s, then snapped back on the hero's own redraw. `PLOT` was a module
+   global read by the same function, so a stray call could also give the hero
+   someone else's boundary. Both are gone: the drawing functions take masses
+   and a rect and return a string, and only the hero's own code at the bottom
+   of the file touches the DOM. Verified by calling `block()` and `site()` from
+   the console and watching the hero's frame stay put.
+2. `Parametric building&nbsp;design,` welded three words into one unbreakable
+   token wider than its column. Measured with a Range over the h1's line boxes:
+   the text ran 93 px past its box at 1280 px and 41 px of it sat *behind* the
+   block panel, and it was wrong at every two-column width from 900 to 1440.
+   The `&nbsp;` is gone. Re-measured at eleven widths from 320 to 1440: the
+   text now stays inside its box at all of them.
+
+**The options chapter compares whole sites.** It compared two single blocks,
+which is not what a design option is — an option is a boundary and everything
+standing on it. Both stages now draw the same 110 × 90 m plot, the app's
+default and the same 9 900 m² the metrics chapter divides by, which is what
+makes coverage and plot ratio printable here when the hero still may not print
+them. Five layouts: three bars, a perimeter block, towers behind a low bar, two
+pinwheeled L-blocks, a slab with a point block.
+
+- `block.js` gained `site(plot, buildings)` and `frame(extents)`. **One box
+  fits all five**, because a scheme fitted to its own frame is drawn larger for
+  being smaller.
+- A mass now carries its own height, so a three-storey plinth can stand beside
+  a twelve-storey tower. `mod: 0` draws storey lines instead of openings: at
+  site scale a window is four pixels wide, which is texture pretending to be
+  information.
+- **Depth runs with x + z**, so low z is the *far* edge. "Two towers behind a
+  low bar" was drawn with the bar at low z and came out with the towers in
+  front of it; the geometry was swapped rather than the caption. The slab
+  chapter's alt text had the same inversion and was rewritten.
+- Checked: all five layouts' footprint and GFA against hand arithmetic, exact;
+  coverage and plot ratio against those over 9 900; no two rectangles in any
+  layout overlap, so the sums are exact; nothing outside the boundary; every
+  layout at least 12 m from it. Two layouts land 36 m² apart, so a difference
+  under one per cent now prints a decimal rather than a bare `+0%`.
+
+**Budget, re-measured, and it is over on both lines.** HTML + CSS is 56.1 KB
+against §7's 40 KB — and it was already 54.8 KB before any of today's work, so
+the four animation commits took it past without the log noticing. JavaScript is
+27.5 KB against 24 KB, and that one is today's: 21.5 KB before. Comments are
+8 KB of the JS, so the target is reachable only by gutting the commentary this
+project is written in. **Left over budget deliberately, for the user to rule
+on** — either the targets move or the prose does, and quietly exceeding a
+written target is the one option that is not available.

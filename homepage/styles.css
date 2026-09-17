@@ -466,9 +466,30 @@ body { counter-reset: sheet; }
   color: var(--ink-soft);
 }
 .opt-note { text-transform: none; letter-spacing: 0; color: var(--blueprint); }
-.opt-gfa { margin: 10px 0 0; font-size: 14px; color: var(--ink-soft); }
-.opt-gfa .num { color: var(--ink); font-weight: 550; }
-.opt-diff { display: inline-block; margin-left: 8px; font-weight: 550; font-variant-numeric: tabular-nums; }
+/* Three figures under each drawing. Coverage and plot ratio are printable
+   here and not under the hero because there is a real boundary: the same
+   110 x 90 m plot carries both options. */
+.opt-figs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 12px;
+  margin: 12px 0 0;
+}
+.opt-figs dt {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-soft);
+}
+.opt-figs dd {
+  margin: 3px 0 0;
+  font-size: 15px;
+  font-weight: 550;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.opt-delta { margin: 10px 0 0; font-size: 13.5px; }
+.opt-diff { display: inline-block; font-weight: 550; font-variant-numeric: tabular-nums; }
 .opt-diff.up { color: #2c7a4b; }
 .opt-diff.down { color: #a4462d; }
 
@@ -626,6 +647,14 @@ body { counter-reset: sheet; }
   cursor: pointer;
 }
 .tab-open:hover { color: var(--blueprint); }
+
+.tabs-hint { display: none; }
+.js-tabs .tabs-hint {
+  display: block;
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
 
 @media (min-width: 820px) {
   .tabs { grid-template-columns: 1fr 1fr; column-gap: clamp(28px, 4vw, 56px); }

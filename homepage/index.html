@@ -131,7 +131,7 @@
   <!-- Hero ------------------------------------------------------------- -->
   <section class="hero">
     <div class="hero-copy reveal">
-      <h1>Parametric building&nbsp;design, in the browser.</h1>
+      <h1>Parametric building design, in the browser.</h1>
       <p class="lead">
         Draw a plot, place buildings on it, and change a slider to rebuild any of
         them — massing, a facade with real openings, and metrics that show their
@@ -166,6 +166,8 @@
         what the viewport does, so the handles on screen are the ones belonging
         to the thing you are doing.
       </p>
+
+      <p class="tabs-hint">Open a tab to see the parameters it holds.</p>
 
       <ul class="tabs" role="list">
         <li class="reveal">
@@ -407,30 +409,39 @@
     <div class="col">
       <h2 id="options">Ten schemes, not one</h2>
       <p class="lead">
-        Design options live in one session and one file. Switch between them,
-        duplicate one as the start of a variation, and the metrics move with
-        you — so a comparison is a number rather than a memory.
+        A design option is a whole site — the boundary and everything standing
+        on it. Switch between options, duplicate one as the start of a
+        variation, and the metrics move with you, so a comparison is a number
+        rather than a memory.
       </p>
 
       <figure class="scene" id="options-scene">
         <div class="opts">
           <div class="opt">
-            <p class="opt-name">Option A</p>
-            <div class="opt-stage"><svg id="opt-a" role="img" aria-label="An L-shaped block of eight floors."></svg></div>
-            <p class="opt-gfa">GFA <span id="opt-a-gfa" class="num">8 320 m²</span></p>
+            <p class="opt-name">Option A <span class="opt-note" id="opt-a-say">three bars, five floors</span></p>
+            <div class="opt-stage"><svg id="opt-a" role="img" aria-label="Three parallel five-storey bars across the plot, evenly spaced."></svg></div>
+            <dl class="opt-figs">
+              <div><dt>GFA</dt><dd class="num" id="opt-a-gfa">12 600 m²</dd></div>
+              <div><dt>Coverage</dt><dd class="num" id="opt-a-cov">25.5%</dd></div>
+              <div><dt>Plot ratio</dt><dd class="num" id="opt-a-far">1.27</dd></div>
+            </dl>
           </div>
           <div class="opt">
-            <p class="opt-name">Option B <span class="opt-note" id="opt-note">six more floors</span></p>
-            <div class="opt-stage"><svg id="opt-b" role="img" aria-label="A second block, changing between variants: more floors, a U plan, a courtyard, a single tall bar."></svg></div>
-            <p class="opt-gfa">GFA <span id="opt-b-gfa" class="num">14 560 m²</span>
-              <span class="opt-diff up" id="opt-diff">+6 240 m² · +75%</span></p>
+            <p class="opt-name">Option B <span class="opt-note" id="opt-b-say">a perimeter block around a court</span></p>
+            <div class="opt-stage"><svg id="opt-b" role="img" aria-label="Four five-storey bars around the edge of the plot, enclosing a courtyard sixty by forty metres."></svg></div>
+            <dl class="opt-figs">
+              <div><dt>GFA</dt><dd class="num" id="opt-b-gfa">16 380 m²</dd></div>
+              <div><dt>Coverage</dt><dd class="num" id="opt-b-cov">33.1%</dd></div>
+              <div><dt>Plot ratio</dt><dd class="num" id="opt-b-far">1.65</dd></div>
+            </dl>
+            <p class="opt-delta"><span class="opt-diff up" id="opt-diff">+3 780 m² GFA · +30%</span></p>
           </div>
         </div>
         <ol class="opt-chips" id="opt-chips" role="list" aria-hidden="true">
           <li>A</li><li class="on">B</li><li>C</li><li>D</li><li>E</li>
           <li>F</li><li>G</li><li>H</li><li>I</li><li>J</li>
         </ol>
-        <figcaption class="scene-say">Each option carries its own undo, and every one of them is saved with the file.</figcaption>
+        <figcaption class="scene-say">The same 110 × 90&thinsp;m plot in both, drawn at the same scale. Each option carries its own undo, and every one of them is saved with the file.</figcaption>
       </figure>
     </div>
   </section>
