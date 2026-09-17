@@ -101,11 +101,30 @@ keeps an anchored heading clear of the bar and differs between the one-row and
 two-row layouts.
 
 1. **Hero.** Mark, name, tagline, one sentence, one button: *Open the app* —
-   the only primary action above the fold. Beside it, a block that rebuilds
-   itself through four schemes. Under the button, the one-line workflow (draw,
-   shape, export) and the two claims that no other section makes: free with no
-   account and offline once loaded, and identical inputs giving an identical
-   building.
+   the only primary action above the fold. Under it, the two claims no other
+   section makes: free with no account and offline once loaded, and identical
+   inputs giving an identical building.
+
+   Beside it, **a block that rebuilds itself through four schemes and shows the
+   arithmetic as it goes** — footprint as the sum of its wings, GFA as
+   footprint times floors, height as floors times floor height. Added
+   17 September 2026. The page's own claim is *metrics that show their working*,
+   and asserting that in a chapter while showing nothing was the weakest thing
+   on it.
+
+   **Nothing to operate.** No sliders, by decision: the block rotates on its
+   own, so the demonstration costs a reader nothing and cannot be missed by
+   not being touched. It stops under `prefers-reduced-motion` and does not
+   redraw in a background tab.
+
+   **The figures are computed, never typed.** That is the whole point, and it
+   is also why this survived when five kinds of imagery did not: a screenshot
+   drifts, a drawing can misrepresent, and a number derived from the geometry
+   on screen can do neither. Deliberately nothing needing a plot — the ground
+   is a margin drawn to sit the block on, not a designed boundary, and dividing
+   by it would report a plot ratio of 3.96: true of the drawing, misleading
+   about the tool.
+
 2. **What it does.** **The app's own eight tabs, each with a line icon and one
    sentence** — Site, Placement, Massing, Program, Facade, Units, Drawings,
    Settings, in the order the decisions happen. Then one line about design
@@ -264,14 +283,22 @@ not finished until the shots that show it are retaken.
 |---|---|
 | Total page weight | Under 400 KB including images |
 | HTML + CSS | Under 40 KB uncompressed |
-| JavaScript | Under 6 KB, or none |
+| JavaScript | Under 8 KB, or none |
 | Requests | Under 15 |
 | Fonts loaded | Zero |
 
 Targets, not measurements. Nothing goes on the page claiming a number until it
 has been measured.
 
-**The JavaScript target moved from 5 KB to 6 KB on 12 September 2026.** Fitting
+**The JavaScript target has moved twice, and that is one more time than a
+budget should move.** 5 KB to 6 KB on 12 September 2026, then to 8 KB on the
+17th when the hero block began computing and showing its own arithmetic — the
+page's central claim, made literal, in about 1.4 KB. Both moves were argued
+rather than slipped, and both are recorded here. **A third move needs a
+different conversation**: at that point the number is not a constraint, it is a
+running total. For scale, 7.4 KB uncompressed is about 2.5 KB over the wire.
+
+The first move, for the record: Fitting
 the hero block's viewBox to each scheme — which recovered about 40% of the
 panel that a short building left empty — took `block.js` to 5.4 KB. The
 alternative was stripping the comments that explain why the rotation is

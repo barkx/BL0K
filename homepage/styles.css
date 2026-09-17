@@ -254,6 +254,28 @@ h2:target { text-decoration: underline; text-decoration-color: var(--blueprint);
 /* The stand-in is a drawing now, and drawings take no frame. */
 .toy-fallback { width: 100%; mix-blend-mode: multiply; }
 
+/* The figures the block computes for itself. Hidden without the script, like
+   the caption, because without it there is nothing to compute them from. */
+.toy-figures { display: none; margin: 0; }
+.js .toy-figures { display: grid; gap: 0; }
+.toy-figures > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 14px;
+  align-items: baseline;
+  padding: 7px 0;
+  border-top: 1px solid var(--rule-soft);
+}
+.toy-figures dt { font-size: 13.5px; color: var(--ink-soft); }
+.toy-figures .v { margin: 0; font-size: 14.5px; font-weight: 550; color: var(--ink); text-align: right; }
+.toy-figures .w {
+  grid-column: 1 / -1;
+  margin: 1px 0 0;
+  font-size: 12.5px;
+  color: var(--blueprint);
+  font-variant-numeric: tabular-nums;
+}
+
 .toy-meta {
   display: none;
   flex-wrap: wrap;

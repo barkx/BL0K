@@ -125,15 +125,48 @@
   ]
 
   var label = document.getElementById('toy-label')
-  var height = document.getElementById('toy-height')
   var still = window.matchMedia('(prefers-reduced-motion: reduce)')
   var at = 0
 
+  /*
+    The figures beside the block, computed from the block rather than typed
+    beside it. Every preset is rectangles that abut rather than overlap, so a
+    footprint is an exact sum — the app needs a polygon union for the general
+    case and this does not, which is why the working can be shown in full.
+
+    Deliberately nothing that needs a plot. The ground here is a margin drawn
+    to sit the block on, not a designed boundary, and dividing by it would
+    report a plot ratio of 3.96 — true of this drawing, misleading about the
+    tool.
+  */
+  function figures(preset, floors, depth) {
+    var foot = 0
+    plan(preset, depth).forEach(function (m) {
+      foot += (m[2] - m[0]) * (m[3] - m[1])
+    })
+    return { foot: foot, gfa: foot * floors, tall: floors * FH }
+  }
+
+  function N(v, d) {
+    return v.toFixed(d || 0).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+  }
+
+  var rows = document.getElementById('toy-figures')
+
   function show(i) {
-    var s = SCHEMES[i]
+    var s = SCHEMES[i], f = figures(s[0], s[1], s[3])
     svg.innerHTML = build(s[0], s[1], s[2], s[3])
-    label.textContent = s[4] + ' · ' + s[1] + ' floors · ' + s[2].toFixed(1) + ' m module'
-    height.textContent = (s[1] * FH) + ' m'
+    label.textContent = s[4] + ' · ' + s[2].toFixed(1) + ' m module'
+    if (!rows) return
+    rows.innerHTML = [
+      ['Footprint', N(f.foot) + ' m²', 'the wings, added up'],
+      ['Floors', String(s[1]), 'at ' + FH.toFixed(1) + ' m'],
+      ['GFA', N(f.gfa) + ' m²', N(f.foot) + ' × ' + s[1]],
+      ['Height', N(f.tall, 1) + ' m', s[1] + ' × ' + FH.toFixed(1)]
+    ].map(function (r) {
+      return '<div><dt>' + r[0] + '</dt><dd class="v num">' + r[1] +
+             '</dd><dd class="w">' + r[2] + '</dd></div>'
+    }).join('')
   }
 
   function next() {

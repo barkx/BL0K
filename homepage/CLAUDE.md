@@ -362,3 +362,31 @@ way a drawing did. That is worth remembering before proposing imagery again —
 five approaches have been tried and only the generated one has lasted.
 
 Four chapters, 1 314 words.
+
+## 12. The hero shows its working, 17 September 2026
+
+With every figure gone, the page asserted "metrics that show their working" and
+showed none. The block already rotated through four schemes; now it computes
+footprint, GFA and height for each and prints the arithmetic beneath them.
+
+**Why this and not another picture.** Five kinds of imagery have been cut — 
+prose-only, drawn figures, app screenshots, exported drawings, interface
+snapshots. The block is the only visual that has survived, and the reason is
+structural: it is generated from the same parameters it describes, so it cannot
+drift from the app like a screenshot or misrepresent it like a drawing. A
+number derived from the geometry on screen inherits that property. Anything
+proposed for this page should be asked whether it does too.
+
+**Checked by hand, not by eye.** The courtyard's wings are 624 + 624 + 168 +
+168 = 1 584 m², and 1 584 × 8 = 12 672. The presets abut rather than overlap,
+so the sum is exact and no polygon union is needed — which is precisely why the
+working can be shown rather than asserted.
+
+**Nothing that needs a plot.** Plot ratio and coverage were built and then
+removed: the ground is a margin drawn to sit the block on, and dividing by it
+reported 3.96 and 49.5%. True of the drawing, misleading about the tool.
+
+**The cache trap caught me again**, exactly as §8 records — the pane served a
+stale `block.js` and then a stale `index.html`, so a working feature looked
+broken twice. Busting the page URL fixes the markup; the script needs fetching
+and re-evaluating. Read §8 before debugging anything here that looks wrong.
