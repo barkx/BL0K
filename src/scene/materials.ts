@@ -7,11 +7,17 @@ import {
   MeshStandardMaterial,
 } from 'three'
 import type { RenderMode } from '../store/params'
+import type { Use } from '../store/program'
 
 export interface MaterialSet {
   mode: RenderMode
-  /** Diagram mode tints masses by their position in the stack. */
-  wall: (tintIndex: number) => Material
+  /**
+   * Diagram mode tints masses by their position in the stack, and a floor given
+   * over to public programme by what it is for. White and PBR ignore `use`
+   * entirely — a study model is white, and the programme is a reading of the
+   * scheme rather than a property of its surfaces.
+   */
+  wall: (tintIndex: number, use?: Use) => Material
   glass: Material
   /** The core shaft. Only its overrun is ever above the roof to be seen. */
   core: Material
@@ -37,6 +43,21 @@ export interface MaterialSet {
  */
 const DIAGRAM_TINTS = ['#eff3f8', '#c2d3e4', '#93aecb', '#6a89ac', '#4d6a8a']
 
+/**
+ * Public programme, in the one warm hue this palette allows itself.
+ *
+ * Deliberately outside the blueprint ramp: a plinth has to be legible as *not
+ * housing* at a glance, and another step of the same blue would read as one
+ * more mass in the stack. Three tones of a single hue rather than three hues,
+ * so the drawing-office palette gains one accent and not a colour wheel.
+ */
+const USE_TINTS: Record<Use, string | null> = {
+  residential: null,
+  retail: '#b9803c',
+  office: '#d0a163',
+  amenity: '#e3c495',
+}
+
 type Kit = Omit<MaterialSet, 'dispose'>
 
 export function makeMaterials(mode: RenderMode): MaterialSet {
@@ -53,9 +74,14 @@ export function makeMaterials(mode: RenderMode): MaterialSet {
 function build(mode: RenderMode, keep: <T extends Material>(m: T) => T): Kit {
   if (mode === 'diagram') {
     const tints = DIAGRAM_TINTS.map((c) => keep(new MeshBasicMaterial({ color: new Color(c) })))
+    const useTints = new Map<Use, Material>()
+    for (const [use, colour] of Object.entries(USE_TINTS)) {
+      if (colour) useTints.set(use as Use, keep(new MeshBasicMaterial({ color: new Color(colour) })))
+    }
     return {
       mode,
-      wall: (tintIndex) => tints[Math.min(tintIndex, tints.length - 1)],
+      wall: (tintIndex, use) =>
+        (use && useTints.get(use)) ?? tints[Math.min(tintIndex, tints.length - 1)],
       glass: keep(new MeshBasicMaterial({ color: '#4d6a8a', transparent: true, opacity: 0.55 })),
       // Darker than every mass tint, so the core reads as the one thing on the
       // roof that is not the building.

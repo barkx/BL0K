@@ -4,6 +4,7 @@ import type { FacadeModel } from '../geometry/facade'
 import type { BuiltCores } from '../geometry/core'
 import { unionArea } from '../lib/rect'
 import type { Params } from '../store/params'
+import { useAt, type Use } from '../store/program'
 
 export interface AreaMetrics {
   /** Per-level union, before loggias are deducted. */
@@ -22,6 +23,11 @@ export interface AreaMetrics {
   balconyArea: number
   height: number
   topLevel: number
+  /**
+   * GFA by programme. The residential figure is the one the unit estimate is
+   * built on — counting a shopfront as flats is the inaccuracy this fixes.
+   */
+  gfaByUse: Record<Use, number>
 }
 
 export function computeAreas(
@@ -34,13 +40,20 @@ export function computeAreas(
   // A naive sum double-counts the corner where two wings meet, so take the
   // union of footprints level by level.
   let gfaGross = 0
+  const gfaByUse: Record<Use, number> = { residential: 0, retail: 0, office: 0, amenity: 0 }
   for (const level of levels(masses)) {
-    gfaGross += unionArea(footprintsAt(masses, level))
+    const area = unionArea(footprintsAt(masses, level))
+    gfaGross += area
+    gfaByUse[useAt(p.program, level)] += area
   }
+
+  // Every loggia is on a residential floor — a band takes balconies off the
+  // floors it covers — so the whole deduction lands there.
+  const gfa = gfaGross - facade.loggiaArea
+  gfaByUse.residential = Math.max(0, gfaByUse.residential - facade.loggiaArea)
 
   // Core area is real floor area, so it stays in GFA and comes out of NIA. The
   // factor then covers only what is not modelled: internal walls, risers, plant.
-  const gfa = gfaGross - facade.loggiaArea
   const nia = Math.max(0, gfa - cores.area) * p.efficiency
   const footprintArea = unionArea(footprintsAt(masses, 0))
   const facadeArea = elevations.reduce((s, e) => s + e.exteriorArea, 0)
@@ -61,5 +74,6 @@ export function computeAreas(
     balconyArea: facade.balconyArea,
     height: top * p.floorHeight + p.roofParapet,
     topLevel: top,
+    gfaByUse,
   }
 }

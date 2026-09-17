@@ -5,13 +5,26 @@ import type { Params } from '../store/params'
 import type { Elevation } from './elevations'
 import type { FacadeModel, ModuleSlot, Opening } from './facade'
 import { cheekRect, DOWN, faceRect, frameOf, shelfRect, UP, type Frame } from './frame'
+import { loggiaHeadEdge } from './balcony'
+import { useAt, type Use } from '../store/program'
 
-/** Exposed slab edge across the head of a loggia opening. */
-export const SLAB_EDGE = 0.22
+/**
+ * One merged opaque buffer per mass *and programme*.
+ *
+ * Split by mass so diagram mode can tint by position in the stack, and by use
+ * so it can tint a public floor differently. The split lives here rather than
+ * in the scene because geometry must not depend on the render mode — three
+ * modes over one geometry is a locked decision, and a buffer that existed only
+ * in diagram mode would break it.
+ */
+export interface WallPart {
+  massId: string
+  use: Use
+  geometry: BufferGeometry
+}
 
 export interface BuiltWalls {
-  /** One merged opaque buffer per mass, so diagram mode can tint by level. */
-  byMass: Record<string, BufferGeometry>
+  parts: WallPart[]
   /** Every window pane, merged. One draw call, no per-instance matrices. */
   glass: BufferGeometry
   triangles: number
@@ -69,12 +82,23 @@ export function buildWalls(
   // Pre-size the buffers from the module count. Growing by doubling would
   // otherwise copy the whole vertex buffer a dozen times on a tall block.
   const quadsPerModule = 24
-  const modulesPerMass = new Map<string, number>()
+  const modulesPerPart = new Map<string, number>()
+  const partKey = (massId: string, use: Use) => `${massId}#${use}`
   for (const m of facade.modules) {
-    modulesPerMass.set(m.massId, (modulesPerMass.get(m.massId) ?? 0) + 1)
+    const k = partKey(m.massId, m.use)
+    modulesPerPart.set(k, (modulesPerPart.get(k) ?? 0) + 1)
   }
 
-  const builders = new Map<string, MeshBuilder>()
+  const builders = new Map<string, { massId: string; use: Use; b: MeshBuilder }>()
+  const builderFor = (massId: string, use: Use) => {
+    const k = partKey(massId, use)
+    let hit = builders.get(k)
+    if (!hit) {
+      const estimate = (modulesPerPart.get(k) ?? 0) * quadsPerModule + 128
+      builders.set(k, (hit = { massId, use, b: new MeshBuilder(estimate) }))
+    }
+    return hit.b
+  }
   const glass = new MeshBuilder(facade.openings.length + 16)
 
   const modulesByFloor = new Map<string, ModuleSlot[]>()
@@ -95,15 +119,14 @@ export function buildWalls(
 
   for (const e of elevations) {
     if (e.abutting) continue
-    let b = builders.get(e.massId)
-    if (!b) {
-      const estimate = (modulesPerMass.get(e.massId) ?? 0) * quadsPerModule + 128
-      builders.set(e.massId, (b = new MeshBuilder(estimate)))
-    }
     const f = frameOf(e)
 
     for (let i = 0; i < e.floors; i++) {
       const floor = e.baseFloor + i
+      // Every quad on this floor goes to its programme's buffer, junction
+      // slivers included: a sliver of blank wall beside a shopfront belongs to
+      // the shopfront's floor, not to the housing above it.
+      const b = builderFor(e.massId, useAt(p.program, floor))
       const yBase = floor * p.floorHeight
       const yTop = yBase + p.floorHeight
       const mods = modulesByFloor.get(`${e.key}#${floor}`) ?? []
@@ -124,7 +147,7 @@ export function buildWalls(
           // The recess stops short of the floor above so the slab edge reads
           // across the opening — without it, stacked loggias merge into one
           // continuous slot.
-          const edge = Math.min(SLAB_EDGE, p.floorHeight * 0.12)
+          const edge = loggiaHeadEdge(p.floorHeight)
           const yHead = yTop - edge
 
           faceRect(b, f, m.u0, m.bu0, yBase, yTop, 0)
@@ -148,12 +171,12 @@ export function buildWalls(
     }
   }
 
-  const byMass: Record<string, BufferGeometry> = {}
+  const parts: WallPart[] = []
   let triangles = glass.triangles
-  for (const [id, b] of builders) {
+  for (const { massId, use, b } of builders.values()) {
     triangles += b.triangles
-    byMass[id] = b.toGeometry()
+    parts.push({ massId, use, geometry: b.toGeometry() })
   }
 
-  return { byMass, glass: glass.toGeometry(), triangles }
+  return { parts, glass: glass.toGeometry(), triangles }
 }

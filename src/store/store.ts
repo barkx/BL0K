@@ -32,7 +32,14 @@ import type { OsmContext } from '../geo/overpass'
  * the whole point — one place to ask "what does a click do right now" instead of
  * a precedence ladder inside every pointer handler.
  */
-export type Tool = 'site' | 'placement' | 'massing' | 'facade' | 'units' | 'settings'
+export type Tool =
+  | 'site'
+  | 'placement'
+  | 'massing'
+  | 'program'
+  | 'facade'
+  | 'units'
+  | 'settings'
 
 interface State {
   site: Site

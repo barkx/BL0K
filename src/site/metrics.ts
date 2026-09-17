@@ -12,11 +12,14 @@ import {
 } from '../lib/poly'
 import { checkRules, type Breach } from './rules'
 import type { Placement, Site } from './types'
+import type { Use } from '../store/program'
 
 export interface SiteMetrics {
   buildings: number
   /** Sum across every building. */
   gfa: number
+  /** The same total, split by what each floor is for. */
+  gfaByUse: Record<Use, number>
   /** Sum of the floor area cores take out of every storey. */
   coreArea: number
   /** Sum of per-building NIA, each GFA less its cores, times its own factor. */
@@ -81,6 +84,7 @@ export function computeSiteMetrics(
   const plotArea = polygonArea(site.plot)
 
   let gfa = 0
+  const gfaByUse: Record<Use, number> = { residential: 0, retail: 0, office: 0, amenity: 0 }
   let coreArea = 0
   let nia = 0
   let units = 0
@@ -92,6 +96,9 @@ export function computeSiteMetrics(
 
   for (const { building } of placed) {
     gfa += building.metrics.gfa
+    for (const use of Object.keys(gfaByUse) as Use[]) {
+      gfaByUse[use] += building.metrics.gfaByUse[use]
+    }
     coreArea += building.metrics.coreArea
     nia += building.metrics.nia
     units += building.metrics.units
@@ -146,6 +153,7 @@ export function computeSiteMetrics(
   return {
     buildings: placed.length,
     gfa,
+    gfaByUse,
     coreArea,
     nia,
     units,

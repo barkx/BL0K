@@ -28,6 +28,7 @@ current as the app changes, and record any deviation in `README.md`.
 | Metrics | GFA, NIA, facade area, unit estimate, footprint, coverage, plot ratio |
 | Site rules | Setback, separation, height cap, FAR and coverage limits; zero is off |
 | Interaction | A tab is a tool: it scopes the viewport's handles and drags. Selection is always live |
+| Program | A floor can be residential, retail, office or amenity. Bands of levels, not a value per floor. Drives glazing and the metrics, never the massing |
 | Core | A rectangular shaft on the perimeter or the spine, draggable along its track. Massing only |
 | Location | A site can carry a latitude, longitude and true north. Georeferences every export |
 | Context | OpenStreetMap surroundings, fetched on request. Drawn and traced over; never measured, never exported |
@@ -46,7 +47,12 @@ current as the app changes, and record any deviation in `README.md`.
   extrusion path exists and is tested, behind `EXTRUDE_BUILDINGS` in
   `src/geo/build.ts`, and is off by decision — turning it on is what would
   actually reopen this.
-- Differentiated ground-floor plinth (retail).
+- Differentiated ground-floor plinth (retail). **Approached but not crossed at
+  M16**: a floor can now be given over to retail, office or amenity, and it is
+  glazed and counted as such. The part this non-goal was protecting — a plinth
+  with its *own footprint*, wider than the tower above — stays out, because it
+  reopens junction detection, elevations, cores and clash tests. Floor height
+  stays uniform for the same reason.
 - Cost estimation.
 - Multi-user collaboration — it needs a backend, and this has none.
 
@@ -355,6 +361,7 @@ Do these cheaply now so the deferred features are not rewrites:
 | **M12 Core** | A shaft of stairs, lift and risers as massing: count, size, overrun, and a perimeter or centre track it is shared along and can be dragged on. A perimeter shaft blanks the facade it meets — no windows, no units behind a lift. NIA becomes `(GFA − core) × efficiency`. Config v5. Reopens part of a §1 non-goal, by decision |
 
 | **M15 Location and context** | A site carries latitude, longitude and true north, which georeferences the IFC. A map picker with search to choose it, and OpenStreetMap surroundings fetched from Overpass and drawn as linework to trace over — at true scale and true north, which is the hand-calibration step gone. Config v7 |
+| **M16 Program by floor** | A run of levels given over to something other than housing: its own shopfront glazing, no balconies, its own line in the metrics, and its own tint in diagram mode. Bands of absolute levels, trimmed to be disjoint by the one clamping function. Config v8 |
 | **M13 Tabs as tools** | The open section scopes what the viewport does. Selection and camera stay live everywhere; handles and drags belong to their tab. Clicking drills in — ground and first click to Placement, again to Massing, a face to Facade — and the plot boundary opens Site |
 
 ### In progress
@@ -367,19 +374,23 @@ and keeping it in-house holds the no-dependency, offline rule. `src/io/exportIfc
 |---|---|---|
 | 1 | **Done** | Spatial structure, SI units, storeys, floor and roof slabs, exterior walls, each building placed and rotated as on the plot |
 | 2 | **Done** | Every window as an `IfcOpeningElement` voiding its wall with an `IfcWindow` filling it — the receiving application cuts the hole itself |
-| 3 | Next | **Balconies and loggias**, then cores, the plot on `IfcSite`, property sets carrying the metrics, and a massing-versus-full detail switch for file size |
+| 3a | **Done** | Balconies and loggias: a deck and a guard on a projecting balcony; on a loggia, the recess voided out of the facade wall, a back wall and two returns enclosing it, a guard across its front, and its windows in that back wall at last |
+| 3b | Next | Cores, the plot on `IfcSite`, property sets carrying the metrics, and a massing-versus-full detail switch for file size |
 
-Three things stage 3 inherits:
+What stage 3 carries forward:
 
-- **Loggia windows are skipped**, deliberately. Their `setback` puts them at the
-  back of a recess the export does not cut, so punching them through the facade
-  plane would put a hole in a wall they do not belong to. Cutting the recess is
-  the first half of the balcony work.
 - **Wall and slab thickness are invented** by the exporter, because the app
   models neither. Recorded in README § Deviations. Making them real massing
   parameters is the honest fix and it is a decision for §1, not for the writer.
-- **Size.** A 30-floor courtyard emits 2 220 windows and 1.3 MB. Workable, but
-  it is the reason the detail switch is in stage 3 rather than later.
+  A balcony deck is the exception: the app models its thickness, so the export
+  uses the real number.
+- **Size**, and it is now the open one. A 30-floor courtyard is 1.4 MB with no
+  balconies, 2.3 MB mixed and 2.7 MB with a loggia on every module — 19 800 to
+  37 800 entities. Still workable, and still the reason the detail switch is in
+  stage 3 rather than later.
+- **A balustrade is one panel per run**, in every variant. The bars the viewport
+  can draw are an affordance, not information: 60 000 of them as rooted IFC
+  elements would say nothing the panel does not.
 
 "Valid file" and "opens cleanly in Revit" remain different bars. The first is
 checked here; the second is checked by importing, and only by importing.

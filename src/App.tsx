@@ -104,6 +104,7 @@ const BY_TOOL: Record<Tool, string> = {
   site: 'Drag a corner to reshape the plot · click a midpoint to add one · right-click a corner to remove it',
   placement: 'Drag a building to place it · click it again for Massing',
   massing: 'Drag a core along its track · click a face for Facade',
+  program: 'Switch to Diagram in Settings to see the programme on the model',
   facade: 'Click a face to override it · click it again to clear',
   units: 'Click a building to select it',
   settings: 'Click a building to select it',

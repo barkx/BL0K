@@ -267,15 +267,15 @@ export function Building({
       position={[placement.position.x, 0, placement.position.z]}
       rotation={[0, (placement.rotation * Math.PI) / 180, 0]}
     >
-      {Object.entries(building.walls.byMass).map(([id, geometry]) => (
+      {building.walls.parts.map((part) => (
         <mesh
-          key={`wall-${id}`}
-          geometry={geometry}
-          material={mat.wall(tintIndex.get(id) ?? 0)}
+          key={`wall-${part.massId}-${part.use}`}
+          geometry={part.geometry}
+          material={mat.wall(tintIndex.get(part.massId) ?? 0, part.use)}
           castShadow={mat.shadows}
           receiveShadow={mat.shadows}
           onPointerDown={onPointerDown}
-          onPointerUp={onPointerUp(id)}
+          onPointerUp={onPointerUp(part.massId)}
         />
       ))}
 

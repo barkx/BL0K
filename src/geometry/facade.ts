@@ -1,6 +1,7 @@
 import { hash01 } from '../lib/rng'
 import { clamp } from '../lib/clamp'
 import { PIER_MIN, type BalconyType, type Dir, type Params } from '../store/params'
+import { bandAt, type Use } from '../store/program'
 import { spanIsBlanked, spanIsOpen, type Elevation } from './elevations'
 
 /** What a module actually got, once patterns and junctions had their say. */
@@ -17,6 +18,9 @@ export interface ModuleSlot {
   dir: Dir
   /** Absolute level index, not an offset within the mass. */
   floor: number
+  /** What this floor is for. Carried here so the count of flats, the tint and
+   * later the IFC property sets all read it off the same address. */
+  use: Use
   index: number
   u0: number
   u1: number
@@ -114,15 +118,31 @@ export function buildFacade(elevations: Elevation[], p: Params): FacadeModel {
     const windows = clamp(Math.round(ov.windowsPerModule ?? p.windowsPerModule), 1, 3)
 
     const { count, actual } = fitModules(e.length, p.moduleWidth)
-    const localWindow = Math.max(
-      0.4,
-      Math.min(p.windowWidth, (actual - (windows + 1) * PIER_MIN) / windows),
-    )
-    fit[e.key] = { requested: p.moduleWidth, actual, count, windowWidth: localWindow }
+    // The module rhythm is a property of the elevation, not of any one floor:
+    // a shopfront sits in the same grid as the flats above it, which is what
+    // stops a plinth reading as a different building. Only the glazing inside
+    // a module changes with the programme.
+    const fitWindow = (want: number, per: number, within: number) =>
+      Math.max(0.4, Math.min(want, (within - (per + 1) * PIER_MIN) / per))
+    fit[e.key] = {
+      requested: p.moduleWidth,
+      actual,
+      count,
+      windowWidth: fitWindow(p.windowWidth, windows, actual),
+    }
 
     for (let i = 0; i < e.floors; i++) {
       const floor = e.baseFloor + i
       const yBase = floor * p.floorHeight
+      // A public floor takes its glazing from its band, and never a balcony:
+      // a loggia over a shopfront would be a flat's balcony on a floor that
+      // has no flats.
+      const band = bandAt(p.program, floor)
+      const use: Use = band?.use ?? 'residential'
+      const perModule = band ? band.windowsPerModule : windows
+      const sill = band ? band.sillHeight : p.sillHeight
+      const glassHeight = band ? band.windowHeight : p.windowHeight
+      const localWindow = fitWindow(band ? band.windowWidth : p.windowWidth, perModule, actual)
       const open = e.openByFloor[i]
       const blank = e.blankByFloor[i] ?? []
 
@@ -140,7 +160,7 @@ export function buildFacade(elevations: Elevation[], p: Params): FacadeModel {
         const bu1 = bu0 + bWidth
 
         let balcony: ModuleBalcony = 'none'
-        if (baseType !== 'none' && wantsBalcony(p, pattern, p.randomSeed, e, floor, k)) {
+        if (!band && baseType !== 'none' && wantsBalcony(p, pattern, p.randomSeed, e, floor, k)) {
           if (baseType === 'mixed') {
             balcony =
               hash01(p.randomSeed + 7919, idHash(e.massId), DIR_INDEX[e.dir], floor, k) < 0.5
@@ -159,6 +179,7 @@ export function buildFacade(elevations: Elevation[], p: Params): FacadeModel {
           massId: e.massId,
           dir: e.dir,
           floor,
+          use,
           index: k,
           u0,
           u1,
@@ -171,12 +192,12 @@ export function buildFacade(elevations: Elevation[], p: Params): FacadeModel {
         // Openings sit inside the module, or across the back of a loggia recess.
         const [gu0, gu1] = balcony === 'loggia' ? [bu0, bu1] : [u0, u1]
         const runWidth = gu1 - gu0
-        const w = Math.max(0.4, Math.min(localWindow, (runWidth - (windows + 1) * PIER_MIN) / windows))
-        const pier = (runWidth - windows * w) / (windows + 1)
-        const y0 = yBase + p.sillHeight
-        const y1 = y0 + p.windowHeight
+        const w = fitWindow(localWindow, perModule, runWidth)
+        const pier = (runWidth - perModule * w) / (perModule + 1)
+        const y0 = yBase + sill
+        const y1 = y0 + glassHeight
 
-        for (let n = 0; n < windows; n++) {
+        for (let n = 0; n < perModule; n++) {
           const wu0 = gu0 + pier + n * (w + pier)
           openings.push({
             elevKey: e.key,
@@ -188,7 +209,7 @@ export function buildFacade(elevations: Elevation[], p: Params): FacadeModel {
             y1,
             setback: balcony === 'loggia' ? p.balconyDepth : 0,
           })
-          glazedArea += w * p.windowHeight
+          glazedArea += w * glassHeight
         }
       }
     }

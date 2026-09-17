@@ -12,12 +12,26 @@ export interface Instance {
 }
 
 export const SLAB_THICKNESS = 0.22
+/** Exposed slab edge across the head of a loggia opening. */
+export const SLAB_EDGE = 0.22
 export const RAIL_HEIGHT = 1.1
 export const RAIL_CAP = 0.06
 export const BAR_SIZE = 0.035
 export const BAR_PITCH = 0.12
 /** Above this, vertical bars stop being worth the instances. */
 export const BAR_BUDGET = 60000
+
+/**
+ * How far a loggia's recess stops short of the floor above.
+ *
+ * Without it a stack of loggias merges into one continuous slot instead of
+ * reading floor by floor. On a low storey the fixed edge would eat the opening,
+ * so it gives way to a fraction of the floor height. Stated once because the
+ * viewport and the IFC export must cut the recess at the same line — they
+ * disagreeing would be invisible until someone measured the file.
+ */
+export const loggiaHeadEdge = (floorHeight: number) =>
+  Math.min(SLAB_EDGE, floorHeight * 0.12)
 
 export interface BuiltBalconies {
   slabs: Instance[]

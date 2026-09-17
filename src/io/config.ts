@@ -14,6 +14,7 @@ import {
   type SiteRules,
   type Underlay,
 } from '../site/types'
+import { PUBLIC_USES, type ProgramBand } from '../store/program'
 
 /**
  * v1: params at the top level.
@@ -22,6 +23,10 @@ import {
  *     optional underlay image carried inline as a data URL.
  * v4: the site carries `rules` — the plot's planning limits. A v3 file has no
  *     rules, so it loads with every rule off, which is what it meant.
+ * v8: buildings carry `program` — the runs of levels given over to something
+ *     other than housing. A file without it is a building of flats, which is
+ *     exactly what it described, so no bands is both the migration and the
+ *     truth rather than a default standing in for one.
  * v7: the site can carry imported OpenStreetMap surroundings alongside the
  *     anchor. A file without them simply has none.
  * v6: the site can carry a geo anchor — latitude, longitude and true north.
@@ -35,7 +40,7 @@ import {
  * The `app` field is informational only — the loader never reads it — so files
  * written under either earlier name, 3DBlock or BL0K, still load unchanged.
  */
-export const CONFIG_VERSION = 7
+export const CONFIG_VERSION = 8
 
 export interface SavedConfig {
   version: number
@@ -81,6 +86,19 @@ function readParams(incoming: unknown): { params: Params; filled: number } {
   // sure what it sizes is a list of numbers and nulls.
   params.coreOffsets = Array.isArray(source.coreOffsets)
     ? source.coreOffsets.map((v) => (typeof v === 'number' && Number.isFinite(v) ? v : null))
+    : []
+  // A band with a missing end or an unknown use would clamp to something the
+  // author never drew, so anything malformed is dropped rather than repaired.
+  // `resolveParams` then orders what is left and fits it to the floor count.
+  params.program = Array.isArray(source.program)
+    ? source.program.filter(
+        (b): b is ProgramBand =>
+          !!b &&
+          typeof b === 'object' &&
+          Number.isFinite((b as ProgramBand).from) &&
+          Number.isFinite((b as ProgramBand).to) &&
+          (PUBLIC_USES as string[]).includes((b as ProgramBand).use),
+      )
     : []
   return { params: resolveParams(params), filled }
 }

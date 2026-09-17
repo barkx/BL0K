@@ -1,6 +1,7 @@
 import { round } from '../lib/clamp'
 import { RULE_KIND, RULE_LABEL, RULE_ORDER, RULE_SENSE, type RuleKey } from '../site/rules'
 import type { SiteBuild } from '../site/build'
+import { PUBLIC_USES, USE_LABEL, type Use } from '../store/program'
 import type { Site } from '../site/types'
 
 /**
@@ -51,6 +52,11 @@ export function siteCsv(site: Site, build: SiteBuild, when = new Date()): string
   lines.push(row(['Footprint (m2)', k.footprint]))
   lines.push(row(['Coverage (fraction)', k.coverage]))
   lines.push(row(['GFA (m2)', k.gfa]))
+  // Always written, zeros included: a spreadsheet column that appears only on
+  // some schemes cannot be compared across them.
+  for (const use of ['residential', ...PUBLIC_USES] as Use[]) {
+    lines.push(row([`GFA ${USE_LABEL[use].toLowerCase()} (m2)`, k.gfaByUse[use]]))
+  }
   lines.push(row(['Core area (m2)', k.coreArea]))
   lines.push(row(['NIA (m2)', k.nia]))
   lines.push(row(['Efficiency (fraction)', k.gfa > 0 ? k.nia / k.gfa : 0]))

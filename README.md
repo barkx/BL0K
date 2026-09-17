@@ -246,7 +246,7 @@ What stays visible in every tab is the geometry itself — the plot outline, the
 underlay, the buildings. Only the *handles* hide. Losing the boundary you are
 designing against would be losing context, not clutter.
 
-The sidebar is an icon rail with six sections, and the rest of this chapter
+The sidebar is an icon rail with seven sections, and the rest of this chapter
 follows them in order:
 
 | Section | Holds |
@@ -254,9 +254,14 @@ follows them in order:
 | **Site** | Plot boundary, site rules, overlay image |
 | **Placement** | The list of buildings, and where the selected one sits |
 | **Massing** | Footprint preset and wings; floors, floor height, parapet; core |
+| **Program** | Which floors are not housing, and how they are glazed |
 | **Facade** | Module, windows, balconies |
 | **Units** | The unit estimate, and the net-area factor |
 | **Settings** | Render mode and image, save, load, export, reset |
+
+Program sits between Massing and Facade because that is the order the decisions
+happen in: floors have to exist before they can be zoned, and a floor has to
+know what it is before it can be clothed.
 
 Under 900 px the whole sidebar becomes a bottom sheet and the rail lays out
 horizontally.
@@ -438,6 +443,53 @@ them. Overrides are saved and loaded with the config.
 - **Parapet** 0–1.5 m — upstand around exposed roof edges only, so a mass with
   another sitting on it does not get a parapet buried in the wall above.
 
+## Program
+
+Which floors are not housing. Everything else in the app assumes flats; this is
+the one place that says otherwise.
+
+A **band** is a run of levels given over to something else — retail, office or
+amenity — with both ends included, so "ground floor" is a band from 0 to 0. Any
+level no band covers stays residential, which means a building with no bands is
+a building of flats and needs no entry at all. That is also the migration: a
+file written before this existed described exactly that.
+
+Bands rather than a use per floor, for three reasons. A brief says "retail at
+ground, housing above", not thirty values that happen to agree. Dragging the
+Floors slider changes the level count constantly, and a per-floor list would
+need a resize rule on every drag where a band only needs clamping — which
+`resolveParams()` already does in one place, re-settling every band against the
+floor count whether or not the tab is open. And the levels are the absolute ones
+`ModuleSlot.floor` already carries, so a band means the same thing to a stacked
+mass starting at level 6 as to the wing beside it.
+
+Overlaps are trimmed rather than arbitrated at lookup: the later band's start is
+pushed past the earlier band's end, and a band swallowed whole disappears. The
+panel then shows what was actually built, instead of two bands both claiming one
+floor with only the geometry knowing which won.
+
+**What a band changes**
+
+- **Glazing.** The band carries its own window width, height, sill and count.
+  A shopfront is low and wide where a window is high and narrow, and one opening
+  per module is most of what makes it read as a shopfront. The module rhythm
+  itself does not change — a shop sits in the same grid as the flats above it,
+  which is what stops a plinth reading as a different building.
+- **Balconies.** None, ever. A loggia over a shopfront would be a flat's balcony
+  on a floor with no flats.
+- **The metrics.** GFA is reported per programme, and the unit estimate counts
+  only residential modules against only residential GFA. Before this, a retail
+  ground floor was silently counted as flats and inflated both the unit count
+  and the average unit area.
+- **Diagram mode.** A public floor is tinted in the one warm accent this palette
+  allows itself, outside the blueprint ramp so a plinth reads as *not housing*
+  rather than as one more mass in the stack. White and PBR ignore it entirely:
+  a study model is white, and the geometry is the same in all three modes.
+
+**What a band does not change.** Floor height is uniform and the footprint is
+the same on every level. This is a programme and a facade, not a plinth — see
+Deviations, and `project.md` §1.
+
 ## Facade
 
 - **Module width** 3.0–9.0 m — the width of one apartment module, and the thing
@@ -511,9 +563,22 @@ keeps the value you asked for; the building uses the resolved one.
   exporter is code-split, so it only downloads when you click.
 - **Export IFC (.ifc)** — the site as an IFC4 Reference View file: a project,
   a site, a building per block placed and rotated as on the plot, a storey per
-  level, floor and roof slabs, exterior walls, and every window as a real
-  `IfcOpeningElement` with an `IfcWindow` filling it. This is the export you
-  continue a project from; the glTF is for looking at.
+  level, floor and roof slabs, exterior walls, balconies, and every window as a
+  real `IfcOpeningElement` with an `IfcWindow` filling it. This is the export
+  you continue a project from; the glTF is for looking at.
+
+  A projecting balcony goes out as an `IfcSlab` for the deck and an
+  `IfcRailing` for the guard around it. A loggia goes out as what it actually
+  is: an `IfcOpeningElement` taking the recess out of the facade wall, a wall
+  closing the back of it, two returns closing its sides, and a guard across its
+  front — so the building reads as enclosed rather than open to the weather at
+  every loggia, which is what every downstream area and energy figure depends
+  on. Its windows sit in that back wall, a full recess depth behind the facade
+  plane, which is why they had to wait for the recess.
+
+  A balustrade exports as one panel per run whatever the viewport draws. The
+  bars variant is a viewport affordance: writing out one scheme's 60 000 bars
+  as 60 000 rooted elements would say nothing a panel does not.
 
   Written by hand rather than through a library, so it adds no dependency and
   runs offline like everything else. GlobalIds are derived from the model, not
@@ -521,9 +586,11 @@ keeps the value you asked for; the building uses the resolved one.
   elements downstream instead of replacing them — and renaming a building does
   not disturb them either.
 
-  Not in it yet: balconies, loggia recesses and their windows, cores, the plot
-  boundary, and property sets carrying the metrics. The app models no wall or
-  slab thickness, so the file states an assumed one — see § Deviations.
+  Not in it yet: cores, the plot boundary, property sets carrying the metrics,
+  and a massing-versus-full detail switch. The app models no wall or slab
+  thickness, so the file states an assumed one — see § Deviations. A 30-floor
+  courtyard with a loggia on every module is 2.7 MB against 1.4 MB with no
+  balconies at all, which is the argument for that switch.
 - **Export metrics (.csv)** — the metrics panel as a spreadsheet: four tables in
   one file — site totals, a row per building, every rule with its limit, worst
   case and met / breach / off status, then the warnings. Numbers are plain, with

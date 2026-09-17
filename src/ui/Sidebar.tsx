@@ -1,6 +1,6 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useRef, useState } from 'react'
 import { Slider } from './Slider'
-import { Chips, Select } from './Field'
+import { Block, Chips, Select } from './Field'
 import { useSelectedParams, useStore, type Tool } from '../store/store'
 import { PRESET_LABELS, PRESET_WINGS } from '../store/presets'
 import type {
@@ -23,10 +23,12 @@ import {
   RuleControls,
 } from './SitePanel'
 import { UnderlayPanel } from './UnderlayPanel'
+import { ProgramPanel } from './ProgramPanel'
 import {
   IconFacade,
   IconMassing,
   IconPlacement,
+  IconProgram,
   IconSettings,
   IconSite,
   IconUnits,
@@ -81,16 +83,6 @@ function saveImage() {
   canvas.toBlob((blob) => {
     if (blob) download(`urbgen-${stamp()}.png`, blob, 'image/png')
   }, 'image/png')
-}
-
-/** A labelled block inside a panel, replacing the old accordion groups. */
-function Block({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="block">
-      <h3 className="block-title">{title}</h3>
-      {children}
-    </section>
-  )
 }
 
 function NoSelection() {
@@ -269,11 +261,12 @@ function SettingsPanel() {
             Export IFC (.ifc)
           </button>
           <div className="hint">
-            IFC4: storeys, floor slabs, exterior walls, and every window as a
+            IFC4: storeys, floor slabs, exterior walls, balcony decks and
+            balustrades, loggias recessed and enclosed, and every window as a
             real opening the receiving application cuts for itself. The app
             models no thickness, so the export assumes {mm(WALL_THICKNESS)} walls
             and {mm(SLAB_THICKNESS)} slabs — anything downstream measuring those
-            is measuring the assumption. Cores and balconies come next.
+            is measuring the assumption. Cores and the plot come next.
           </div>
           <button
             className="ghost"
@@ -323,6 +316,10 @@ const SECTIONS: { id: Tool; label: string; icon: () => JSX.Element }[] = [
   { id: 'site', label: 'Site', icon: IconSite },
   { id: 'placement', label: 'Placement', icon: IconPlacement },
   { id: 'massing', label: 'Massing', icon: IconMassing },
+  // Between Massing and Facade because that is the order the decisions happen
+  // in: floors have to exist before they can be zoned, and a floor has to know
+  // what it is before it can be clothed.
+  { id: 'program', label: 'Program', icon: IconProgram },
   { id: 'facade', label: 'Facade', icon: IconFacade },
   { id: 'units', label: 'Units', icon: IconUnits },
   { id: 'settings', label: 'Settings', icon: IconSettings },
@@ -444,6 +441,8 @@ export function Sidebar() {
             ) : (
               <NoSelection />
             ))}
+
+          {active === 'program' && (hasSelection ? <ProgramPanel /> : <NoSelection />)}
 
           {active === 'facade' &&
             (hasSelection ? (

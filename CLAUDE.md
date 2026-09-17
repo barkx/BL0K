@@ -208,7 +208,23 @@ Refuse:
 
 ## 6. Project State
 
-- **M1–M13 complete**, see `project.md` §8.
+- **M1–M13, M15–M16 complete**, see `project.md` §8.
+  - **M16, program by floor**: a `ProgramBand` is a run of *absolute* levels
+    given over to retail, office or amenity — `store/program.ts`. Bands, not a
+    use per floor, and the list holds only the non-residential runs, so an empty
+    list is a building of flats and that is also the v7-file migration. Clamped
+    in `resolveParams()` like everything else, which matters more than
+    consistency here: the Floors slider can pull the top of the building down
+    through a band with the Program tab closed, so bands re-settle on every
+    resolve. Overlaps are **trimmed**, not arbitrated at lookup, so the panel
+    and the geometry never disagree. A band takes its own glazing and never a
+    balcony; the module rhythm stays the elevation's. Metrics gained
+    `gfaByUse`, and the unit estimate counts only residential modules against
+    residential GFA. `BuiltWalls.byMass` became `parts`, one buffer per (mass,
+    use) — the split lives in geometry, not the scene, because three render
+    modes over one geometry is a locked decision. Config v8.
+    **Reopens half of a §1 non-goal by decision**: programme and facade yes,
+    plinth footprint and per-band floor height no.
   - **M1–M7, the building**: six presets with per-floor junction detection,
     module-driven facade with real openings, projecting and loggia balconies,
     three render modes, metrics, glTF export, config I/O, per-elevation
@@ -263,8 +279,10 @@ Refuse:
     a vertical face to Facade with that elevation open. Consequence to know
     about: a click on the ground *inside* the plot leaves the Site tab, because
     the ground is the site surface and returns you to the site scale.
-- **UI**: the sidebar is an icon rail with six sections — Site, Placement,
-  Massing, Facade (balconies live here), Units, Settings. Rules sit in Site;
+- **UI**: the sidebar is an icon rail with seven sections — Site, Placement,
+  Massing, Program, Facade (balconies live here), Units, Settings. Program sits
+  between Massing and Facade because that is the order the decisions happen in.
+  Rules sit in Site;
   the core sits in Massing; the efficiency factor sits in Units. The top bar is
   deliberately bare — render mode and the PNG snapshot are in Settings, and
   double-clicking the ground frames the site, so there is no Fit button. Inside
@@ -277,14 +295,18 @@ Refuse:
   flat faces, no strokes — `src/ui/Logo.tsx`, same shape as the favicon. The
   palette is unchanged drawing-office greys and blueprint ink. There is no AI
   in this app and the branding must not claim otherwise.
-- **Next**: M14 IFC export, **stages 1 and 2 landed** — see `project.md` §8.
+- **Next**: M14 IFC export, **stages 1, 2 and 3a landed** — see `project.md` §8.
   `src/io/exportIfc.ts` writes IFC4 Reference View by hand, no dependency:
-  storeys, slabs, exterior walls, and windows as real openings. Stage 3 is
-  balconies and loggias first, then cores, the plot, property sets and a detail
-  switch. Two things to know before touching it: **loggia windows are skipped on
-  purpose** until the recess is cut, and **GlobalIds are derived from
-  `placement.id` alone** so a rename does not reissue every element's identity.
-  DXF import sits behind all of it.
+  storeys, slabs, exterior walls, windows as real openings, and balconies. A
+  loggia is exported as what it is — a recess voided out of the facade wall,
+  enclosed by a back wall and two returns — so **a loggia window now lands in
+  that back wall**, at its `setback` behind the facade plane, rather than being
+  skipped. Anything that hosts an opening must pass the right wall to
+  `openingsIn`; the setback does the rest. Stage 3b is cores, the plot, property
+  sets and a detail switch — and size is the live argument for it, 1.4 MB to
+  2.7 MB on a 30-floor courtyard depending on balconies. One thing that has not
+  changed: **GlobalIds are derived from `placement.id` alone** so a rename does
+  not reissue every element's identity. DXF import sits behind all of it.
 - **Biggest gap, by decision**: no **IFC export**. glTF is a visualisation
   format — nobody continues a project from it, so today the tool dead-ends
   rather than feeding Revit or ArchiCAD. Treated as a blocker, not a backlog

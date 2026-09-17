@@ -1,3 +1,15 @@
+import type { ReactNode } from 'react'
+
+/** A labelled block inside a panel, replacing the old accordion groups. */
+export function Block({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="block">
+      <h3 className="block-title">{title}</h3>
+      {children}
+    </section>
+  )
+}
+
 export interface Option<T extends string> {
   value: T
   label: string

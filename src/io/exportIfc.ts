@@ -1,6 +1,13 @@
 import { footprint, levels, topLevel, type Mass } from '../geometry/masses'
 import type { Elevation } from '../geometry/elevations'
-import type { FacadeModel, Opening } from '../geometry/facade'
+import type { FacadeModel, ModuleSlot, Opening } from '../geometry/facade'
+import {
+  loggiaHeadEdge,
+  RAIL_CAP,
+  RAIL_HEIGHT,
+  SLAB_THICKNESS as BALCONY_SLAB,
+} from '../geometry/balcony'
+import type { Params } from '../store/params'
 import type { SiteBuild } from '../site/build'
 import type { Site } from '../site/types'
 import { compoundAngle } from '../geo/project'
@@ -42,6 +49,18 @@ export const SLAB_THICKNESS = 0.25
 /** A pane has to have some depth to be a solid at all. */
 export const GLAZING_THICKNESS = 0.05
 
+/**
+ * A balustrade's panel thickness.
+ *
+ * The app can draw a balustrade as vertical bars, and does — but bars are a
+ * viewport affordance, not a thing to write out: one scheme's 60 000 bars would
+ * be 60 000 rooted IFC elements for no information gain. Every variant exports
+ * as one panel per run, which is what a receiving application needs in order to
+ * know a guard is there and how thick it is.
+ */
+const railThickness = (kind: Params['balustrade']) =>
+  kind === 'solid' ? 0.16 : GLAZING_THICKNESS
+
 // ---------------------------------------------------------------------------
 // Coordinates
 // ---------------------------------------------------------------------------
@@ -55,6 +74,26 @@ export const GLAZING_THICKNESS = 0.05
  * wrong and not notice until someone reads the plan.
  */
 const plan = (x: number, z: number): [number, number] => [x, -z]
+
+/**
+ * A point authored the way the facade is: `u` along an elevation, `out` in
+ * front of its face, `z` above the hosting storey — delivered in IFC's frame.
+ *
+ * Every wall, window, recess and balustrade is positioned this way, so the one
+ * place the app's XZ meets IFC's XY is here.
+ */
+function at3(
+  e: Elevation,
+  u: number,
+  out: number,
+  z: number,
+): [number, number, number] {
+  const [x, y] = plan(
+    e.origin.x + e.uDir.x * u + e.normal.x * out,
+    e.origin.z + e.uDir.z * u + e.normal.z * out,
+  )
+  return [x, y, z]
+}
 
 /**
  * A rotation of `deg` about the app's Y axis is the same rotation about IFC's
@@ -208,10 +247,14 @@ function boxSolid(
   )
 }
 
-const shapeOf = (s: Step, body: number, solid: number) => {
-  const rep = s.add(`IFCSHAPEREPRESENTATION(#${body},'Body','SweptSolid',(#${solid}))`)
+/** Several solids under one representation, for an element built of parts. */
+const shapeOfAll = (s: Step, body: number, solids: number[]) => {
+  const items = solids.map((id) => `#${id}`).join(',')
+  const rep = s.add(`IFCSHAPEREPRESENTATION(#${body},'Body','SweptSolid',(${items}))`)
   return s.add(`IFCPRODUCTDEFINITIONSHAPE($,$,(#${rep}))`)
 }
+
+const shapeOf = (s: Step, body: number, solid: number) => shapeOfAll(s, body, [solid])
 
 // ---------------------------------------------------------------------------
 // The file
@@ -278,10 +321,12 @@ function slabsFor(
  * `IfcOpeningElement` that voids it, and leaves the subtraction to whatever
  * opens the file. The app already holds both halves of that pair.
  *
- * A loggia window is skipped, and deliberately. Its `setback` puts it at the
- * back of a recess the export does not yet cut, so punching it through the
- * facade plane would place a hole in a wall it does not belong to — worse than
- * leaving the wall solid, because it would look right.
+ * A window's `setback` is how far behind the facade plane its wall stands: zero
+ * on open facade, a loggia's depth at the back of a recess. The caller decides
+ * which wall hosts it and the setback puts it in that wall — which is why this
+ * had to wait for the recess to be cut. Punching a loggia window through the
+ * facade plane, as a version of this that ignored `setback` would, puts a hole
+ * in a wall it does not belong to, and looks entirely right while doing it.
  */
 function openingsIn(
   ctx: Context,
@@ -299,7 +344,6 @@ function openingsIn(
   const windows: { id: number; level: number }[] = []
 
   for (const o of ops) {
-    if (o.setback > 1e-6) continue
     if (o.u0 < span.a - 1e-6 || o.u1 > span.b + 1e-6) continue
 
     const width = o.u1 - o.u0
@@ -307,11 +351,14 @@ function openingsIn(
     if (width <= 1e-6 || height <= 1e-6) continue
 
     const u = (o.u0 + o.u1) / 2
-    const cx = e.origin.x + e.uDir.x * u - e.normal.x * (WALL_THICKNESS / 2)
-    const cz = e.origin.z + e.uDir.z * u - e.normal.z * (WALL_THICKNESS / 2)
-    const [px, py] = plan(cx, cz)
-    // The wall's placement is the storey's, so heights here are relative to it.
-    const zLocal = o.y0 - level * floorHeight
+    const centre = at3(
+      e,
+      u,
+      -(o.setback + WALL_THICKNESS / 2),
+      // The wall's placement is the storey's, so heights here are relative to it.
+      o.y0 - level * floorHeight,
+    )
+    const [px, py, zLocal] = centre
 
     const voidSolid = boxSolid(s, width, WALL_THICKNESS, height, [px, py, zLocal], ref)
     const opening = s.add(
@@ -343,19 +390,180 @@ function openingsIn(
   return windows
 }
 
+/**
+ * A loggia: the recess cut into the facade, the wall closing the back of it,
+ * and the two returns closing its sides.
+ *
+ * The app builds a loggia as panels around a void, because it has no CSG. IFC
+ * wants the recess stated as a void, so the facade wall stays one whole wall
+ * and an `IfcOpeningElement` takes the slot out of it — the same trade the
+ * windows already make, one scale up.
+ *
+ * The three walls are what actually encloses the room behind. Without them the
+ * loggia is a hole into the neighbouring flats, and every downstream area,
+ * volume and energy calculation reads the building as open to the weather.
+ *
+ * The head band survives: the recess stops short of the floor above by the same
+ * `loggiaHeadEdge` the viewport cuts to, so a stack of loggias reads as a stack
+ * rather than one continuous slot.
+ */
+function loggiaIn(
+  ctx: Context,
+  e: Elevation,
+  wall: number,
+  m: ModuleSlot,
+  ops: Opening[],
+  span: { a: number; b: number },
+  level: number,
+  p: Params,
+  parent: number,
+  ref: [number, number],
+  key: string,
+): { id: number; level: number }[] {
+  const { s, owner, body } = ctx
+  const out: { id: number; level: number }[] = []
+
+  const d = p.balconyDepth
+  const t = WALL_THICKNESS
+  const width = m.bu1 - m.bu0
+  const uc = (m.bu0 + m.bu1) / 2
+  const zBase = m.yBase - level * p.floorHeight
+  const edge = loggiaHeadEdge(p.floorHeight)
+  const clear = p.floorHeight - edge
+  const place = localPlacement(s, parent, axis3(s, [0, 0, 0]))
+
+  // The recess, as a void right through the facade wall.
+  const slot = boxSolid(s, width, t, clear, at3(e, uc, -t / 2, zBase), ref)
+  const opening = s.add(
+    `IFCOPENINGELEMENT(${str(ctx.guid(key, 'recess', e.key, level, m.index))},#${owner},` +
+      `${str('Loggia recess')},$,$,#${place},#${shapeOf(s, body, slot)},$,.OPENING.)`,
+  )
+  s.add(
+    `IFCRELVOIDSELEMENT(${str(ctx.guid(key, 'recess-voids', e.key, level, m.index))},` +
+      `#${owner},$,$,#${wall},#${opening})`,
+  )
+
+  // The back of the recess. Full floor height: above the head it is simply the
+  // wall of the room, and the facade's head band in front of it is the slab
+  // edge, not a second skin.
+  const back = s.add(
+    `IFCWALL(${str(ctx.guid(key, 'loggia-back', e.key, level, m.index))},#${owner},` +
+      `${str(`Loggia back ${e.key} L${level}`)},$,$,#${place},` +
+      `#${shapeOf(s, body, boxSolid(s, width, t, p.floorHeight, at3(e, uc, -(d + t / 2), zBase), ref))},` +
+      `$,.SOLIDWALL.)`,
+  )
+  out.push({ id: back, level })
+
+  // The two returns, running from the facade plane back to meet it. They sit
+  // outside the clear span, so the recess keeps the width the app drew.
+  for (const [side, u] of [
+    ['L', m.bu0 - t / 2],
+    ['R', m.bu1 + t / 2],
+  ] as const) {
+    const solid = boxSolid(s, t, d + t, clear, at3(e, u, -(d + t) / 2, zBase), ref)
+    out.push({
+      id: s.add(
+        `IFCWALL(${str(ctx.guid(key, 'loggia-side', e.key, level, m.index, side))},#${owner},` +
+          `${str(`Loggia return ${e.key} L${level}`)},$,$,#${place},` +
+          `#${shapeOf(s, body, solid)},$,.SOLIDWALL.)`,
+      ),
+      level,
+    })
+  }
+
+  // Now the windows have a wall to sit in. Their `setback` is the recess depth,
+  // so `openingsIn` lands them in the back wall rather than the facade plane.
+  out.push(...openingsIn(ctx, e, back, ops, span, level, p.floorHeight, parent, ref, key))
+  return out
+}
+
+/**
+ * A balcony's deck and its balustrade.
+ *
+ * A projecting balcony gets a slab of its own and a guard on three sides; a
+ * loggia stands on the building's own floor and gets a guard only across its
+ * front. That is the same split `buildBalconies` makes, and for the same
+ * reason — a loggia's sides are walls, not edges.
+ *
+ * `IfcSlabTypeEnum` has no balcony member, so the deck goes out as
+ * `.USERDEFINED.` with the ObjectType saying what it is, rather than being
+ * mislabelled a floor and turning up in a floor-area schedule.
+ */
+function balconyFor(
+  ctx: Context,
+  e: Elevation,
+  m: ModuleSlot,
+  level: number,
+  p: Params,
+  parent: number,
+  ref: [number, number],
+  key: string,
+): { id: number; level: number }[] {
+  const { s, owner, body } = ctx
+  const out: { id: number; level: number }[] = []
+  if (m.balcony === 'none') return out
+
+  const d = p.balconyDepth
+  const width = m.bu1 - m.bu0
+  const uc = (m.bu0 + m.bu1) / 2
+  const zBase = m.yBase - level * p.floorHeight
+  const place = localPlacement(s, parent, axis3(s, [0, 0, 0]))
+  const projecting = m.balcony === 'projecting'
+
+  if (projecting) {
+    // The deck hangs below the level it serves, so you step out onto it level
+    // with the floor inside.
+    const solid = boxSolid(
+      s,
+      width,
+      d,
+      BALCONY_SLAB,
+      at3(e, uc, d / 2, zBase - BALCONY_SLAB),
+      ref,
+    )
+    out.push({
+      id: s.add(
+        `IFCSLAB(${str(ctx.guid(key, 'balcony', e.key, level, m.index))},#${owner},` +
+          `${str(`Balcony ${e.key} L${level}`)},$,${str('Balcony')},#${place},` +
+          `#${shapeOf(s, body, solid)},$,.USERDEFINED.)`,
+      ),
+      level,
+    })
+  }
+
+  const rt = railThickness(p.balustrade)
+  const height = RAIL_HEIGHT + RAIL_CAP
+  const front = projecting ? d : 0
+  const runs = [boxSolid(s, width, rt, height, at3(e, uc, front - rt / 2, zBase), ref)]
+  if (projecting) {
+    // Cheeks, only where the deck actually cantilevers.
+    runs.push(boxSolid(s, rt, d, height, at3(e, m.bu0 + rt / 2, d / 2, zBase), ref))
+    runs.push(boxSolid(s, rt, d, height, at3(e, m.bu1 - rt / 2, d / 2, zBase), ref))
+  }
+  out.push({
+    id: s.add(
+      `IFCRAILING(${str(ctx.guid(key, 'railing', e.key, level, m.index))},#${owner},` +
+        `${str(`Balustrade ${e.key} L${level}`)},$,$,#${place},` +
+        `#${shapeOfAll(s, body, runs)},$,.BALUSTRADE.)`,
+    ),
+    level,
+  })
+  return out
+}
+
 function wallsFor(
   ctx: Context,
   e: Elevation,
   facade: FacadeModel,
   storeyPlacement: Map<number, number>,
-  floorHeight: number,
+  p: Params,
   key: string,
-): { walls: { id: number; level: number }[]; windows: { id: number; level: number }[] } {
+): { id: number; level: number }[] {
   const { s, owner, body } = ctx
-  const walls: { id: number; level: number }[] = []
-  const windows: { id: number; level: number }[] = []
-  if (e.abutting) return { walls, windows }
+  const made: { id: number; level: number }[] = []
+  if (e.abutting) return made
 
+  const floorHeight = p.floorHeight
   const ref = plan(e.uDir.x, e.uDir.z)
   for (let i = 0; i < e.floors; i++) {
     const level = e.baseFloor + i
@@ -363,6 +571,13 @@ function wallsFor(
     if (parent === undefined) continue
 
     const ops = facade.openings.filter((o) => o.elevKey === e.key && o.floor === level)
+    const mods = facade.modules.filter((m) => m.elevKey === e.key && m.floor === level)
+    // A loggia's windows belong to its own back wall, so they must not also be
+    // offered to the facade wall covering the same stretch.
+    const loggias = new Set(
+      mods.filter((m) => m.balcony === 'loggia').map((m) => m.index),
+    )
+    const facadeOps = ops.filter((o) => !loggias.has(o.moduleIndex))
 
     for (let k = 0; k < e.openByFloor[i].length; k++) {
       const span = e.openByFloor[i][k]
@@ -372,24 +587,35 @@ function wallsFor(
       // Centre of the run, pushed half a thickness inward so the outer face
       // lands on the elevation plane the app drew.
       const u = (span.a + span.b) / 2
-      const cx = e.origin.x + e.uDir.x * u - e.normal.x * (WALL_THICKNESS / 2)
-      const cz = e.origin.z + e.uDir.z * u - e.normal.z * (WALL_THICKNESS / 2)
-      const [px, py] = plan(cx, cz)
+      const [px, py, pz] = at3(e, u, -WALL_THICKNESS / 2, 0)
 
-      const solid = boxSolid(s, length, WALL_THICKNESS, floorHeight, [px, py, 0], ref)
+      const solid = boxSolid(s, length, WALL_THICKNESS, floorHeight, [px, py, pz], ref)
       const shape = shapeOf(s, body, solid)
       const wall = s.add(
         `IFCWALL(${str(ctx.guid(key, 'wall', e.key, level, k))},#${owner},` +
           `${str(`Wall ${e.key} L${level}`)},$,$,` +
           `#${localPlacement(s, parent, axis3(s, [0, 0, 0]))},#${shape},$,.SOLIDWALL.)`,
       )
-      walls.push({ id: wall, level })
-      windows.push(
-        ...openingsIn(ctx, e, wall, ops, span, level, floorHeight, parent, ref, key),
+      made.push({ id: wall, level })
+      made.push(
+        ...openingsIn(ctx, e, wall, facadeOps, span, level, floorHeight, parent, ref, key),
       )
+
+      const inSpan = mods.filter(
+        (m) => m.u0 >= span.a - 1e-6 && m.u1 <= span.b + 1e-6,
+      )
+      for (const m of inSpan) {
+        if (m.balcony === 'loggia') {
+          const mine = ops.filter((o) => o.moduleIndex === m.index)
+          made.push(
+            ...loggiaIn(ctx, e, wall, m, mine, span, level, p, parent, ref, key),
+          )
+        }
+        made.push(...balconyFor(ctx, e, m, level, p, parent, ref, key))
+      }
     }
   }
-  return { walls, windows }
+  return made
 }
 
 /**
@@ -528,9 +754,7 @@ export function siteIfc(site: Site, build: SiteBuild, when = new Date()): string
       put(slabsFor(ctx, mass, storeyPlacement, floorHeight, key))
     }
     for (const e of building.elevations) {
-      const made = wallsFor(ctx, e, building.facade, storeyPlacement, floorHeight, key)
-      put(made.walls)
-      put(made.windows)
+      put(wallsFor(ctx, e, building.facade, storeyPlacement, placement.params, key))
     }
 
     aggregates.push(

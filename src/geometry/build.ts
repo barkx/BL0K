@@ -50,7 +50,7 @@ export function buildBuilding(p: Params): Building {
   const edges = buildEdges(masses, elevations, cores.cores, p)
 
   const areas = computeAreas(masses, elevations, facade, cores, p)
-  const units = estimateUnits(facade, areas.gfa, p)
+  const units = estimateUnits(facade, areas.gfaByUse.residential, p)
 
   return {
     masses,
@@ -71,7 +71,7 @@ export function buildBuilding(p: Params): Building {
 /** Geometry is derived, so the previous pass's buffers are dead the moment a new one lands. */
 export function disposeBuilding(b: Building | null) {
   if (!b) return
-  for (const g of Object.values(b.walls.byMass)) g.dispose()
+  for (const part of b.walls.parts) part.geometry.dispose()
   for (const g of Object.values(b.roof.byMass)) g.dispose()
   b.walls.glass.dispose()
   disposeCores(b.cores)

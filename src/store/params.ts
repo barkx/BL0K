@@ -1,4 +1,5 @@
 import { clamp } from '../lib/clamp'
+import type { ProgramBand } from './program'
 
 export type Preset = 'bar' | 'L' | 'T' | 'U' | 'courtyard' | 'stacked'
 export type Dir = 'N' | 'E' | 'S' | 'W'
@@ -59,6 +60,13 @@ export interface Params {
   coreDepth: number
   coreOverrun: number
 
+  /**
+   * Levels given over to something other than housing, lowest first. An empty
+   * list is a building of flats — see `store/program.ts` for why the absence
+   * of a band, rather than a value per floor, is what carries that.
+   */
+  program: ProgramBand[]
+
   // metrics inputs
   modulesPerUnit: number
   /** Net internal area as a share of GFA *after* the cores are taken out. */
@@ -106,6 +114,7 @@ export const DEFAULTS: Params = {
   // visible at all on a massing model.
   coreOverrun: 1.6,
 
+  program: [],
   modulesPerUnit: 1,
   // What is left after the core is already deducted: internal walls, risers
   // and plant. Still a factor, not a measurement.
@@ -195,6 +204,53 @@ export const HEAD_MIN = 0.25
 export const PIER_MIN = 0.3
 
 /**
+ * Bands, made disjoint, ordered and fitted to the building they belong to.
+ *
+ * Overlaps are resolved by trimming the later band's start, so the list stays
+ * something you can read top to bottom and the viewport agrees with the panel.
+ * Resolving them at lookup instead would leave the panel showing two bands
+ * claiming one floor, with only the geometry knowing which won.
+ */
+function resolveProgram(
+  raw: ProgramBand[],
+  floors: number,
+  headroom: number,
+): ProgramBand[] {
+  const top = Math.max(0, floors - 1)
+  const bands = (Array.isArray(raw) ? raw : [])
+    .map((b) => ({
+      ...b,
+      from: clamp(Math.round(b.from), 0, top),
+      to: clamp(Math.round(b.to), 0, top),
+    }))
+    .filter((b) => b.to >= b.from)
+    .sort((a, b) => a.from - b.from || a.to - b.to)
+
+  const out: ProgramBand[] = []
+  for (const b of bands) {
+    const previous = out[out.length - 1]
+    const from = previous ? Math.max(b.from, previous.to + 1) : b.from
+    if (from > b.to) continue
+    // The same vertical fit the building's own windows get: a head needs
+    // masonry above it, and the sill is what gives way first.
+    const sillHeight = clamp(b.sillHeight, 0, Math.max(0, headroom - RANGE.windowHeight.min))
+    out.push({
+      ...b,
+      from,
+      sillHeight,
+      windowHeight: clamp(
+        b.windowHeight,
+        RANGE.windowHeight.min,
+        Math.max(RANGE.windowHeight.min, headroom - sillHeight),
+      ),
+      windowWidth: clamp(b.windowWidth, RANGE.windowWidth.min, RANGE.windowWidth.max),
+      windowsPerModule: Math.round(clamp(b.windowsPerModule, 1, 3)),
+    })
+  }
+  return out
+}
+
+/**
  * The single clamping point. Raw slider values in, a mutually-consistent set
  * out. The UI displays what comes back from here, so the user always sees the
  * value the building was actually built from.
@@ -256,6 +312,13 @@ export function resolveParams(raw: Params): Params {
 
   p.reveal = Math.min(p.reveal, 0.4)
   p.balconyStartFloor = clamp(Math.round(p.balconyStartFloor), 0, Math.max(0, p.floors - 1))
+
+  // Program bands. Clamped here rather than at the inputs like everything else,
+  // and for a sharper reason than consistency: the Floors slider can pull the
+  // top of the building down through a band while nobody is looking at the
+  // Program tab, so a band has to be re-settled against the floor count on
+  // every resolve, not only when it is edited.
+  p.program = resolveProgram(p.program, p.floors, headroom)
 
   return p
 }

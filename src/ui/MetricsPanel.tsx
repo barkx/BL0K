@@ -2,6 +2,36 @@ import { useStore } from '../store/store'
 import { int, m, m2, pct } from '../lib/units'
 import { round } from '../lib/clamp'
 import { RULE_KIND, RULE_LABEL, RULE_SENSE, type Breach } from '../site/rules'
+import { PUBLIC_USES, USE_LABEL } from '../store/program'
+
+/**
+ * A line per public programme, and none at all when the scheme is all housing.
+ *
+ * Silence is the right default here: a row reading "Retail 0 m2" on every
+ * scheme would be noise on the many and no more informative on the few.
+ */
+function ProgrammeRows({ gfaByUse }: { gfaByUse: Record<string, number> }) {
+  const rows = PUBLIC_USES.filter((use) => gfaByUse[use] > 0.5)
+  if (rows.length === 0) return null
+  return (
+    <>
+      {rows.map((use) => (
+        <ProgrammeRow key={use} label={USE_LABEL[use]} area={gfaByUse[use]} />
+      ))}
+    </>
+  )
+}
+
+function ProgrammeRow({ label, area }: { label: string; area: number }) {
+  return (
+    <>
+      <dt>{label}</dt>
+      <dd>
+        {m2(area)} <small>of GFA</small>
+      </dd>
+    </>
+  )
+}
 
 /** A breach in one line: what the scheme does, against what the rule allows. */
 function breachLine(b: Breach): string {
@@ -42,6 +72,8 @@ export function MetricsPanel() {
           {m2(k.gfa)}
           {k.loggiaLoss > 0.5 && <small> −{m2(k.loggiaLoss)}</small>}
         </dd>
+
+        <ProgrammeRows gfaByUse={k.gfaByUse} />
 
         <dt>Plot ratio</dt>
         <dd>

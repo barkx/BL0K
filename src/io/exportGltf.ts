@@ -86,9 +86,13 @@ export async function exportSiteGltf(build: SiteBuild): Promise<ArrayBuffer> {
     group.position.set(placement.position.x, 0, placement.position.z)
     group.rotation.y = (placement.rotation * Math.PI) / 180
 
-    for (const [id, g] of Object.entries(building.walls.byMass)) {
-      const mesh = new Mesh(g, m.wall)
-      mesh.name = `Walls_${id}`
+    for (const part of building.walls.parts) {
+      const mesh = new Mesh(part.geometry, m.wall)
+      // Housing keeps the bare name it has always had, so a scheme with no
+      // programme exports exactly the file it did before. Only a public floor
+      // announces itself.
+      mesh.name =
+        part.use === 'residential' ? `Walls_${part.massId}` : `Walls_${part.massId}_${part.use}`
       group.add(mesh)
     }
     for (const [id, g] of Object.entries(building.roof.byMass)) {

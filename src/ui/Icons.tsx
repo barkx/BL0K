@@ -33,6 +33,15 @@ export const IconPlacement = () => (
   </svg>
 )
 
+/** A section through a building, with the ground floor marked out. */
+export const IconProgram = () => (
+  <svg {...base}>
+    <rect x="4" y="4" width="16" height="16" rx="1" />
+    <path d="M4 9h16M4 14h16" />
+    <path d="M7.5 17h9" />
+  </svg>
+)
+
 /** Two stacked masses. */
 export const IconMassing = () => (
   <svg {...base}>
